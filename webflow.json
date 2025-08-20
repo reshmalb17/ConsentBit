@@ -1,0 +1,9 @@
+{
+  "name": "consentbit",
+  "publicDir": "public",
+  "size": "large",
+  "apiVersion": "2",
+  "appConnections": [
+    "MyconsentImage" 
+  ]
+}
