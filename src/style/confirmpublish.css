@@ -1,0 +1,285 @@
+.publish-container {
+  display: flex;
+  gap: 2rem;
+  padding: 0px 24px 24px 24px;
+  background: rgba(10, 8, 27, 1);
+  /* dark bg */
+  color: #fff;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.content-container {
+  margin-top: 10px;
+  display: flex;
+  gap: 27px;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.publish-left {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.go-back-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  display: flex;
+  gap: 3px;
+}
+
+.go-back-btn:hover {
+  color: #fff;
+}
+
+.whitearrow {
+  transform: rotate(180deg);
+}
+
+.payment-box {
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.payment-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.coupon-box {
+  background: rgba(33, 30, 57, 1);
+  border: 1px solid rgba(140, 121, 255, 1);
+  border-radius: 8px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.50rem;
+  min-width: 206px;
+}
+
+.coupon-header {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  line-height: 15px;
+  margin: 0;
+}
+
+.coupon-strip {
+  width: 206px;
+  height: 31px;
+  background: url("../assets/CopyContent.svg") no-repeat center;
+  background-size: 100% 100%;
+  /* stretch to fit exactly */
+  color: #fff;
+  font-size: 10px;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.coupon-container {
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.coupon-strip span {
+  white-space: nowrap;
+  /* prevent text from breaking into 2 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copy-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.pay-container {
+  padding: 0px 10px 0px 10px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.pay-now-btn {
+  background: transparent;
+  border: none;
+  color: #a78bfa;
+  padding: 8px 0px;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+}
+
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  /* keep star aligned with first line */
+  gap: 6px;
+  /* space between star and text */
+  color: rgba(255, 255, 255, 0.4);
+  /* optional text color */
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 320px;
+  /* keeps line wrapping clean */
+}
+
+.note-star {
+  flex-shrink: 0;
+  /* don’t let star move */
+}
+
+
+.publish-btn {
+  background: rgba(38, 46, 132, 1);
+  border: none;
+  color: #fff;
+  border-radius: 5px;
+  height: 31px;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.publish-btn:disabled {
+  background: #3f3f46;
+  cursor: not-allowed;
+}
+
+.customize-link {
+  font-size: 0.9rem;
+  color: rgba(140, 121, 255, 1);
+  /* margin-top: auto; */
+  display: flex;
+  gap: 3px;
+}
+
+.customize-link:hover {
+  text-decoration: underline;
+}
+
+.publish-right {
+  width: 66%;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-header {
+  font-size: 0.9rem;
+  color: white;
+  margin-bottom: 0.5rem;
+  position: absolute;
+  top: 34px;
+  left: 9px;
+  z-index: 99;
+}
+
+.preview-window {
+  background: #111827;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.preview-content {
+  flex-grow: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: #000;
+  min-width: 496px;
+  height: 310px;
+  /* add this so the mockup image scales properly */
+}
+
+.cookie-banner1 {
+  background: #fff;
+  color: #111;
+  padding: 7px;
+  border-radius: 3px;
+  max-width: 350px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  flex-direction: column;
+  max-width: 258px;
+  right: 13px;
+  bottom: 14px;
+  position: absolute;
+  max-height: 105px;
+}
+
+.cookie-title {
+  font-weight: 500;
+  font-style: Medium;
+  font-size: 13.97px;
+  line-height: 15.97px;
+  letter-spacing: 0%;
+  color: black;
+
+}
+
+.cookie-text {
+  font-size: 8px;
+  color: rgba(76, 74, 102, 1);
+  margin-bottom: 0.8rem;
+}
+
+.cookie-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+.cookie-actions button {
+  padding: 0.4rem 0.8rem;
+
+  border-radius: 3px;
+  font-size: 7.7px;
+  cursor: pointer;
+  border: 0px;
+}
+
+.btns-preferences {
+  background: rgba(201, 201, 201, 1);
+  color: black;
+}
+
+.btns-reject {
+  color: black;
+  background: rgba(201, 201, 201, 1);
+}
+
+.btns-accept {
+  color: white;
+  background: rgba(0, 0, 0, 1);
+}
+
+.consentbit-icon {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 99;
+}
