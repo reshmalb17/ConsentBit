@@ -4,7 +4,7 @@ import { ScriptCategory } from "../types/types";
 import { customCodeApi } from "../services/api";
 import { useScriptContext } from "../context/ScriptContext";
 import PulseAnimation from './PulseAnimation';
-import usePersistentState from '../hooks/usePersistentState';
+import { usePersistentState } from '../hooks/usePersistentState';
 import webflow from '../types/webflowtypes';
 
 const questionmark = new URL("../assets/blue question.svg", import.meta.url).href;
@@ -26,7 +26,8 @@ const tickmarkcopy = new URL("../assets/Vector 23.svg", import.meta.url).href;
 const Script: React.FC<{
     fetchScripts: boolean;
     setFetchScripts: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ fetchScripts, setFetchScripts }) => {
+    isWelcome?: boolean;
+}> = ({ fetchScripts, setFetchScripts ,isWelcome}) => {
     const { scripts, setScripts } = useScriptContext();
     
     // Debug scripts state changes
@@ -308,10 +309,16 @@ const Script: React.FC<{
 
     useEffect(() => {
         if (fetchScripts) {
-            fetchScriptData();
-            setFetchScripts(false);
+            const fetchDataAndResetFlag = async () => {
+                await fetchScriptData();
+                // Only reset the flag if not in welcome mode
+                if (!isWelcome) {
+                    setFetchScripts(false);
+                }
+            };
+            fetchDataAndResetFlag();
         }
-    }, [fetchScripts, fetchScriptData, setFetchScripts]);
+    }, [fetchScripts, fetchScriptData, setFetchScripts, isWelcome]);
 
     const handleSaveAll = async () => {
         setIsSaving(true);
@@ -597,7 +604,7 @@ const Script: React.FC<{
 
     return (
         <div className="container-script">
-            <div className="section back-color">
+          {!isWelcome && (   <div className="section back-color">
                 <div className="flexings">
                     <div>
                         <img src={sheild} alt="catogery image" />
@@ -619,7 +626,7 @@ const Script: React.FC<{
                         <a href="https://www.consentbit.com/help-document" target="_blank">Need help? See the docs <i><img src={uparrow} alt="uparrow" /></i></a>
                     </div>
                 </div>
-            </div>
+            </div>)}
 
             {scripts.length > 0 && (
                 <div className="line">
