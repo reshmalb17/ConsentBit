@@ -258,16 +258,9 @@ export const useBannerCreation = () => {
      console.log("=== GDPR BANNER CREATION START ===");
      setIsCreating(true);
      setShowLoading(true);
-     
-           // Add overall timeout for the entire process
-      const overallTimeout = setTimeout(() => {
-        console.error("GDPR banner creation timed out after 20 seconds");
-        setIsCreating(false);
-        setShowLoading(false);
-      }, 20000);
     
-    console.log("Creating GDPR banner with config:", config);
-    console.log("Language:", config.language);
+    console.log("Creating GDPR banner with config:", bannerStyles);
+    console.log("Language:", bannerLanguages.language);
     console.log("SkipCommonDiv:", skipCommonDiv);
     console.log("bannerAnimation object:", bannerAnimation);
     console.log("bannerAnimation.animation:", bannerAnimation.animation);
@@ -828,8 +821,10 @@ export const useBannerCreation = () => {
              });
              
              try {
-               console.log("Starting createCookiePreferences with timeout...");
-               const cookiePreferencesPromise = createCookiePreferences(
+               console.log("Starting createCookiePreferences...");
+               console.log("About to call createCookiePreferences function...");
+               
+               await createCookiePreferences(
                  ["essential", "analytics", "marketing", "preferences"],
                  bannerLanguages.language,
                  bannerStyles.color,
@@ -844,18 +839,62 @@ export const useBannerCreation = () => {
                  bannerStyles.secondbuttontext,
                  skipCommonDiv,
                  bannerToggleStates.toggleStates.disableScroll,
-                 bannerToggleStates.toggleStates.closebutton,
-                 bannerStyles.Font
+                 bannerToggleStates.toggleStates.closebutton,                
                );
                
-               const cookiePreferencesTimeout = new Promise((_, reject) => 
-                 setTimeout(() => reject(new Error("createCookiePreferences timeout after 15 seconds")), 15000)
-               );
-               
-               await Promise.race([cookiePreferencesPromise, cookiePreferencesTimeout]);
                console.log("createCookiePreferences completed successfully");
+               
+               // Display list of created DOM elements with IDs
+               console.log("=== CREATED DOM ELEMENTS WITH IDs ===");
+               try {
+                 const allElements = await webflow.getAllElements();
+                 const elementsWithIds = [];
+                 
+                 for (const element of allElements) {
+                   try {
+                     const domId = await element.getDomId?.();
+                     if (domId) {
+                       elementsWithIds.push({
+                         id: domId,
+                         element: element
+                       });
+                     }
+                   } catch (err) {
+                     // Skip elements that don't have getDomId method
+                   }
+                 }
+                 
+                 console.log("Total elements with DOM IDs:", elementsWithIds.length);
+                 elementsWithIds.forEach((item, index) => {
+                   console.log(`${index + 1}. DOM ID: "${item.id}"`);
+                 });
+                 
+                 // Show specific banner-related IDs
+                 const bannerIds = elementsWithIds.filter(item => 
+                   item.id.includes('consent') || 
+                   item.id.includes('banner') || 
+                   item.id.includes('preference') ||
+                   item.id.includes('toggle') ||
+                   item.id.includes('accept') ||
+                   item.id.includes('decline') ||
+                   item.id.includes('preferences')
+                 );
+                 
+                 if (bannerIds.length > 0) {
+                   console.log("=== BANNER-RELATED DOM ELEMENTS ===");
+                   bannerIds.forEach((item, index) => {
+                     console.log(`${index + 1}. Banner Element: "${item.id}"`);
+                   });
+                 }
+                 
+               } catch (error) {
+                 console.error("Error getting DOM elements:", error);
+               }
+               
              } catch (error) {
                console.error("Error in createCookiePreferences:", error);
+               console.error("Error details:", error.message);
+               console.error("Error stack:", error.stack);
                throw error;
              }
 
@@ -895,145 +934,9 @@ export const useBannerCreation = () => {
            }
          });
          
-         // Add the script directly to the page for immediate functionality
-         console.log("Adding GDPR script directly to page for immediate functionality...");
-         const scriptContent = `
-           (function () {
-             window.dataLayer = window.dataLayer || [];
-             function gtag() { dataLayer.push(arguments); }
-             
-             gtag('consent', 'default', {
-               'analytics_storage': 'denied',
-               'ad_storage': 'denied',
-               'ad_personalization': 'denied',
-               'ad_user_data': 'denied',
-               'personalization_storage': 'denied',
-               'functionality_storage': 'granted',
-               'security_storage': 'granted'
-             });
-             
-             function showBanner(banner) {
-               if (banner) {
-                 console.log('Showing banner:', banner.id);
-                 // Remove all conflicting styles and set to visible
-                 banner.style.removeProperty("display");
-                 banner.style.removeProperty("visibility");
-                 banner.style.removeProperty("opacity");
-                 banner.style.setProperty("display", "block", "important");
-                 banner.classList.add("show-banner");
-                 banner.classList.remove("hidden");
-                 console.log('Banner display after show:', banner.style.display);
-               }
-             }
-             
-             function hideBanner(banner) {
-               if (banner) {
-                 console.log('Hiding banner:', banner.id);
-                 // Only set display to none, don't set conflicting opacity/visibility
-                 banner.style.setProperty("display", "none", "important");
-                 banner.classList.remove("show-banner");
-                 banner.classList.add("hidden");
-                 console.log('Banner display after hide:', banner.style.display);
-               }
-             }
-             
-             // Set up event listeners when DOM is ready
-             document.addEventListener('DOMContentLoaded', function () {
-               console.log('DOM Content Loaded - Setting up event listeners');
-               
-               // Preferences button functionality
-               const preferencesBtn = document.getElementById('preferences-btn');
-               if (preferencesBtn) {
-                 console.log('Preferences button found, adding click listener');
-                 preferencesBtn.onclick = function (e) {
-                   e.preventDefault();
-                   console.log('Preferences button clicked');
-                   const mainBanner = document.getElementById("main-banner");
-                   console.log('Main banner element:', mainBanner);
-                   if (mainBanner) {
-                     console.log('Main banner current display:', mainBanner.style.display);
-                     showBanner(mainBanner);
-                     console.log('Main banner display after show:', mainBanner.style.display);
-                   } else {
-                     console.log('Main banner not found');
-                   }
-                 };
-               } else {
-                 console.log('Preferences button not found');
-               }
-               
-               // Accept button functionality
-               const acceptBtn = document.getElementById('accept-btn');
-               if (acceptBtn) {
-                 acceptBtn.onclick = function (e) {
-                   e.preventDefault();
-                   console.log('Accept button clicked');
-                   hideBanner(document.getElementById("consent-banner"));
-                   hideBanner(document.getElementById("main-banner"));
-                 };
-               }
-               
-               // Decline button functionality
-               const declineBtn = document.getElementById('decline-btn');
-               if (declineBtn) {
-                 declineBtn.onclick = function (e) {
-                   e.preventDefault();
-                   console.log('Decline button clicked');
-                   hideBanner(document.getElementById("consent-banner"));
-                   hideBanner(document.getElementById("main-banner"));
-                 };
-               }
-               
-               // Save preferences button functionality
-               const savePreferencesBtn = document.getElementById('save-preferences-btn');
-               if (savePreferencesBtn) {
-                 savePreferencesBtn.onclick = function (e) {
-                   e.preventDefault();
-                   console.log('Save preferences button clicked');
-                   hideBanner(document.getElementById("main-banner"));
-                 };
-               }
-               
-               // Cancel button functionality
-               const cancelBtn = document.getElementById('cancel-btn');
-               if (cancelBtn) {
-                 cancelBtn.onclick = function (e) {
-                   e.preventDefault();
-                   console.log('Cancel button clicked');
-                   hideBanner(document.getElementById("main-banner"));
-                   showBanner(document.getElementById("consent-banner"));
-                 };
-               }
-               
-               // Close button functionality
-               const closeButtons = document.querySelectorAll('[consentbit="close"]');
-               closeButtons.forEach(function (closeBtn) {
-                 closeBtn.onclick = function (e) {
-                   e.preventDefault();
-                   console.log('Close button clicked');
-                   const banners = [
-                     document.getElementById("consent-banner"),
-                     document.getElementById("main-banner"),
-                     document.getElementById("initial-consent-banner"),
-                     document.getElementById("main-consent-banner")
-                   ];
-                   banners.forEach(banner => {
-                     if (banner) hideBanner(banner);
-                   });
-                 };
-               });
-               
-               console.log('GDPR Banner script loaded and event listeners attached');
-             });
-           })();
-         `;
-         
-         // Create and add the script to the page
-         const scriptElement = document.createElement('script');
-         scriptElement.type = 'text/javascript';
-         scriptElement.textContent = scriptContent;
-         document.head.appendChild(scriptElement);
-         console.log("GDPR Script added directly to page for immediate functionality");
+        
+       
+       
          
        } catch (error) {
          console.error("Error applying analytics blocking script:", error);
@@ -1049,7 +952,6 @@ export const useBannerCreation = () => {
     } catch (error) {
       handleBannerError(error);
     } finally {
-      clearTimeout(overallTimeout);
       setIsCreating(false);
       setShowLoading(false);
     }
@@ -1485,8 +1387,8 @@ export const useBannerCreation = () => {
       });
       
       try {
-        console.log("Starting createCookieccpaPreferences with timeout...");
-        const ccpaPreferencesPromise = createCookieccpaPreferences(
+        console.log("Starting createCookieccpaPreferences...");
+        await createCookieccpaPreferences(
           bannerLanguages.language,
           bannerStyles.color,
           bannerStyles.btnColor,
@@ -1503,12 +1405,55 @@ export const useBannerCreation = () => {
           bannerStyles.Font
         );
         
-        const ccpaPreferencesTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("createCookieccpaPreferences timeout after 15 seconds")), 15000)
-        );
-        
-        await Promise.race([ccpaPreferencesPromise, ccpaPreferencesTimeout]);
         console.log("createCookieccpaPreferences completed successfully");
+        
+        // Display list of created DOM elements with IDs for CCPA
+        console.log("=== CCPA CREATED DOM ELEMENTS WITH IDs ===");
+        try {
+          const allElements = await webflow.getAllElements();
+          const elementsWithIds = [];
+          
+          for (const element of allElements) {
+            try {
+              const domId = await element.getDomId?.();
+              if (domId) {
+                elementsWithIds.push({
+                  id: domId,
+                  element: element
+                });
+              }
+            } catch (err) {
+              // Skip elements that don't have getDomId method
+            }
+          }
+          
+          console.log("Total CCPA elements with DOM IDs:", elementsWithIds.length);
+          elementsWithIds.forEach((item, index) => {
+            console.log(`${index + 1}. CCPA DOM ID: "${item.id}"`);
+          });
+          
+          // Show specific CCPA banner-related IDs
+          const ccpaBannerIds = elementsWithIds.filter(item => 
+            item.id.includes('consent') || 
+            item.id.includes('banner') || 
+            item.id.includes('preference') ||
+            item.id.includes('toggle') ||
+            item.id.includes('ccpa') ||
+            item.id.includes('initial') ||
+            item.id.includes('do-not-share')
+          );
+          
+          if (ccpaBannerIds.length > 0) {
+            console.log("=== CCPA BANNER-RELATED DOM ELEMENTS ===");
+            ccpaBannerIds.forEach((item, index) => {
+              console.log(`${index + 1}. CCPA Banner Element: "${item.id}"`);
+            });
+          }
+          
+        } catch (error) {
+          console.error("Error getting CCPA DOM elements:", error);
+        }
+        
       } catch (error) {
         console.error("Error in createCookieccpaPreferences:", error);
         throw error;

@@ -58,7 +58,7 @@ export const useAppState = () => {
   // Configuration states
   const [expires, setExpires] = usePersistentState("expires", "");
   const [size, setSize] = usePersistentState("size", "12");
-  const [Font, SetFont] = usePersistentState("Font", "");
+  const [Font, SetFont] = usePersistentState("font", "");
   const [weight, setWeight] = usePersistentState("weight", "semibold");
   const [borderRadius, setBorderRadius] = usePersistentState<number>("borderRadius", 16);
   const [buttonRadius, setButtonRadius] = usePersistentState<number>("buttonRadius", 2);
@@ -107,8 +107,8 @@ export const useAppState = () => {
   const userinfo = localStorage.getItem("wf_hybrid_user");
   const tokenss = JSON.parse(userinfo || '{}');
   //Aniamation states 
-  const [animation, setAnimation] = usePersistentState('animation', "Fade");
-  const [easing, setEasing] = usePersistentState('easing', "Ease");
+  const [animation, setAnimation] = usePersistentState('animation', "fade");
+  const [easing, setEasing] = usePersistentState('easing', "ease");
   const [language, setLanguage] = usePersistentState('language', "English");
   //Toggle States
    const [toggleStates, setToggleStates] = usePersistentState('toggleStates', {

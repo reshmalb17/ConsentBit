@@ -297,23 +297,38 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
 
       //divblock///////////////////////////////////////////////////////////////////
 
-      const prefrenceContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
-      if (!prefrenceContainer) {
-        throw new Error("Failed to create button container");
-      }
-      await prefrenceContainer.setStyles([prefrenceDiv]);
+             // Create the main banner container with class consentbit-preference
+       const mainBanner = await selectedElement.before(webflow.elementPresets.DivBlock);
+       if (!mainBanner) {
+         throw new Error("Failed to create main banner");
+       }
+       await mainBanner.setStyles([maindivs]);
 
-      const Maincontainer = await selectedElement.before(webflow.elementPresets.DivBlock);
-      if (!Maincontainer) {
-        throw new Error("Failed to create button container");
-      }
-      await Maincontainer.setStyles([maindivs]);
+       // Set DOM ID to main-banner
+       if ((mainBanner as any).setDomId) {
+         await (mainBanner as any).setDomId("main-banner");
+       } else {
+         console.error("setDomId method not available on main banner");
+       }
 
-    if ((Maincontainer as any).setDomId) {
-      await (Maincontainer as any).setDomId("main-banner");
-    } else {
-      console.error("setDomId method not available on accept button element");
-    }
+       // Create the preference div with class consentbit-preference_div
+       const preferenceDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+       if (!preferenceDiv) {
+         throw new Error("Failed to create preference div");
+       }
+       await preferenceDiv.setStyles([prefrenceDiv]);
+
+       // Set DOM ID to consentbit-preference_div
+       if ((preferenceDiv as any).setDomId) {
+         await (preferenceDiv as any).setDomId("consentbit-preference_div");
+       } else {
+         console.error("setDomId method not available on preference div");
+       }
+
+       // Append preference div to main banner
+       if (mainBanner.append && preferenceDiv) {
+         await mainBanner.append(preferenceDiv);
+       }
 
 
 
@@ -529,21 +544,21 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         console.error("❌ setDomId method not available on accept button element");
       }
 
-      if (Maincontainer.append && newDiv) {
-        await Maincontainer.append(newDiv);
-      }
+             if (mainBanner.append && newDiv) {
+         await mainBanner.append(newDiv);
+       }
 
-      if (newDiv.append && tempHeading && tempParagraph && buttonContainer && prefrenceContainer) {
-        await newDiv.append(tempHeading);
-        await newDiv.append(tempParagraph);
-        await newDiv.append(prefrenceContainer)
-        await newDiv.append(buttonContainer);
-        if (Closebuttons) await newDiv.append(Closebuttons)
+       if (newDiv.append && tempHeading && tempParagraph && buttonContainer && preferenceDiv) {
+         await newDiv.append(tempHeading);
+         await newDiv.append(tempParagraph);
+         await newDiv.append(preferenceDiv)
+         await newDiv.append(buttonContainer);
+         if (Closebuttons) await newDiv.append(Closebuttons)
 
-        if (prefrenceContainer.append && prefrenceContainerinner) {
-          // await prefrenceContainer.append(prefrenceContainertoggle)
-          await prefrenceContainer.append(prefrenceContainerinner)
-        }
+         if (preferenceDiv.append && prefrenceContainerinner) {
+           // await preferenceDiv.append(prefrenceContainertoggle)
+           await preferenceDiv.append(prefrenceContainerinner)
+         }
 
         if (prefrenceContainerinner.append && formBlock) {
           await prefrenceContainerinner.append(formBlock)
