@@ -2154,6 +2154,8 @@ body {
   font-family: 'DM Sans', sans-serif;
   width: 800px;
   overflow-x: hidden;
+  overflow-y: hidden;
+
 }
 
 .username {
@@ -2290,7 +2292,7 @@ h4 {
 }
 
 .subscribe a {
-  color: #8C8C9A;
+  color: rgba(140, 121, 255, 1)
 }
 
 .editimage {
@@ -2540,7 +2542,7 @@ img {
 .tabs {
   gap: 10px;
   /* margin-bottom: 20px; */
-  border-bottom: 1px solid #242137;
+  /* border-bottom: 1px solid #242137; */
   font-family: 'DM Sans', sans-serif;
   font-weight: 400;
   font-size: 12px;
@@ -2724,8 +2726,8 @@ input[type="number"]::-webkit-outer-spin-button {
   padding-bottom: 14px;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: 412px;
-  min-height: 412px;
+  max-height: 428px;
+  min-height: 428px;
   scrollbar-width: thin;
   scrollbar-color: #4a4a5d transparent;
   scroll-behavior: smooth;
@@ -3896,7 +3898,13 @@ input:checked+.toggle::before {
 .script-container {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
-
+.gotto-settings{
+      display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+    color: rgba(140, 121, 255, 1);
+    text-decoration: underline;
+}
 .fade-in {
   opacity: 1;
   transform: translateY(0);
@@ -4519,7 +4527,7 @@ input:checked+.toggle::before {
   justify-content: center;
   z-index: 9999;
   transition: opacity 0.3s ease-in-out;
-  backdrop-filter: blur(15.7px);
+  backdrop-filter: blur(62px);
   /* Add this line for background blur */
   background: rgba(0, 0, 0, 0.3);
 }
@@ -6755,8 +6763,8 @@ text-align: center;
 /* Welcome Screen Styles */
 .welcome-screen {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width:800px;
+  height: 600px;
   background-color: #0A081B;
   overflow: hidden;
   display: flex;
@@ -6841,11 +6849,12 @@ text-align: center;
 
 /* Header */
 .welcome-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 10;
-  position: relative;
+display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 10;
+    position: relative;
+    padding-right: 15px;
 }
 
 .welcome-logo {
@@ -7060,7 +7069,25 @@ letter-spacing: -3%;
 
 .setup-checkbox {
   display: none;
+}
 
+/* Create custom checkbox box */
+.custom-checkbox3 {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(110, 102, 157, 1);
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* Tick icon should fit nicely */
+.tick-icon3 {
+  width: 14px;
+  height: 14px;
 }
 
 .setup-checkmark {
@@ -7115,13 +7142,13 @@ position: absolute;
 
 .setup-back-btn {
   position: absolute;
-  top: 266px;
+  top: 275px;
   left: 190px;
   width:80px;
   height: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 3px;
   background: transparent;
   border: none;
   color: white;
@@ -7138,9 +7165,6 @@ position: absolute;
   transform: rotate(0deg);
 }
 
-.setup-back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
 
 .setup-back-btn img {
   width: 16px;
@@ -7162,7 +7186,7 @@ position: absolute;
   padding: 10px 51px;
   border-radius: 3px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.3s ease;
   opacity: 1;
@@ -7204,19 +7228,20 @@ top: auto;
 
 
 .setup-card {
-border: 1px solid #262E84;
+border: 1px solid rgba(38, 46, 132, 1);
     width: 250px;
-  border-radius: 12px;
+  border-radius: 8px;
   backdrop-filter: blur(10px);
   padding:12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background: rgba(20, 17, 40, 1);
 
 }
 
 .setup-card-info{
-  background: linear-gradient(135deg, #2C2840 0%, #403A60 100%);
+  background: linear-gradient(135deg, #100e1c 0%, #262140 100%);
   border :1px #000000;
   width : 80%;
   border-radius:12px;
@@ -7233,7 +7258,7 @@ border: 1px solid #262E84;
 
 
 .setup-card-title {
- color: #bc79ff;
+ color:rgba(140, 121, 255, 1);
 font-family: 'DM Sans', sans-serif;
 font-weight: 400;
 font-size: 12px;
@@ -7268,7 +7293,7 @@ letter-spacing: -0.36px;
   height: 16px;
   font-size: 12px;
   font-weight: 300;
-  gap: 2px;
+  gap: 7px;
 
 }
 .setup-card-img{
@@ -7288,16 +7313,31 @@ letter-spacing: -0.36px;
     left: 120px;
 }
 .setup-video-thumbnail {
- width: 100%;
-  height: 100%;
+width:99px;
+height:54px
 
+}
+
+.nextbutton{
+      background: #262e84;
+    width: 91px;
+    position: relative;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 100%;
+    letter-spacing: -3%;
+    border-radius: 5px;
 }
 .setup-card-info{
   display: flex;
   flex-direction: row;
   gap: 4px;
-  padding:12px;
-  background-color: #8C79FF;
+  padding:4px 12px 12px 12px;
   border-radius: 8px;
 }
 .setup-card-info-title{
@@ -7311,7 +7351,6 @@ letter-spacing: -3%;
 .setup-card-info-logo{
   width: 16px;
   height: 16px;
-  filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(200deg);
   flex-shrink: 0;
   margin-right: 4px;
 }
@@ -7397,7 +7436,6 @@ color: #ffffff;
 .setup-card-icon {
   width: 20px;
   height: 20px;
-  filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(200deg);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -7443,14 +7481,14 @@ color: #ffffff;
 .welcome-script-actions-container{
   position: absolute;
   width:96%;
-  left: -14px!important;
+  /* left: -14px!important; */
   top: 0;
 }
 .welcome-screen.script{
   position: relative; 
-  width: 100vw;
-  height: 100vh;
-  padding: 25px
+  /* width: 100vw;
+  height: 100vh; */
+  /* padding: 25px */
 }
 .setup-info-cards.welcome-script{
   position: relative;
@@ -7464,23 +7502,22 @@ color: #ffffff;
  left: 11px;
  bottom: 20px;;
  right: 20px;
- padding-left: 25px;
-  padding-right: 25px;
-  
+    padding-left: 7px;
+    padding-right: 7px;
 
 }
 .next-step-section{
-  width: 91%;
-  height: 50px;
-  position: relative;
-  bottom: 20px;
-  left: 50px;
-  right: 20px;
-  top: 11%;
-  display: flex;
-  flex-direction: row;
-  right: 20px;
-  gap: 16px;
+    width: 98%;
+    height: 50px;
+    position: relative;
+    bottom: 5px;
+    left: 17px;
+    right: 20px;
+    top: 11%;
+    display: flex;
+    flex-direction: row;
+    right: -5px;
+    gap: 16px;
 }
 .welcome-script-buttons{
   position: absolute;
@@ -7493,9 +7530,9 @@ color: #ffffff;
   position: absolute;
   font-size: 20px;
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
+/* 
+Responsive Design
+/* @media (max-width: 768px) {
   .setup-main-content {
     padding: 20px;
   }
@@ -7513,7 +7550,7 @@ color: #ffffff;
   .setup-card {
     padding: 20px;
   }
-}`, ""]);
+} */ `, ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -7636,6 +7673,202 @@ ___CSS_LOADER_EXPORT___.push([module.id, `.success-overlay {
     padding-top: 12px;
     padding-right: 9px;
     max-height: 209px;
+}`, ""]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/cjs.js!./src/style/welcomescript.css":
+/*!***************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js!./src/style/welcomescript.css ***!
+  \***************************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/noSourceMaps.js */ "./node_modules/css-loader/dist/runtime/noSourceMaps.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__);
+// Imports
+
+
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, `.ws-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 20px;
+}
+
+.ws-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 11px;
+}
+
+.ws-help-card {
+    display: flex;
+    align-items: flex-start;
+    background: rgba(33, 30, 57, 1);
+    max-height: 105px;
+    opacity: 1;
+    border: 1px solid rgba(38, 46, 132, 1);
+    background: rgba(20, 17, 40, 1);
+    padding: 10px;
+    border-radius: 8px;
+    min-width: 217px;
+    font-size: 12px;
+    flex-direction: column;
+}
+
+.ws-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(20, 17, 40, 1);
+    border-radius: 8px;
+    padding: 20px;
+    color: #fff;
+    max-height: 105px;
+    min-width: 454px;
+}
+
+.ws-info-icon img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.8;
+    margin-top: 4px;
+    /* align with text */
+}
+
+.ws-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ws-info-title {
+    font-size: 12px;
+    font-weight: 400;
+    margin: 0;
+    color: white;
+}
+
+.ws-info-subtitle {
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0;
+    color: #9a9bb3;
+}
+
+.ws-docs-link {
+    font-size: 12px;
+    color: rgba(140, 121, 255, 1);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ws-docs-link img {
+    width: 8.5px;
+    height: 8.5px;
+}
+
+.ws-card .ws-info-card {
+    display: flex;
+    flex-direction: row;
+}
+
+/* Help card specific */
+.ws-help-card .ws-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ws-help-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.ws-thumbnail {
+    width: 96px;
+    border-radius: 8px;
+}
+
+
+.ws-docs-link {
+    color: rgba(140, 121, 255, 1);
+    text-decoration: none;
+    font-size: 12px;
+}
+
+/* Scripts header */
+.ws-scripts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ws-scripts-title {
+    font-family: DM Sans;
+    font-weight: 400;
+    font-style: 9pt Regular;
+    font-size: 20px;
+    line-height: 100%;
+    letter-spacing: -3%;
+    color: white;
+}
+
+.ws-next-btn {
+    background: rgba(38, 46, 132, 1);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 3px;
+    border: none;
+    width: 91px;
+    cursor: pointer;
+}
+
+.ws-scripts-scroll {
+    max-height: 358px;
+    overflow-y: auto;
+    padding-right: 8px;
+    overflow-x: auto;
+    font-size: 14px;
+    width: 762px;
+    scrollbar-width: none;
+}
+
+.ws-card-title {
+    color: rgba(140, 121, 255, 1);
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.ws-popup {
+    position: fixed;
+    inset: 0;
+    /* background: rgba(0, 0, 0, 0.6); */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ws-popup-content {
+    background: rgba(10, 8, 27, 1);
+    padding: 20px;
+    border-radius: 12px;
+    width: 800px;
 }`, ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
@@ -42728,6 +42961,58 @@ var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js
 
 /***/ }),
 
+/***/ "./src/style/welcomescript.css":
+/*!*************************************!*\
+  !*** ./src/style/welcomescript.css ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/styleDomAPI.js */ "./node_modules/style-loader/dist/runtime/styleDomAPI.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/insertBySelector.js */ "./node_modules/style-loader/dist/runtime/insertBySelector.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js */ "./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/insertStyleElement.js */ "./node_modules/style-loader/dist/runtime/insertStyleElement.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/styleTagTransform.js */ "./node_modules/style-loader/dist/runtime/styleTagTransform.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_welcomescript_css__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! !!../../node_modules/css-loader/dist/cjs.js!./welcomescript.css */ "./node_modules/css-loader/dist/cjs.js!./src/style/welcomescript.css");
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+var options = {};
+
+options.styleTagTransform = (_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default());
+options.setAttributes = (_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default());
+options.insert = _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head");
+options.domAPI = (_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default());
+options.insertStyleElement = (_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default());
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_welcomescript_css__WEBPACK_IMPORTED_MODULE_6__["default"], options);
+
+
+
+
+       /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_welcomescript_css__WEBPACK_IMPORTED_MODULE_6__["default"] && _node_modules_css_loader_dist_cjs_js_welcomescript_css__WEBPACK_IMPORTED_MODULE_6__["default"].locals ? _node_modules_css_loader_dist_cjs_js_welcomescript_css__WEBPACK_IMPORTED_MODULE_6__["default"].locals : undefined);
+
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js":
 /*!****************************************************************************!*\
   !*** ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js ***!
@@ -43858,7 +44143,7 @@ const ConfirmPublish = ({ onGoBack, onProceed, }) => {
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" } },
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "pay-container" },
                                     " ",
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://billing.stripe.com/p/login/00gbIJclf5nz4Hm8ww", target: "_blank", rel: "noopener noreferrer", className: "pay-now-btn", style: { textDecoration: 'none', color: 'inherit' } }, "Pay now"),
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://billing.stripe.com/p/login/00gbIJclf5nz4Hm8ww", target: "_blank", rel: "noopener noreferrer", className: "pay-now-btn", style: { textDecoration: 'none' } }, "Pay now"),
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: arrow, alt: "" })))),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "note" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "note-star" }, "*"),
@@ -43872,7 +44157,7 @@ const ConfirmPublish = ({ onGoBack, onProceed, }) => {
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "global-error-content" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("text", null, "To continue, choose an element inside the page Body.")),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: crossmark, onClick: () => { setShowTooltip(false); tooltips.setFadeOut(false); }, alt: "" }))),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { onClick: handleCustomizeClick, className: "customize-link", style: { background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none', color: 'inherit' } },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { onClick: handleCustomizeClick, className: "customize-link", style: { background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none' } },
                         "Customize ",
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: arrow, alt: "" }))),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "publish-right" },
@@ -46491,6 +46776,7 @@ const uparrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/blu
 const line2 = new URL(/* asset import */ __webpack_require__(/*! ../assets/line.svg */ "./src/assets/line.svg"), __webpack_require__.b).href;
 const copyScript = new URL(/* asset import */ __webpack_require__(/*! ../assets/copy script.svg */ "./src/assets/copy script.svg"), __webpack_require__.b).href;
 const tickmarkcopy = new URL(/* asset import */ __webpack_require__(/*! ../assets/Vector 23.svg */ "./src/assets/Vector 23.svg"), __webpack_require__.b).href;
+const goto = new URL(/* asset import */ __webpack_require__(/*! ../assets/gotosetting.svg */ "./src/assets/gotosetting.svg"), __webpack_require__.b).href;
 const Script = ({ fetchScripts, setFetchScripts, isWelcome }) => {
     const { scripts, setScripts } = (0,_context_ScriptContext__WEBPACK_IMPORTED_MODULE_3__.useScriptContext)();
     // Debug scripts state changes
@@ -47022,14 +47308,12 @@ const Script = ({ fetchScripts, setFetchScripts, isWelcome }) => {
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "text-[12px] font-bold" }, script.category
                                     ? `Update the ${script.category.charAt(0).toUpperCase() + script.category.slice(1)} Script`
                                     : 'Unknown Script')),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "flex" },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: settings, alt: "settingsimage" }),
-                                (siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.shortName) ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: `https://webflow.com/dashboard/sites/${siteInfo.shortName}/custom-code`, target: "_blank", rel: "noopener noreferrer", className: "font-14 light", style: { cursor: 'pointer' } }, "Site Settings > Custom Code")) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "font-14 light" }, "Site Settings > Custom Code"))),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "flex" }),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "dismiss-btn", onClick: () => handleDismiss(index) },
                                 "  ",
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: dismiss, alt: "Dismiss icon", style: { marginRight: '8px' } }),
                                 "Dismiss")),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Select a category for this script, remove the current script, and add the updated script to the Site head:"),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Check categories \u2192 copy script \u2192 open the page to paste script"),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: line, alt: "lineimage" })),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "category-code-block" },
@@ -47045,10 +47329,16 @@ const Script = ({ fetchScripts, setFetchScripts, isWelcome }) => {
                                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "info", className: "tooltip-icon" }),
                                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "tooltip-text" }, "Categorize this script based on its purpose."))));
                                 })),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "code-block" },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "script-header" },
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("textarea", { value: script.fullTag || '', readOnly: true, className: `script-input ${copiedScriptIndex === index ? 'copied' : ''}`, rows: 8, placeholder: "Script content..." }),
-                                    copiedScriptIndex === index ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: tickmarkcopy, className: "copy-button", alt: "Copy icon" })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: copyScript, className: "copy-button", onClick: () => handleCopyScript(script.fullTag || '', index), alt: "Copy icon" })))))))))))));
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "code-block" },
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "script-header" },
+                                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("textarea", { value: script.fullTag || '', readOnly: true, className: `script-input ${copiedScriptIndex === index ? 'copied' : ''}`, rows: 8, placeholder: "Script content..." }),
+                                        copiedScriptIndex === index ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: tickmarkcopy, className: "copy-button", alt: "Copy icon" })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: copyScript, className: "copy-button", onClick: () => handleCopyScript(script.fullTag || '', index), alt: "Copy icon" })))),
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "gotto-settings" }, (siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.shortName) ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: `https://webflow.com/dashboard/sites/${siteInfo.shortName}/custom-code`, target: "_blank", rel: "noopener noreferrer", className: "font-14 light flex items-center gap-2", style: { cursor: "pointer", color: "rgba(140, 121, 255, 1)" } },
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Open the page to paste script"),
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: goto, alt: "", className: "w-4 h-4" }))) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "font-14 light" },
+                                    "Open the page to paste script ",
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: goto, alt: "" }))))))))))))));
         }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Script);
@@ -47078,6 +47368,9 @@ const confirmIcon = new URL(/* asset import */ __webpack_require__(/*! ../assets
 const arrowLeft = new URL(/* asset import */ __webpack_require__(/*! ../assets/arroww.svg */ "./src/assets/arroww.svg"), __webpack_require__.b).href;
 const arrowRight = new URL(/* asset import */ __webpack_require__(/*! ../assets/up arrow.svg */ "./src/assets/up arrow.svg"), __webpack_require__.b).href;
 const exclamationIcon = new URL(/* asset import */ __webpack_require__(/*! ../assets/warning-2.svg */ "./src/assets/warning-2.svg"), __webpack_require__.b).href;
+const whitearrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/→.svg */ "./src/assets/→.svg"), __webpack_require__.b).href;
+const tickmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/tickmark.svg */ "./src/assets/tickmark.svg"), __webpack_require__.b).href;
+const uparrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/blue up arrow.svg */ "./src/assets/blue up arrow.svg"), __webpack_require__.b).href;
 const SetupStep = ({ onGoBack, onProceed }) => {
     const [isConfirmed, setIsConfirmed] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [showConfirmPublish, setShowConfirmPublish] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -47086,8 +47379,8 @@ const SetupStep = ({ onGoBack, onProceed }) => {
     const questionmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/question.svg */ "./src/assets/question.svg"), __webpack_require__.b).href;
     const leftLines = new URL(/* asset import */ __webpack_require__(/*! ../assets/leftlines.svg */ "./src/assets/leftlines.svg"), __webpack_require__.b).href;
     const rightLines = new URL(/* asset import */ __webpack_require__(/*! ../assets/rightlines.svg */ "./src/assets/rightlines.svg"), __webpack_require__.b).href;
-    const youtubethumbnail = new URL(/* asset import */ __webpack_require__(/*! ../assets/youtube-thumbnail.svg */ "./src/assets/youtube-thumbnail.svg"), __webpack_require__.b).href;
     const infologo = new URL(/* asset import */ __webpack_require__(/*! ../assets/info-logo.svg */ "./src/assets/info-logo.svg"), __webpack_require__.b).href;
+    const youtubethumbnail = new URL(/* asset import */ __webpack_require__(/*! ../assets/thumbnail.svg */ "./src/assets/thumbnail.svg"), __webpack_require__.b).href;
     const onNeedHelp = () => {
         // Open help modal or redirect to help page
         window.open('https://www.consentbit.com/help-document', '_blank');
@@ -47110,10 +47403,12 @@ const SetupStep = ({ onGoBack, onProceed }) => {
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-checkbox-container" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { className: "setup-checkbox-label" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "checkbox", checked: isConfirmed, onChange: (e) => setIsConfirmed(e.target.checked), className: "setup-checkbox" }),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "setup-checkmark" })),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "setup-checkbox-text" }, "Confirm that you are added all scripts to the backend"))),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "custom-checkbox3" }, isConfirmed && react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: tickmark, alt: "checked", className: "tick-icon3" })),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "setup-checkbox-text" }, "Confirm that you added all scripts to the backend")))),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-navigation" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "setup-back-btn", onClick: onGoBack }, "\u2190 Go back"),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "setup-back-btn", onClick: onGoBack },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: whitearrow, alt: "" }),
+                        " Go back"),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "setup-proceed-btn", onClick: handleProceedToConfirmPublish, disabled: !isConfirmed }, "proceed to next step"))),
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-info-cards" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card" },
@@ -47126,7 +47421,8 @@ const SetupStep = ({ onGoBack, onProceed }) => {
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "Need help?", style: { width: "100%", height: "100%" } })),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "need-help-text" }, "Need help?")),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-youtube-thumbnail" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: youtubethumbnail, alt: "Tutorial Video", className: "setup-video-thumbnail" })))),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "", target: "_blank" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: youtubethumbnail, alt: "Tutorial Video", className: "setup-video-thumbnail" }))))),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-logo" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: infologo, alt: "Info", className: "setup-card-info-icon" })),
@@ -47137,7 +47433,7 @@ const SetupStep = ({ onGoBack, onProceed }) => {
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { className: "link", href: "#" },
                                 "Need help? See the docs ",
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("i", null,
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: "https://67c7218243770a3d2c39fb20.webflow-ext.com/689d09e47269fe2b0de4ee70/58620d0d66fe581478f9.svg", alt: "" }))))))))))));
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: uparrow, alt: "" }))))))))))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SetupStep);
 
@@ -47292,21 +47588,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _style_styless_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../style/styless.css */ "./src/style/styless.css");
+/* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../hooks/useAppState */ "./src/hooks/useAppState.ts");
 /* harmony import */ var _Script__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Script */ "./src/components/Script.tsx");
-/* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../hooks/useAppState */ "./src/hooks/useAppState.ts");
-/* harmony import */ var _SetupStep__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./SetupStep */ "./src/components/SetupStep.tsx");
+/* harmony import */ var _SetupStep__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./SetupStep */ "./src/components/SetupStep.tsx");
+/* harmony import */ var _style_welcomescript_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../style/welcomescript.css */ "./src/style/welcomescript.css");
 
 
 
 
 
-const youtubethumbnail = new URL(/* asset import */ __webpack_require__(/*! ../assets/youtube-thumbnail.svg */ "./src/assets/youtube-thumbnail.svg"), __webpack_require__.b).href;
 const infologo = new URL(/* asset import */ __webpack_require__(/*! ../assets/info-logo.svg */ "./src/assets/info-logo.svg"), __webpack_require__.b).href;
 const questionmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/question.svg */ "./src/assets/question.svg"), __webpack_require__.b).href;
+const uparrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/blue up arrow.svg */ "./src/assets/blue up arrow.svg"), __webpack_require__.b).href;
+const thumbnail = new URL(/* asset import */ __webpack_require__(/*! ../assets/thumbnail.svg */ "./src/assets/thumbnail.svg"), __webpack_require__.b).href;
 const WelcomeScipt = ({ isFetchScripts, setFetchScripts }) => {
     console.log("isFetchScripts prop in WelcomeScript:", isFetchScripts);
-    const { bannerBooleans, popups } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_3__.useAppState)();
+    const { bannerBooleans, popups } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_1__.useAppState)();
     const handleNextButton = () => {
         popups.setShowPopupWelcomeSetup(true);
     };
@@ -47317,40 +47614,37 @@ const WelcomeScipt = ({ isFetchScripts, setFetchScripts }) => {
         popups.setShowPopupWelcomeSetup(false);
         popups.setShowSetUpStep(true);
     };
-    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-screen script" },
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-info-cards welcome-script" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-top" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-title" }, "Facing any issues?"),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-content" }, "Check our tutorial video to help yourself")),
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-bottom" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-help" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-img" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "Need help?", style: { width: "100%", height: "100%" } })),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "need-help-text" }, "Need help?")),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-youtube-thumbnail" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: youtubethumbnail, alt: "Tutorial Video", className: "setup-video-thumbnail" })))),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-logo" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: infologo, alt: "Info", className: "setup-card-info-icon" })),
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-text" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "setup-card-info-title" }, "Update the scripts in your project that handle cookie creation"),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "setup-card-info-subtitle" }, "Check your project scripts for any that create cookies. Organize them, replace with our snippet, and follow our tutorial to streamline your workflow."),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "subscribe help" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { className: "link", href: "#" },
-                            "Need help? See the docs ",
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("i", null,
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: "https://67c7218243770a3d2c39fb20.webflow-ext.com/689d09e47269fe2b0de4ee70/58620d0d66fe581478f9.svg", alt: "" }))))))),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "next-step-section" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-script-title" }, "List of scripts to update"),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-script-buttons" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-buttons", onClick: handleNextButton }, "Next"))),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-script-actions" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-script-actions-container" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Script__WEBPACK_IMPORTED_MODULE_2__["default"], { fetchScripts: isFetchScripts, setFetchScripts: setFetchScripts, isWelcome: true }))),
-        popups.showPopupWelcomeSetup && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-loading-content" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SetupStep__WEBPACK_IMPORTED_MODULE_4__["default"], { onGoBack: handleGoBack, onProceed: handleProceed }))))));
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-container" },
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-info-grid" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-help-card" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { display: "flex" } },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-card-header" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", { className: "ws-card-title" }, "Facing any issues?"),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "ws-card-desc" }, "Check our tutorial video to help yourself")),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://vimeo.com/1112446810?share=copy", target: "_blank" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: thumbnail, alt: "Tutorial Video", className: "ws-thumbnail" })))),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-card-footer" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-help-link" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { style: { width: "18px" }, src: questionmark, alt: "Help", className: "ws-help-icon" }),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Need help?")))),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-card ws-info-card" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-info-icon" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: infologo, alt: "Info" })),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-info-text" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", { className: "ws-info-title" }, "Update the scripts in your project that handle cookie creation"),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "ws-info-subtitle" }, "Check your project scripts for any that create cookies. Organize them, replace with our snippet, and follow our tutorial to streamline your workflow."),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { target: "_blank", className: "ws-docs-link" },
+                        "Need help? See the docs ",
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: uparrow, alt: "\u2197" }))))),
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-scripts-header" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", { className: "ws-scripts-title" }, "List of scripts to update"),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "ws-next-btn", onClick: handleNextButton }, "Next")),
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-scripts-scroll" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Script__WEBPACK_IMPORTED_MODULE_2__["default"], { fetchScripts: isFetchScripts, setFetchScripts: setFetchScripts, isWelcome: true })),
+        popups.showPopupWelcomeSetup && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-popup" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-popup-content" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SetupStep__WEBPACK_IMPORTED_MODULE_3__["default"], { onGoBack: handleGoBack, onProceed: handleProceed }))))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (WelcomeScipt);
 
@@ -47550,6 +47844,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+// import { aw } from 'framer-motion/dist/types.d-6pKw1mTI';
 
 const ccpaTranslations = {
     English: {
@@ -51735,6 +52030,16 @@ module.exports = __webpack_require__.p + "68a1fe2d8c3940dbf237.svg";
 
 /***/ }),
 
+/***/ "./src/assets/gotosetting.svg":
+/*!************************************!*\
+  !*** ./src/assets/gotosetting.svg ***!
+  \************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+module.exports = __webpack_require__.p + "723b479f197937731279.svg";
+
+/***/ }),
+
 /***/ "./src/assets/group.svg":
 /*!******************************!*\
   !*** ./src/assets/group.svg ***!
@@ -51895,6 +52200,16 @@ module.exports = __webpack_require__.p + "e1e9028fefd1f05424b9.jpg";
 
 /***/ }),
 
+/***/ "./src/assets/thumbnail.svg":
+/*!**********************************!*\
+  !*** ./src/assets/thumbnail.svg ***!
+  \**********************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+module.exports = __webpack_require__.p + "e32e0a567c4ca83597c9.svg";
+
+/***/ }),
+
 /***/ "./src/assets/tick-square catogeries.svg":
 /*!***********************************************!*\
   !*** ./src/assets/tick-square catogeries.svg ***!
@@ -51972,16 +52287,6 @@ module.exports = __webpack_require__.p + "6aa4268a6271822d7446.svg";
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 module.exports = __webpack_require__.p + "d455a62719b31d412041.svg";
-
-/***/ }),
-
-/***/ "./src/assets/youtube-thumbnail.svg":
-/*!******************************************!*\
-  !*** ./src/assets/youtube-thumbnail.svg ***!
-  \******************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "8ec0581b2845c3f611c0.svg";
 
 /***/ }),
 

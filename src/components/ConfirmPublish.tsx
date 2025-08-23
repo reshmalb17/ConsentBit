@@ -29,7 +29,7 @@ type ConfirmPublishProps = {
   onProceed: () => void;
 };
 
-const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }) => {
+const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed, }) => {
   const [isConfirmed, setIsConfirmed] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -37,39 +37,39 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
   const [showCustomize, setShowCustomize] = useState(false);
 
   const {
-        bannerStyles,
-        bannerUI,
-        bannerConfig,
-        bannerBooleans,
-        popups,
-        tooltips,
-        siteData,
-        buttons,
-        bannerAnimation,
-        bannerToggleStates,
-        bannerLanguages,
-        localStorage: localStorageData
-      } = useAppState();
-      const {user, exchangeAndVerifyIdToken } = useAuth();
-  const { 
-    createGDPRBanner, 
-    createCCPABanner, 
-    createBothBanners, 
-    isCreating, 
-    showLoading, 
+    bannerStyles,
+    bannerUI,
+    bannerConfig,
+    bannerBooleans,
+    popups,
+    tooltips,
+    siteData,
+    buttons,
+    bannerAnimation,
+    bannerToggleStates,
+    bannerLanguages,
+    localStorage: localStorageData
+  } = useAppState();
+  const { user, exchangeAndVerifyIdToken } = useAuth();
+  const {
+    createGDPRBanner,
+    createCCPABanner,
+    createBothBanners,
+    isCreating,
+    showLoading,
     showSuccess,
     showSuccessPublish,
     handleSuccessPublishProceed,
     handleSuccessPublishGoBack
   } = useBannerCreation();
-  
+
 
   const handlePublishClick = async () => {
     console.log("handlePublishClick called");
     console.log("isConfirmed:", isConfirmed);
     console.log("user:", user);
     console.log("isUserValid:", user?.firstName);
-    
+
     const isUserValid = user?.firstName;
     try {
       const selectedElement = await webflow.getSelectedElement() as { type?: string };
@@ -78,7 +78,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
 
       if (isUserValid && !isInvalidElement) {
         tooltips.setShowTooltip(false);
-        
+
         // Create banner configuration using actual state values
         const config: BannerConfig = {
           color: bannerStyles.color,
@@ -108,7 +108,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
 
         console.log("Creating banners with config:", config);
         console.log("Selected options:", bannerUI.selectedOptions);
-        
+
         // Create banners based on user selection - Default to both banners
         if (bannerUI.selectedOptions.includes("GDPR") && bannerUI.selectedOptions.includes("U.S. State Laws")) {
           console.log("Creating both banners");
@@ -124,7 +124,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
           // Default to both banners
           await createBothBanners(config);
         }
-        
+
         popups.setShowPopup(true);
       } else {
         popups.setShowPopup(false);
@@ -149,7 +149,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
     setShowCustomize(false);
   };
 
-    // If showCustomize is true, render the CustomizationTab component
+  // If showCustomize is true, render the CustomizationTab component
   if (showCustomize) {
     return <CustomizationTab onAuth={handleBackFromCustomize} />;
   }
@@ -163,10 +163,10 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
           onGoBack={handleSuccessPublishGoBack}
         />
       )}
-      
+
       {/* Loading overlay with pulse animation */}
       {isCreating && (
-         <div className="popup">
+        <div className="popup">
           <div className="popup-loading-content">
             <PulseAnimation />
             <p className="popup-message">
@@ -175,7 +175,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
           </div>
         </div>
       )}
-      
+
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "flex-end" }}><NeedHelp /></div>
         {/* LEFT COLUMN */}
@@ -208,7 +208,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
                           .then(() => {
                             console.log("Text copied to clipboard");
                             setTimeout(() => {
-                              img.style.opacity = "0.7"; 
+                              img.style.opacity = "0.7";
                             }, 300);
                           })
                           .catch(() => {
@@ -226,7 +226,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
                   </div>
                 </div>
 
-                <div style={{ width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" }}><div className="pay-container"> <a href="https://billing.stripe.com/p/login/00gbIJclf5nz4Hm8ww" target="_blank" rel="noopener noreferrer" className="pay-now-btn" style={{ textDecoration: 'none', color: 'inherit' }}>Pay now</a><img src={arrow} alt="" /></div></div>
+                <div style={{ width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" }}><div className="pay-container"> <a href="https://billing.stripe.com/p/login/00gbIJclf5nz4Hm8ww" target="_blank" rel="noopener noreferrer" className="pay-now-btn" style={{ textDecoration: 'none' }}>Pay now</a><img src={arrow} alt="" /></div></div>
               </div>
 
 
@@ -238,28 +238,28 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
                 </p>
               </div>
 
-                                                           <button
-                  className="publish-btn"
-                  disabled={!isConfirmed || isCreating}
-                  onClick={() => {
-                    console.log("Button clicked, isConfirmed:", isConfirmed);
-                    handlePublishClick();
-                  }}
-                >
-                  {isCreating ? "Creating..." : "Publish"}
-                </button>
+              <button
+                className="publish-btn"
+                disabled={!isConfirmed || isCreating}
+                onClick={() => {
+                  console.log("Button clicked, isConfirmed:", isConfirmed);
+                  handlePublishClick();
+                }}
+              >
+                {isCreating ? "Creating..." : "Publish"}
+              </button>
             </div>
-                 {showTooltip && (
-        <div className={`global-error-banner ${tooltips.fadeOut ? 'fade-out' : 'fade-in'}`}>
-          <img src={errorsheild} alt="errorsheild" />
-          <div className="global-error-content">
-            <text>To continue, choose an element inside the page Body.</text>
-          </div>
-          <img src={crossmark} onClick={() => { setShowTooltip(false); tooltips.setFadeOut(false); }} alt="" />
-        </div>
-      )}
+            {showTooltip && (
+              <div className={`global-error-banner ${tooltips.fadeOut ? 'fade-out' : 'fade-in'}`}>
+                <img src={errorsheild} alt="errorsheild" />
+                <div className="global-error-content">
+                  <text>To continue, choose an element inside the page Body.</text>
+                </div>
+                <img src={crossmark} onClick={() => { setShowTooltip(false); tooltips.setFadeOut(false); }} alt="" />
+              </div>
+            )}
 
-            <button onClick={handleCustomizeClick} className="customize-link" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
+            <button onClick={handleCustomizeClick} className="customize-link" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none' }}>
               Customize <img src={arrow} alt="" />
             </button>
           </div>
