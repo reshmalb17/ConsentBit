@@ -6,6 +6,7 @@ import createCookiePreferences from './gdprPreference';
 import createCookieccpaPreferences from './ccpaPreference';
 import { CodeApplication } from '../types/types';
 import pkg from '../../package.json';
+import { useAppState } from './useAppState';
 
 const appVersion = pkg.version;
 
@@ -139,6 +140,17 @@ export const useBannerCreation = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showSuccessPublish, setShowSuccessPublish] = useState(false);
+    const {
+        bannerStyles,
+        bannerUI,
+        bannerConfig,
+        bannerBooleans,
+        popups,
+        bannerAnimation,
+        bannerToggleStates,
+        bannerLanguages,
+    } = useAppState();
 
   const handleBannerSuccess = () => {
     setShowSuccess(true);
@@ -152,19 +164,35 @@ export const useBannerCreation = () => {
     webflow.notify({ type: "error", message: "An error occurred while creating the banner." });
   };
 
+  const handleSuccessPublishProceed = () => {
+    setShowSuccessPublish(false);
+    // Add any additional logic for proceeding from success page
+  };
+
+  const handleSuccessPublishGoBack = () => {
+    setShowSuccessPublish(false);
+    // Add any additional logic for going back from success page
+  };
+
   const fetchAnalyticsBlockingsScripts = async () => {
+    console.log("Starting V1 analytics blocking script registration...");
     try {
       const token = getSessionTokenFromLocalStorage();
       if (!token) {
         throw new Error("No token available");
       }
+      console.log("Token retrieved successfully");
 
       const siteIdinfo = await webflow.getSiteInfo();
+      console.log("Site info retrieved:", siteIdinfo);
+      
       const hostingScript = await customCodeApi.registerAnalyticsBlockingScript(token);
+      console.log("V1 analytics blocking script registered:", hostingScript);
 
       if (hostingScript) {
         const scriptId = hostingScript.result.id;
         const version = hostingScript.result.version;
+        console.log("Script ID:", scriptId, "Version:", version);
 
         const params: CodeApplication = {
           targetType: 'site',
@@ -174,26 +202,37 @@ export const useBannerCreation = () => {
           version: version
         };
         
+        console.log("Applying V1 script with params:", params);
         await customCodeApi.applyScript(params, token);
+        console.log("V1 analytics blocking script applied successfully");
+      } else {
+        console.log("No hosting script returned from registration");
       }
     } catch (error) {
       console.error("Error in fetchAnalyticsBlockingsScripts:", error);
+      throw error;
     }
   };
 
   const fetchAnalyticsBlockingsScriptsV2 = async () => {
+    console.log("Starting V2 analytics blocking script registration...");
     try {
       const token = getSessionTokenFromLocalStorage();
       if (!token) {
         throw new Error("No token available");
       }
+      console.log("Token retrieved successfully");
 
       const siteIdinfo = await webflow.getSiteInfo();
+      console.log("Site info retrieved:", siteIdinfo);
+      
       const hostingScript = await customCodeApi.registerV2BannerCustomCode(token);
+      console.log("V2 analytics blocking script registered:", hostingScript);
 
       if (hostingScript) {
         const scriptId = hostingScript.result.id;
         const version = hostingScript.result.version;
+        console.log("Script ID:", scriptId, "Version:", version);
 
         const params: CodeApplication = {
           targetType: 'site',
@@ -203,10 +242,15 @@ export const useBannerCreation = () => {
           version: version
         };
         
+        console.log("Applying V2 script with params:", params);
         await customCodeApi.applyV2Script(params, token);
+        console.log("V2 analytics blocking script applied successfully");
+      } else {
+        console.log("No hosting script returned from V2 registration");
       }
     } catch (error) {
       console.error("Error in fetchAnalyticsBlockingsScriptsV2:", error);
+      throw error;
     }
   };
 
@@ -225,6 +269,8 @@ export const useBannerCreation = () => {
     console.log("Creating GDPR banner with config:", config);
     console.log("Language:", config.language);
     console.log("SkipCommonDiv:", skipCommonDiv);
+    console.log("bannerAnimation object:", bannerAnimation);
+    console.log("bannerAnimation.animation:", bannerAnimation.animation);
     
     try {
       console.log("Starting GDPR banner creation process...");
@@ -318,15 +364,9 @@ export const useBannerCreation = () => {
         secondBackgroundStyle, closebutton
       ] = styles;
 
-      const animationAttributeMap = {
-        "fade": "fade",
-        "slide-up": "slide-up",
-        "slide-down": "slide-down",
-        "slide-left": "slide-left",
-        "slide-right": "slide-right",
-        "select": "select",
-      };
-      const animationAttribute = animationAttributeMap[config.animation] || "";
+      
+      const animationAttribute = bannerAnimation.animation || "fade";
+      console.log("GDPR animationAttribute value:", animationAttribute);
 
       const divPropertyMap: Record<string, string> = {
         "background-color": config.color,
@@ -551,20 +591,25 @@ export const useBannerCreation = () => {
          console.log("newDiv.setStyles not available");
        }
 
-               console.log("Setting custom attributes...");
-        if (newDiv.setCustomAttribute) {
-          console.log("Setting data-animation attribute:", animationAttribute? animationAttribute : "none");
-          try {
-            const animationPromise = newDiv.setCustomAttribute("data-animation", animationAttribute);
-            const animationTimeout = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error("Animation attribute timeout")), 5000)
-            );
-            await Promise.race([animationPromise, animationTimeout]);
-            console.log("data-animation attribute set successfully");
-          } catch (error) {
-            console.error("Error setting data-animation attribute:", error);
-            throw error;
-          }
+                               console.log("Setting custom attributes...");
+         if (newDiv.setCustomAttribute) {
+           // Only set animation attribute if it has a valid value
+           if (animationAttribute && animationAttribute.trim() !== "") {
+             console.log("Setting data-animation attribute:", animationAttribute);
+             try {
+               const animationPromise = newDiv.setCustomAttribute("data-animation", animationAttribute);
+               const animationTimeout = new Promise((_, reject) => 
+                 setTimeout(() => reject(new Error("Animation attribute timeout")), 5000)
+               );
+               await Promise.race([animationPromise, animationTimeout]);
+               console.log("data-animation attribute set successfully");
+             } catch (error) {
+               console.error("Error setting data-animation attribute:", error);
+               throw error;
+             }
+           } else {
+             console.log("Skipping data-animation attribute - no valid animation value");
+           }
           
           console.log("Setting data-cookie-banner attribute:", config.toggleStates.disableScroll ? "true" : "false");
           try {
@@ -762,30 +807,238 @@ export const useBannerCreation = () => {
         });
       }
 
-      await createCookiePreferences(
-        ["essential", "analytics", "marketing", "preferences"],
-        config.language,
-        config.color,
-        config.btnColor,
-        config.headColor,
-        config.paraColor,
-        config.secondcolor,
-        config.buttonRadius,
-        config.animation,
-        config.toggleStates.customToggle,
-        config.primaryButtonText,
-        config.secondbuttontext,
-        skipCommonDiv,
-        config.toggleStates.disableScroll,
-        config.toggleStates.closebutton,
-        config.Font
-      );
+             console.log("=== CALLING createCookiePreferences ===");
+             console.log("Parameters:", {
+               selectedPreferences: ["essential", "analytics", "marketing", "preferences"],
+               language: bannerLanguages.language,
+               color: bannerStyles.color,
+               btnColor: bannerStyles.btnColor,
+               headColor: bannerStyles.headColor,
+               paraColor: bannerStyles.paraColor,
+               secondcolor: bannerStyles.secondcolor,
+               buttonRadius: bannerConfig.buttonRadius,
+               animation: bannerAnimation.animation,
+               customToggle: bannerToggleStates.toggleStates.customToggle,
+               primaryButtonText: bannerStyles.primaryButtonText,
+               secondbuttontext: bannerStyles.secondbuttontext,
+               skipCommonDiv,
+               disableScroll: bannerToggleStates.toggleStates.disableScroll,
+               closebutton: bannerToggleStates.toggleStates.closebutton,
+               donotshare: bannerToggleStates.toggleStates.donotshare ? "true" : "false"
+             });
+             
+             try {
+               console.log("Starting createCookiePreferences with timeout...");
+               const cookiePreferencesPromise = createCookiePreferences(
+                 ["essential", "analytics", "marketing", "preferences"],
+                 bannerLanguages.language,
+                 bannerStyles.color,
+                 bannerStyles.btnColor,
+                 bannerStyles.headColor,
+                 bannerStyles.paraColor,
+                 bannerStyles.secondcolor,
+                 bannerConfig.buttonRadius,
+                 bannerAnimation.animation,
+                 bannerToggleStates.toggleStates.customToggle,
+                 bannerStyles.primaryButtonText,
+                 bannerStyles.secondbuttontext,
+                 skipCommonDiv,
+                 bannerToggleStates.toggleStates.disableScroll,
+                 bannerToggleStates.toggleStates.closebutton,
+                 bannerStyles.Font
+               );
+               
+               const cookiePreferencesTimeout = new Promise((_, reject) => 
+                 setTimeout(() => reject(new Error("createCookiePreferences timeout after 15 seconds")), 15000)
+               );
+               
+               await Promise.race([cookiePreferencesPromise, cookiePreferencesTimeout]);
+               console.log("createCookiePreferences completed successfully");
+             } catch (error) {
+               console.error("Error in createCookiePreferences:", error);
+               throw error;
+             }
 
-      if (appVersion === '1.0.0') {
-        await fetchAnalyticsBlockingsScripts();
-      } else {
-        await fetchAnalyticsBlockingsScriptsV2();
-      }
+      console.log("=== ANALYTICS BLOCKING SCRIPT PHASE ===");
+      console.log("Current app version:", appVersion);
+      try {
+        if (appVersion === '1.0.0') {
+          console.log("Using V1 analytics blocking script...");
+          await fetchAnalyticsBlockingsScripts();
+          console.log("V1 analytics blocking script applied successfully");
+        } else {
+          console.log("Using V2 analytics blocking script...");
+          await fetchAnalyticsBlockingsScriptsV2();
+          console.log("V2 analytics blocking script applied successfully");
+        }
+        
+        // Add a delay to ensure script is loaded
+        console.log("Waiting for script to load...");
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log("Script loading delay completed");
+        
+        // Check if the script is loaded
+        const scripts = document.querySelectorAll('script[src*="consent"]');
+        console.log("Found consent scripts:", scripts.length);
+        scripts.forEach((script, index) => {
+          const scriptElement = script as HTMLScriptElement;
+          console.log(`Script ${index}:`, scriptElement.src);
+        });
+        
+                 // Check if the script is loaded in the head
+         const headScripts = document.head.querySelectorAll('script');
+         console.log("Total scripts in head:", headScripts.length);
+         headScripts.forEach((script, index) => {
+           const scriptElement = script as HTMLScriptElement;
+           if (scriptElement.src && scriptElement.src.includes('consent')) {
+             console.log(`Consent script ${index} in head:`, scriptElement.src);
+           }
+         });
+         
+         // Add the script directly to the page for immediate functionality
+         console.log("Adding GDPR script directly to page for immediate functionality...");
+         const scriptContent = `
+           (function () {
+             window.dataLayer = window.dataLayer || [];
+             function gtag() { dataLayer.push(arguments); }
+             
+             gtag('consent', 'default', {
+               'analytics_storage': 'denied',
+               'ad_storage': 'denied',
+               'ad_personalization': 'denied',
+               'ad_user_data': 'denied',
+               'personalization_storage': 'denied',
+               'functionality_storage': 'granted',
+               'security_storage': 'granted'
+             });
+             
+             function showBanner(banner) {
+               if (banner) {
+                 console.log('Showing banner:', banner.id);
+                 // Remove all conflicting styles and set to visible
+                 banner.style.removeProperty("display");
+                 banner.style.removeProperty("visibility");
+                 banner.style.removeProperty("opacity");
+                 banner.style.setProperty("display", "block", "important");
+                 banner.classList.add("show-banner");
+                 banner.classList.remove("hidden");
+                 console.log('Banner display after show:', banner.style.display);
+               }
+             }
+             
+             function hideBanner(banner) {
+               if (banner) {
+                 console.log('Hiding banner:', banner.id);
+                 // Only set display to none, don't set conflicting opacity/visibility
+                 banner.style.setProperty("display", "none", "important");
+                 banner.classList.remove("show-banner");
+                 banner.classList.add("hidden");
+                 console.log('Banner display after hide:', banner.style.display);
+               }
+             }
+             
+             // Set up event listeners when DOM is ready
+             document.addEventListener('DOMContentLoaded', function () {
+               console.log('DOM Content Loaded - Setting up event listeners');
+               
+               // Preferences button functionality
+               const preferencesBtn = document.getElementById('preferences-btn');
+               if (preferencesBtn) {
+                 console.log('Preferences button found, adding click listener');
+                 preferencesBtn.onclick = function (e) {
+                   e.preventDefault();
+                   console.log('Preferences button clicked');
+                   const mainBanner = document.getElementById("main-banner");
+                   console.log('Main banner element:', mainBanner);
+                   if (mainBanner) {
+                     console.log('Main banner current display:', mainBanner.style.display);
+                     showBanner(mainBanner);
+                     console.log('Main banner display after show:', mainBanner.style.display);
+                   } else {
+                     console.log('Main banner not found');
+                   }
+                 };
+               } else {
+                 console.log('Preferences button not found');
+               }
+               
+               // Accept button functionality
+               const acceptBtn = document.getElementById('accept-btn');
+               if (acceptBtn) {
+                 acceptBtn.onclick = function (e) {
+                   e.preventDefault();
+                   console.log('Accept button clicked');
+                   hideBanner(document.getElementById("consent-banner"));
+                   hideBanner(document.getElementById("main-banner"));
+                 };
+               }
+               
+               // Decline button functionality
+               const declineBtn = document.getElementById('decline-btn');
+               if (declineBtn) {
+                 declineBtn.onclick = function (e) {
+                   e.preventDefault();
+                   console.log('Decline button clicked');
+                   hideBanner(document.getElementById("consent-banner"));
+                   hideBanner(document.getElementById("main-banner"));
+                 };
+               }
+               
+               // Save preferences button functionality
+               const savePreferencesBtn = document.getElementById('save-preferences-btn');
+               if (savePreferencesBtn) {
+                 savePreferencesBtn.onclick = function (e) {
+                   e.preventDefault();
+                   console.log('Save preferences button clicked');
+                   hideBanner(document.getElementById("main-banner"));
+                 };
+               }
+               
+               // Cancel button functionality
+               const cancelBtn = document.getElementById('cancel-btn');
+               if (cancelBtn) {
+                 cancelBtn.onclick = function (e) {
+                   e.preventDefault();
+                   console.log('Cancel button clicked');
+                   hideBanner(document.getElementById("main-banner"));
+                   showBanner(document.getElementById("consent-banner"));
+                 };
+               }
+               
+               // Close button functionality
+               const closeButtons = document.querySelectorAll('[consentbit="close"]');
+               closeButtons.forEach(function (closeBtn) {
+                 closeBtn.onclick = function (e) {
+                   e.preventDefault();
+                   console.log('Close button clicked');
+                   const banners = [
+                     document.getElementById("consent-banner"),
+                     document.getElementById("main-banner"),
+                     document.getElementById("initial-consent-banner"),
+                     document.getElementById("main-consent-banner")
+                   ];
+                   banners.forEach(banner => {
+                     if (banner) hideBanner(banner);
+                   });
+                 };
+               });
+               
+               console.log('GDPR Banner script loaded and event listeners attached');
+             });
+           })();
+         `;
+         
+         // Create and add the script to the page
+         const scriptElement = document.createElement('script');
+         scriptElement.type = 'text/javascript';
+         scriptElement.textContent = scriptContent;
+         document.head.appendChild(scriptElement);
+         console.log("GDPR Script added directly to page for immediate functionality");
+         
+       } catch (error) {
+         console.error("Error applying analytics blocking script:", error);
+         throw error;
+       }
 
              console.log("GDPR banner creation completed, setting success timeout...");
        setTimeout(() => {
@@ -809,6 +1062,8 @@ export const useBannerCreation = () => {
     
     console.log("Creating CCPA banner with config:", config);
     console.log("Language:", config.language);
+    console.log("CCPA bannerAnimation object:", bannerAnimation);
+    console.log("CCPA bannerAnimation.animation:", bannerAnimation.animation);
     
     try {
       // Cleanup existing banners
@@ -873,18 +1128,12 @@ export const useBannerCreation = () => {
         Linktext, innerDivStyle, secondBackgroundStyle, closebutton
       ] = styles;
 
-      const animationAttributeMap = {
-        "fade": "fade",
-        "slide-up": "slide-up",
-        "slide-down": "slide-down",
-        "slide-left": "slide-left",
-        "slide-right": "slide-right",
-        "select": "select",
-      };
-      const animationAttribute = animationAttributeMap[config.animation] || "";
+      
+      const animationAttribute = bannerAnimation.animation || "fade";
+      console.log("CCPA animationAttribute value:", animationAttribute);
 
       const divPropertyMap: Record<string, string> = {
-        "background-color": config.color,
+        "background-color":bannerStyles.color,
         "position": "fixed",
         "z-index": "99999",
         "padding-top": "20px",
@@ -1060,10 +1309,38 @@ export const useBannerCreation = () => {
         await newDiv.setStyles([divStyle]);
       }
 
-      if (newDiv.setCustomAttribute) {
-        await newDiv.setCustomAttribute("data-animation", animationAttribute);
-        await newDiv.setCustomAttribute("data-cookie-banner", config.toggleStates.disableScroll ? "true" : "false");
-      }
+             if (newDiv.setCustomAttribute) {
+         // Only set animation attribute if it has a valid value
+         if (animationAttribute && animationAttribute.trim() !== "") {
+           console.log("Setting CCPA data-animation attribute:", animationAttribute);
+           try {
+             const animationPromise = newDiv.setCustomAttribute("data-animation", animationAttribute);
+             const animationTimeout = new Promise((_, reject) => 
+               setTimeout(() => reject(new Error("CCPA animation attribute timeout")), 5000)
+             );
+             await Promise.race([animationPromise, animationTimeout]);
+             console.log("CCPA data-animation attribute set successfully");
+           } catch (error) {
+             console.error("Error setting CCPA data-animation attribute:", error);
+             throw error;
+           }
+         } else {
+           console.log("Skipping CCPA data-animation attribute - no valid animation value");
+         }
+         
+         console.log("Setting CCPA data-cookie-banner attribute:", bannerToggleStates.toggleStates.disableScroll ? "true" : "false");
+         try {
+           const cookieBannerPromise = newDiv.setCustomAttribute("data-cookie-banner", bannerToggleStates.toggleStates.disableScroll ? "true" : "false");
+           const cookieBannerTimeout = new Promise((_, reject) => 
+             setTimeout(() => reject(new Error("CCPA cookie banner attribute timeout")), 5000)
+           );
+           await Promise.race([cookieBannerPromise, cookieBannerTimeout]);
+           console.log("CCPA data-cookie-banner attribute set successfully");
+         } catch (error) {
+           console.error("Error setting CCPA data-cookie-banner attribute:", error);
+           throw error;
+         }
+       }
 
       // Create inner elements following App_backup.tsx pattern
       console.log("Creating innerdiv for CCPA banner...");
@@ -1098,7 +1375,7 @@ export const useBannerCreation = () => {
       }
 
       let Closebuttons = null;
-      if (config.toggleStates.closebutton) {
+      if (bannerToggleStates.toggleStates.closebutton) {
         Closebuttons = await selectedElement.before(webflow.elementPresets.Paragraph);
         if (!Closebuttons) {
           throw new Error("Failed to create paragraph");
@@ -1190,27 +1467,92 @@ export const useBannerCreation = () => {
         });
       }
 
-      await createCookieccpaPreferences(
-        config.language,
-        config.color,
-        config.btnColor,
-        config.headColor,
-        config.paraColor,
-        config.secondcolor,
-        config.buttonRadius,
-        config.animation,
-        config.primaryButtonText,
-        config.secondbuttontext,
-        config.toggleStates.disableScroll,
-        config.toggleStates.closebutton,
-        false,
-        config.Font
-      );
+      console.log("=== CALLING createCookieccpaPreferences ===");
+      console.log("CCPA Parameters:", {
+        language: bannerLanguages.language,
+        color: bannerStyles.color,
+        btnColor: bannerStyles.btnColor,
+        headColor: bannerStyles.headColor,
+        paraColor: bannerStyles.paraColor,
+        secondcolor: bannerStyles.secondcolor,
+        buttonRadius: bannerConfig.buttonRadius,
+        animation: bannerAnimation.animation,
+        primaryButtonText: bannerStyles.primaryButtonText,
+        secondbuttontext: bannerStyles.secondbuttontext,
+        disableScroll: bannerToggleStates.toggleStates.disableScroll,
+        closebutton: bannerToggleStates.toggleStates.closebutton,
+        Font: bannerStyles.Font
+      });
+      
+      try {
+        console.log("Starting createCookieccpaPreferences with timeout...");
+        const ccpaPreferencesPromise = createCookieccpaPreferences(
+          bannerLanguages.language,
+          bannerStyles.color,
+          bannerStyles.btnColor,
+          bannerStyles.headColor,
+          bannerStyles.paraColor,
+          bannerStyles.secondcolor,
+          bannerConfig.buttonRadius,
+          bannerAnimation.animation,
+          bannerStyles.primaryButtonText,
+          bannerStyles.secondbuttontext,
+          bannerToggleStates.toggleStates.disableScroll,
+          bannerToggleStates.toggleStates.closebutton,
+          false,
+          bannerStyles.Font
+        );
+        
+        const ccpaPreferencesTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("createCookieccpaPreferences timeout after 15 seconds")), 15000)
+        );
+        
+        await Promise.race([ccpaPreferencesPromise, ccpaPreferencesTimeout]);
+        console.log("createCookieccpaPreferences completed successfully");
+      } catch (error) {
+        console.error("Error in createCookieccpaPreferences:", error);
+        throw error;
+      }
 
-      if (appVersion === '1.0.0') {
-        await fetchAnalyticsBlockingsScripts();
-      } else {
-        await fetchAnalyticsBlockingsScriptsV2();
+      console.log("=== CCPA ANALYTICS BLOCKING SCRIPT PHASE ===");
+      console.log("Current app version:", appVersion);
+      try {
+        if (appVersion === '1.0.0') {
+          console.log("Using V1 analytics blocking script for CCPA...");
+          await fetchAnalyticsBlockingsScripts();
+          console.log("V1 analytics blocking script applied successfully for CCPA");
+        } else {
+          console.log("Using V2 analytics blocking script for CCPA...");
+          await fetchAnalyticsBlockingsScriptsV2();
+          console.log("V2 analytics blocking script applied successfully for CCPA");
+        }
+        
+        // Add a delay to ensure script is loaded
+        console.log("Waiting for CCPA script to load...");
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log("CCPA script loading delay completed");
+        
+        // Check if the script is loaded
+        const scripts = document.querySelectorAll('script[src*="consent"]');
+        console.log("Found consent scripts for CCPA:", scripts.length);
+        scripts.forEach((script, index) => {
+          const scriptElement = script as HTMLScriptElement;
+          console.log(`CCPA Script ${index}:`, scriptElement.src);
+        });
+        
+        // Check if the script is loaded in the head
+        const headScripts = document.head.querySelectorAll('script');
+        console.log("Total scripts in head for CCPA:", headScripts.length);
+        headScripts.forEach((script, index) => {
+          const scriptElement = script as HTMLScriptElement;
+          if (scriptElement.src && scriptElement.src.includes('consent')) {
+            console.log(`CCPA Consent script ${index} in head:`, scriptElement.src);
+          }
+        });
+        
+      } catch (error) {
+        console.error("Error applying CCPA analytics blocking script:", error);
+        throw error;
       }
 
              console.log("CCPA banner creation completed, setting success timeout...");
@@ -1235,6 +1577,10 @@ export const useBannerCreation = () => {
       console.log("GDPR banner created successfully, now creating CCPA banner...");
       await createCCPABanner(config);
       console.log("Both banners created successfully!");
+      
+      // Show success page after both banners are created
+      console.log("Showing SuccessPublish component...");
+      setShowSuccessPublish(true);
     } catch (error) {
       console.error("Error in createBothBanners:", error);
       throw error;
@@ -1274,6 +1620,9 @@ export const useBannerCreation = () => {
     testSimpleBannerCreation,
     isCreating,
     showLoading,
-    showSuccess
+    showSuccess,
+    showSuccessPublish,
+    handleSuccessPublishProceed,
+    handleSuccessPublishGoBack
   };
 };

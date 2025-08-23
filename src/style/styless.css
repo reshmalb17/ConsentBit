@@ -405,7 +405,7 @@ img {
 .tabs {
   gap: 10px;
   /* margin-bottom: 20px; */
-  border-bottom: 1px solid #242137;
+  /* border-bottom: 1px solid #242137; */
   font-family: 'DM Sans', sans-serif;
   font-weight: 400;
   font-size: 12px;
@@ -589,8 +589,8 @@ input[type="number"]::-webkit-outer-spin-button {
   padding-bottom: 14px;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: 412px;
-  min-height: 412px;
+  max-height: 428px;
+  min-height: 428px;
   scrollbar-width: thin;
   scrollbar-color: #4a4a5d transparent;
   scroll-behavior: smooth;
@@ -4712,11 +4712,12 @@ text-align: center;
 
 /* Header */
 .welcome-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 10;
-  position: relative;
+display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 10;
+    position: relative;
+    padding-right: 15px;
 }
 
 .welcome-logo {
@@ -5004,13 +5005,13 @@ position: absolute;
 
 .setup-back-btn {
   position: absolute;
-  top: 266px;
+  top: 275px;
   left: 190px;
   width:80px;
   height: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 3px;
   background: transparent;
   border: none;
   color: white;
@@ -5027,9 +5028,6 @@ position: absolute;
   transform: rotate(0deg);
 }
 
-.setup-back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
 
 .setup-back-btn img {
   width: 16px;
@@ -5093,19 +5091,20 @@ top: auto;
 
 
 .setup-card {
-border: 1px solid #262E84;
+border: 1px solid rgba(38, 46, 132, 1);
     width: 250px;
-  border-radius: 12px;
+  border-radius: 8px;
   backdrop-filter: blur(10px);
   padding:12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background: rgba(20, 17, 40, 1);
 
 }
 
 .setup-card-info{
-  background: linear-gradient(135deg, #2C2840 0%, #403A60 100%);
+  background: linear-gradient(135deg, #100e1c 0%, #262140 100%);
   border :1px #000000;
   width : 80%;
   border-radius:12px;
@@ -5122,7 +5121,7 @@ border: 1px solid #262E84;
 
 
 .setup-card-title {
- color: #bc79ff;
+ color:rgba(140, 121, 255, 1);
 font-family: 'DM Sans', sans-serif;
 font-weight: 400;
 font-size: 12px;
@@ -5202,7 +5201,6 @@ height:54px
   flex-direction: row;
   gap: 4px;
   padding:4px 12px 12px 12px;
-  background-color: #8C79FF;
   border-radius: 8px;
 }
 .setup-card-info-title{

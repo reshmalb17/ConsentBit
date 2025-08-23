@@ -14,8 +14,9 @@ type WelcomeScriptProps = {
   setFetchScripts: (value: boolean) => void;
 };
 
-const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts, setFetchScripts }) => {
-  const { popups } = useAppState();
+const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts,setFetchScripts }) => {
+  console.log("isFetchScripts prop in WelcomeScript:", isFetchScripts);
+   const {bannerBooleans, popups} = useAppState();
 
   const handleNextButton = () => {
     popups.setShowPopupWelcomeSetup(true);
@@ -42,7 +43,7 @@ const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts, setFetchSc
               <p className="ws-card-desc">Check our tutorial video to help yourself</p>
             </div>
             <div>
-               <img src={thumbnail} alt="Tutorial Video" className="ws-thumbnail" />
+               <a href="https://vimeo.com/1112446810?share=copy" target="_blank"><img src={thumbnail} alt="Tutorial Video" className="ws-thumbnail" /></a>
             </div>
           </div>
           <div className="ws-card-footer">
@@ -65,7 +66,7 @@ const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts, setFetchSc
             <p className="ws-info-subtitle">
               Check your project scripts for any that create cookies. Organize them, replace with our snippet, and follow our tutorial to streamline your workflow.
             </p>
-            <a href="#" className="ws-docs-link">
+            <a target="_blank" className="ws-docs-link">
               Need help? See the docs <img src={uparrow} alt="↗" />
             </a>
           </div>

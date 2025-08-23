@@ -4,6 +4,7 @@ import "../style/styless.css";
 import { useAuth } from "../hooks/userAuth";
 import { useAppState } from "../hooks/useAppState";
 import WelcomeScipt from "./WelcomeScript";
+import NeedHelp from "./NeedHelp";
 const logo = new URL("../assets/icon.svg", import.meta.url).href;
 const questionmark = new URL("../assets/question.svg", import.meta.url).href;
 const leftLines = new URL("../assets/leftlines.svg", import.meta.url).href;
@@ -16,21 +17,9 @@ type WelcomeScreenProps = {
 };
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,authenticated}) => {
-     const {
-      colors,
-      ui,
-      config,
-      booleans,
-      popups,
-      tooltips,
-      data,
-      buttons,
-      animation,
-      localStorage: localStorageData
-    } = useAppState();
-
+     const {bannerBooleans} = useAppState();
   console.log("Authenticated prop:", authenticated);
-console.log("fetch scripts:",booleans.fetchScripts);
+console.log("fetch scripts:",bannerBooleans.fetchScripts);
   const base_url = "https://cb-server.web-8fb.workers.dev"
 const { user, exchangeAndVerifyIdToken } = useAuth();
 
@@ -53,15 +42,15 @@ const { user, exchangeAndVerifyIdToken } = useAuth();
     }, 1000);
   };
   const handleScanProject = () => {
-    booleans.setFetchScripts(true);
+    bannerBooleans.setFetchScripts(true);
   }
 
  return (
   <div className="welcome-screen">
-    {booleans.fetchScripts ? (
+    {bannerBooleans.fetchScripts ? (
       <WelcomeScipt
-        isFetchScripts={booleans.fetchScripts}
-        setFetchScripts={booleans.setFetchScripts}
+        isFetchScripts={bannerBooleans.fetchScripts}
+        setFetchScripts={bannerBooleans.setFetchScripts}
       />
     ) : (
       <div className="welcome-main-content">
@@ -71,10 +60,7 @@ const { user, exchangeAndVerifyIdToken } = useAuth();
 
         {/* Header */}
         <div className="welcome-header">
-          <div className="welcome-help" onClick={onNeedHelp}>
-            <img src={questionmark} alt="Need help?" />
-            <span>Need help?</span>
-          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}><NeedHelp /></div>
         </div>
 
         {/* Main content */}

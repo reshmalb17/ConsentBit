@@ -7,7 +7,7 @@ type BreakpointAndPseudo = {
   pseudoClass: string;
 };
 
-const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false, Font: string = "'Montserrat', sans-serif") => {
+const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false) => {
   try {
     const translation = getTranslation(language);
 
@@ -93,8 +93,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "padding-bottom": "20px",
       "padding-left": "20px",
       "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-      "font-family": Font,
-
     };
 
     const responsivePropertyMap: Record<string, string> = {
@@ -164,8 +162,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "background-color": secondcolor,
       "margin-left": "5px",
       "margin-right": "5px",
-      "display": "flex",
-      "justify-content": "center",
       "min-width": "80px",
       "color": primaryButtonText,
       "text-align": "center",
@@ -180,8 +176,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "margin-right": "5px",
       "min-width": "80px",
       "text-align": "center",
-      "display": "flex",
-      "justify-content": "center",
     };
 
 
@@ -203,12 +197,11 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "height": "25px",
       "display": "flex",
       "position": "absolute",
-      "top": "3.5%",
+      "top": "5%",
       "left": "auto",
       "right": "10",
       "z-index": "99",
       "cursor": "pointer",
-      "font-family": "'Montserrat', sans-serif",
     };
 
     const checkboxlabelPropertyMap: Record<string, string> = {
@@ -278,9 +271,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       if (!tempHeading) {
         throw new Error("Failed to create heading");
       }
-      if (tempHeading.setHeadingLevel) {
-        await tempHeading.setHeadingLevel(4);
-      }
       if (tempHeading.setStyles) {
         await tempHeading.setStyles([headingStyle]);
       }
@@ -319,11 +309,11 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       }
       await Maincontainer.setStyles([maindivs]);
 
-      if ((Maincontainer as any).setDomId) {
-        await (Maincontainer as any).setDomId("main-banner");
-      } else {
-        console.error("setDomId method not available on accept button element");
-      }
+    if ((Maincontainer as any).setDomId) {
+      await (Maincontainer as any).setDomId("main-banner");
+    } else {
+      console.error("setDomId method not available on accept button element");
+    }
 
 
 
@@ -504,7 +494,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         if (Closebuttons.setStyles) {
           await Closebuttons.setStyles([closebuttonStyle]);
           await Closebuttons.setTextContent("X");
-          await Closebuttons.setCustomAttribute("consentbit", "close");
+          await Closebuttons.setCustomAttribute("consentbit","close");
         }
       }
 

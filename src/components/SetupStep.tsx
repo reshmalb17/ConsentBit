@@ -25,8 +25,9 @@ const SetupStep: React.FC<SetupStepProps> = ({ onGoBack, onProceed }) => {
   const questionmark = new URL("../assets/question.svg", import.meta.url).href;
   const leftLines = new URL("../assets/leftlines.svg", import.meta.url).href;
   const rightLines = new URL("../assets/rightlines.svg", import.meta.url).href;
-  const youtubethumbnail = new URL("../assets/youtube-thumbnail.svg", import.meta.url).href;
   const infologo = new URL("../assets/info-logo.svg", import.meta.url).href;
+  const youtubethumbnail = new URL("../assets/thumbnail.svg", import.meta.url).href;
+
   const onNeedHelp = () => {
     // Open help modal or redirect to help page
     window.open('https://www.consentbit.com/help-document', '_blank');
@@ -120,7 +121,7 @@ const SetupStep: React.FC<SetupStepProps> = ({ onGoBack, onProceed }) => {
                     <span className="need-help-text">Need help?</span>
                   </div>
                   <div className="setup-card-youtube-thumbnail">
-                    <img src={youtubethumbnail} alt="Tutorial Video" className="setup-video-thumbnail" />
+                    <a href="" target="_blank"><img src={youtubethumbnail} alt="Tutorial Video" className="setup-video-thumbnail" /></a>
                   </div>
 
 

@@ -16,15 +16,15 @@ const App: React.FC = () => {
 
   const queryClient = useQueryClient();
    const {
-    colors,
-    ui,
-    config,
-    booleans,
+    bannerStyles,
+    bannerUI,
+    bannerConfig,
+    bannerBooleans,
     popups,
     tooltips,
-    data,
+    siteData,
     buttons,
-    animation,
+    bannerAnimation,
     localStorage: localStorageData
   } = useAppState();
 

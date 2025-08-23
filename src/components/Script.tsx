@@ -733,7 +733,8 @@ const Script: React.FC<{
                                                             </div>
                                                             <button className="dismiss-btn" onClick={() => handleDismiss(index)}>  <img src={dismiss} alt="Dismiss icon" style={{ marginRight: '8px' }} />Dismiss</button>
                                                         </div>
-                                                        <p>Select a category for this script, remove the current script, and add the updated script to the Site head:</p>
+                                                        {/* <p>Select a category for this script, remove the current script, and add the updated script to the Site head:</p> */}
+                                                            <p>Check categories → copy script → open the page to paste script</p>
                                                         <div><img src={line} alt="lineimage" /></div>
                                                         <div className="category-code-block">
                                                             <div className="category">
