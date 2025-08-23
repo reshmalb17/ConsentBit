@@ -16,18 +16,7 @@ setFetchScripts: (value: boolean) => void;
 
 const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts,setFetchScripts }) => {
   console.log("isFetchScripts prop in WelcomeScript:", isFetchScripts);
-    const {
-        colors,
-        ui,
-        config,
-        booleans,
-        popups,
-        tooltips,
-        data,
-        buttons,
-        animation,
-        localStorage: localStorageData
-      } = useAppState();
+   const {bannerBooleans, popups} = useAppState();
 
   const handleNextButton = () => {
    popups.setShowPopupWelcomeSetup(true);

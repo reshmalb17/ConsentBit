@@ -107,7 +107,7 @@ export const useAppState = () => {
   const userinfo = localStorage.getItem("wf_hybrid_user");
   const tokenss = JSON.parse(userinfo || '{}');
   //Aniamation states 
-    const [animation, setAnimation] = usePersistentState('animation', "Fade");
+  const [animation, setAnimation] = usePersistentState('animation', "Fade");
   const [easing, setEasing] = usePersistentState('easing', "Ease");
   const [language, setLanguage] = usePersistentState('language', "English");
   //Toggle States
@@ -125,7 +125,7 @@ export const useAppState = () => {
   // Return all state and setters organized by category
   return {
     // Color states
-    colors: {
+    bannerStyles: {
       color, setColor,
       bgColor, setBgColor,
       btnColor, setBtnColor,
@@ -135,10 +135,14 @@ export const useAppState = () => {
       headColor, setHeadColor,
       secondbuttontext, setsecondbuttontext,
       primaryButtonText, setPrimaryButtonText,
+      size, setSize,
+      Font, SetFont,
+      weight, setWeight,
+      borderRadius, setBorderRadius,
     },
 
     // UI/UX states
-    ui: {
+    bannerUI: {
       activeTab, setActiveTab,
       activeMode, setActiveMode,
       selected, setSelected,
@@ -149,18 +153,15 @@ export const useAppState = () => {
     },
 
     // Configuration states
-    config: {
+    bannerConfig: {
       expires, setExpires,
-      size, setSize,
-      Font, SetFont,
-      weight, setWeight,
-      borderRadius, setBorderRadius,
+     
       buttonRadius, setButtonRadius,
       cookieExpiration, setCookieExpiration,
     },
 
     // Boolean states
-    booleans: {
+    bannerBooleans: {
       isActive, setIsActive,
       isLoading, setIsLoading,
       isBannerAdded, setIsBannerAdded,
@@ -188,7 +189,7 @@ export const useAppState = () => {
     },
 
     // Data states
-    data: {
+    siteData: {
       siteInfo, setSiteInfo,
       accessToken, setAccessToken,
       pages, setPages,
@@ -208,16 +209,18 @@ export const useAppState = () => {
       userinfo,
       tokenss,
     },
-    animation:{
+    bannerAnimation:{
         animation, setAnimation,
         easing, setEasing,
-        language, setLanguage,
+       
 
     },
-    toggleStates:{
+    bannerToggleStates:{
         toggleStates, setToggleStates,
     },
-    
+    bannerLanguages:{
+        language, setLanguage,
+    } 
   };
 };
 

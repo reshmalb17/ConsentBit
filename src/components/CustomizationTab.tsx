@@ -1,39 +1,40 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
-import "./style/styless.css";
-import Customization from "./components/Customization";
-import Script from "./components/Script";
-const questionmark = new URL("./assets/question.svg", import.meta.url).href;
-const openeye = new URL("./assets/closedeye.svg", import.meta.url).href;
-const eye = new URL("./assets/eye.svg", import.meta.url).href;
-const dots = new URL("./assets/3 dots.svg", import.meta.url).href;
-const checkedcatogry = new URL("./assets/tick-square catogeries.svg", import.meta.url).href;
-const tickmark = new URL("./assets/tickmark.svg", import.meta.url).href;
-const logo = new URL("./assets/icon.svg", import.meta.url).href;
-const errorsheild = new URL("./assets/warning-2.svg", import.meta.url).href;
-const crossmark = new URL("./assets/group.svg", import.meta.url).href;
-const rightarrow = new URL("./assets/up arrow.svg", import.meta.url).href;
-const copyScript = new URL("./assets/copy script.svg", import.meta.url).href;
-const donotshare = new URL("./assets/donotshare.png", import.meta.url).href;
+import "../style/styless.css";
+import Customization from "./Customization";
+import Script from "./Script";
+const questionmark = new URL("../assets/question.svg", import.meta.url).href;
+const openeye = new URL("../assets/closedeye.svg", import.meta.url).href;
+const eye = new URL("../assets/eye.svg", import.meta.url).href;
+const dots = new URL("../assets/3 dots.svg", import.meta.url).href;
+const checkedcatogry = new URL("../assets/tick-square catogeries.svg", import.meta.url).href;
+const tickmark = new URL("../assets/tickmark.svg", import.meta.url).href;
+const logo = new URL("../assets/icon.svg", import.meta.url).href;
+const errorsheild = new URL("../assets/warning-2.svg", import.meta.url).href;
+const crossmark = new URL("../assets/group.svg", import.meta.url).href;
+const rightarrow = new URL("../assets/up arrow.svg", import.meta.url).href;
+const copyScript = new URL("../assets/copy script.svg", import.meta.url).href;
+const donotshare = new URL("../assets/donotshare.png", import.meta.url).href;
 
-import { customCodeApi } from "./services/api";
-import { useAuth } from "./hooks/userAuth";
-import webflow, { WebflowAPI } from './types/webflowtypes';
-import { CodeApplication } from "./types/types";
-import createCookiePreferences from "./hooks/gdprPreference";
-import createCookieccpaPreferences from "./hooks/ccpaPreference";
-import { usePersistentState } from './hooks/usePersistentState';
-import { Script as ScriptType } from "../src/types/types";
+import { customCodeApi } from "../services/api";
+import { useAuth } from "../hooks/userAuth";
+import webflow, { WebflowAPI } from '../types/webflowtypes';
+import { CodeApplication } from "../types/types";
+import createCookiePreferences from "../hooks/gdprPreference";
+import createCookieccpaPreferences from "../hooks/ccpaPreference";
+import { usePersistentState } from "../hooks/usePersistentState";
+import { Script as ScriptType } from "../types/types";
 import { useQueryClient } from "@tanstack/react-query";
-import PulseAnimation from "./components/PulseAnimation";
-import NeedHelp from "./components/NeedHelp";
-import ChoosePlan from "./components/ChoosePlan";
-import CSVExportAdvanced from "./components/CSVExportAdvanced";
-import WelcomeScreen from "./components/WelcomeScreen";
+import PulseAnimation from "./PulseAnimation";
+import NeedHelp from "./NeedHelp";
+import ChoosePlan from "./ChoosePlan";
+import CSVExportAdvanced from "./CSVExportAdvanced";
+import WelcomeScreen from "./WelcomeScreen";
 // Add at the top, after other imports
-import pkg from '../package.json';
+import pkg from '../../package.json';
 const appVersion = pkg.version;
-import { getSessionTokenFromLocalStorage } from './util/Session'; import DonotShare from "./components/donotshare";
+import { getSessionTokenFromLocalStorage } from '../util/Session'; 
+import DonotShare from "./donotshare";
 
 
 
@@ -57,7 +58,11 @@ type UserData = {
   sessionToken: string;
 };
 
-const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
+interface CustomizationTabProps {
+  onAuth: () => void;
+}
+
+const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth }) => {
   const [color, setColor] = usePersistentState("color", "#ffffff");
   const [bgColor, setBgColor] = usePersistentState("bgColor", "#ffffff");
   const [btnColor, setBtnColor] = usePersistentState("btnColor", "#C9C9C9");
@@ -67,19 +72,29 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
   const [headColor, setHeadColor] = usePersistentState("headColor", "#000000");
   const [secondbuttontext, setsecondbuttontext] = usePersistentState("secondbuttontext", "#000000");
   const [primaryButtonText, setPrimaryButtonText] = usePersistentState("primaryButtonText", "#FFFFFF");
-  const [activeTab, setActiveTab] = usePersistentState("activeTab", "General Settings");
+  const [activeTab, setActiveTab] = usePersistentState("activeTab", "Settings");
   const [expires, setExpires] = usePersistentState("expires", "");
   const [size, setSize] = usePersistentState("size", "12");
   const [isActive, setIsActive] = usePersistentState("isActive", false);
   const [Font, SetFont] = usePersistentState("Font", "");
   const [selectedtext, settextSelected] = usePersistentState("selectedtext", "left");
   const [style, setStyle] = usePersistentState<BannerStyle>("style", "align");
-  const [activeMode, setActiveMode] = usePersistentState("activeMode", "Simple");
+  // Removed activeMode - all features are now available by default
   const [selected, setSelected] = usePersistentState<Orientation>("selected", "right");
   const [selectedOption, setSelectedOption] = usePersistentState("selectedOption", "U.S. State Laws");
   const [weight, setWeight] = usePersistentState("weight", "semibold");
   const [showPopup, setShowPopup] = useState(false);
-  const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["GDPR"]);
+  const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["GDPR", "U.S. State Laws"]);
+
+  // Ensure default state is properly set on component mount
+  useEffect(() => {
+    console.log("selectedOptions current value:", selectedOptions);
+    // Force set default values if not already set
+    if (selectedOptions.length === 0 || !selectedOptions.includes("GDPR") || !selectedOptions.includes("U.S. State Laws")) {
+      console.log("Setting default selectedOptions");
+      setSelectedOptions(["GDPR", "U.S. State Laws"]);
+    }
+  }, [selectedOptions, setSelectedOptions]);
   const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
   const [accessToken, setAccessToken] = usePersistentState<string>("accessToken", '');
   const [pages, setPages] = usePersistentState("pages", []);
@@ -104,16 +119,15 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
   const [isBannerAdded, setIsBannerAdded] = usePersistentState("isBannerAdded", false);
   const [isCSVButtonLoading, setIsCSVButtonLoading] = useState(false);
   const [showCSVExportAdvanced, setShowCSVExportAdvanced] = useState(false);
-  const [showWelcomeScreen, setShowWelcomeScreen] = useState(true);
 
 
 
 
   const base_url = "https://cb-server.web-8fb.workers.dev"
 
-  // Welcome screen handlers
+  // Welcome screen handlers - removed since this component is accessed via Customize link
   const handleWelcomeAuthorize = () => {
-    setShowWelcomeScreen(false);
+    // This function is not needed in CustomizationTab
   };
 
   const handleWelcomeNeedHelp = () => {
@@ -321,16 +335,10 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
   }, [animation]);
 
 
-  useEffect(() => {
-    // activeMode now uses usePersistentState, so no need to manually save to localStorage
-
-    if (activeMode === "Simple" && activeTab === "Script") {
-      setActiveTab("Customization");
-    }
-
-    // Force re-render to ensure UI updates
-    setTimeout(() => setIsActive(true), 50);
-  }, [activeMode]);
+     useEffect(() => {
+     // Force re-render to ensure UI updates
+     setTimeout(() => setIsActive(true), 50);
+   }, []);
 
 
   //page fetch
@@ -390,7 +398,7 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
             if (response.cookieExpiration !== undefined) setCookieExpiration(response.cookieExpiration);
             if (response.bgColor !== undefined) setBgColor(response.bgColor);
             if (response.activeTab !== undefined) setActiveTab(response.activeTab);
-            if (response.activeMode !== undefined) setActiveMode(response.activeMode);
+                         // Removed activeMode setting - no longer needed
             if (response.selectedtext !== undefined) settextSelected(response.selectedtext);
             if (response.fetchScripts !== undefined) setFetchScripts(response.fetchScripts);
             if (response.btnColor !== undefined) setBtnColor(response.btnColor);
@@ -1566,12 +1574,12 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
       if (!tokewern) {
         return;
       }
-      const bannerData = {
-        cookieExpiration: cookieExpiration,
-        bgColor: bgColor,
-        activeTab: activeTab,
-        activeMode: activeMode,
-        selectedtext: selectedtext,
+             const bannerData = {
+         cookieExpiration: cookieExpiration,
+         bgColor: bgColor,
+         activeTab: activeTab,
+         activeMode: "Advanced", // Add back to satisfy type requirement
+         selectedtext: selectedtext,
         fetchScripts: fetchScripts,
         btnColor: btnColor,
         paraColor: paraColor,
@@ -1882,15 +1890,8 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
   }, []);
 
 
-  if (showWelcomeScreen) {
-    return (
-      <WelcomeScreen 
-        onAuthorize={handleWelcomeAuthorize}
-        onNeedHelp={handleWelcomeNeedHelp}
-        authenticated={!!user?.firstName  }
-      />
-    );
-  }
+  // Welcome screen logic removed - this component is accessed via Customize link
+  // No need to show welcome screen when coming from ConfirmPublish
 
   if (showChoosePlan) {
     return <ChoosePlan onClose={() => setShowChoosePlan(false)} />;
@@ -1924,30 +1925,34 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
         <NeedHelp />
       </div>
 
-      {/* Configuration Section */}
-      <div className="configuration">
-        <div className="mode-switch">
-          <span>Configuration</span>
-          <button
-            className={`mode-btn ${activeMode === "Simple" ? "active" : ""}`}
-            onClick={() => {
-              setActiveMode("Simple");
-            }}
-          >
-            Simple
-          </button>
-
-          <button
-            className={`mode-btn ${activeMode === "Advanced" ? "active" : ""}`}
-            onClick={() => {
-              setActiveMode("Advanced");
-              setTimeout(() => setIsActive(true), 50);
-            }}
-          >
-            Advanced
-          </button>
-
-        </div>
+                                         {/* Tab Navigation Section */}
+         <div className="configuration">
+           <div className="tabs">
+             <div className="tab-button-wrapper">
+               <button
+                 className={`tab-button ${activeTab === "Settings" ? "active" : ""}`}
+                 onClick={() => setActiveTab("Settings")}
+               >
+                 Settings
+               </button>
+             </div>
+             <div className="tab-button-wrapper">
+               <button
+                 className={`tab-button ${activeTab === "Customization" ? "active" : ""}`}
+                 onClick={() => setActiveTab("Customization")}
+               >
+                 Customization
+               </button>
+             </div>
+             <div className="tab-button-wrapper">
+               <button
+                 className={`tab-button ${activeTab === "Script" ? "active" : ""}`}
+                 onClick={() => setActiveTab("Script")}
+               >
+                 Script
+               </button>
+             </div>
+           </div>
         <div className="component-width">
           {!isSubscribed ? (
             <div className="subscribe">
@@ -2113,39 +2118,14 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
           </div>
         </div>
       )}
-      {/* Tab Navigation */}
-      <div className="tabs">
-
-        {["General Settings", "Customization", "Script"].map((tab) => {
-          const isDisabled = tab === "Script" && activeMode !== "Advanced";
-
-          return (
-            <div key={tab} className="tab-button-wrapper">
-              <button
-                className={`tab-button ${activeTab === tab ? "active" : ""}`}
-                onClick={() => {
-                  if (!isDisabled) setActiveTab(tab);
-                }}
-                disabled={isDisabled}
-              >
-                {tab}
-              </button>
-              {/* Tooltip only shows if in Simple mode and this is Script */}
-              {isDisabled && (
-                <span className="tab-tooltip">Available only in Advanced mode.</span>
-              )}
-            </div>
-          );
-        })}
-
-      </div>
+             
 
 
       {/* Main Container */}
       <div className="container">
         {/* Settings Panel */}
         <div className="settings-panel">
-          {activeTab === "General Settings" && (
+                     {activeTab === "Settings" && (
             <div className="general">
               <div className="width-cust">
                 <div className="settings-group">
@@ -2243,23 +2223,27 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
                   </label>
 
                   <div className="checkbox-group">
-                    {["U.S. State Laws", "GDPR"].map((option) => ( //U.S. State Laws
-                      <label key={option} className="custom-checkboxs">
-                        <input
-                          type="checkbox"
-                          value={option}
-                          checked={selectedOptions.includes(option)}
-                          onChange={() => handleToggles(option)}
-                        />
-                        <span className="checkbox-box"></span>
-                        {option}
-                      </label>
-                    ))}
+                    {["U.S. State Laws", "GDPR"].map((option) => { //U.S. State Laws
+                      const isChecked = selectedOptions.includes(option);
+                      console.log(`Checkbox ${option}:`, isChecked, "selectedOptions:", selectedOptions);
+                      return (
+                        <label key={option} className="custom-checkboxs">
+                          <input
+                            type="checkbox"
+                            value={option}
+                            checked={isChecked}
+                            onChange={() => handleToggles(option)}
+                          />
+                          <span className="checkbox-box"></span>
+                          {option}
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Cookie Settings - Visible only in Advanced Mode */}
-                <div className={`cookie-settings ${(activeMode === "Advanced" && selectedOptions.includes("GDPR")) ? "active" : ""}`}>
+                                 {/* Cookie Settings */}
+                 <div className={`cookie-settings ${selectedOptions.includes("GDPR") ? "active" : ""}`}>
                   <h3 className="cookie-title">Categories</h3>
 
                   {/* Essentials - Always active */}
@@ -2295,8 +2279,7 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
                 </div>
 
 
-                {activeMode === "Advanced" && (
-                  <div className="export-csv">
+                                 <div className="export-csv">
                     <div className="flex">
                       {/* Export CSV Buttons - Only show one based on version */}
                       {(appVersion === '1.0.0' || appVersion !== '2.0.0') && (
@@ -2308,38 +2291,33 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
                           {isExporting ? 'Exporting...' : 'Export CSV'}
                         </button>
                       )}
-                      {appVersion === '2.0.0' && (
-                        <button
-                          className="exportbutton"
-                          onClick={() => {
-                            if (user?.firstName) {
-                              setShowAuthPopup(true);
-                              return;
-                            }
-                            if (sessionTokenFromLocalStorage) {
-                              setShowCSVExportAdvanced(true);
-                            } else {
-                              setShowAuthPopup(true);
-                            }
-                          }}
-                          style={{ marginLeft: '10px' }}
-                          disabled={!user?.firstName || isCSVButtonLoading}
-                        >
-                          {isCSVButtonLoading ? 'Loading...' : 'Export CSV'}
-                        </button>
-                      )}
+                                             {appVersion === '2.0.0' && (
+                         <button
+                           className="exportbutton"
+                           onClick={() => {
+                             if (!sessionTokenFromLocalStorage) {
+                               setShowAuthPopup(true);
+                               return;
+                             }
+                             setShowCSVExportAdvanced(true);
+                           }}
+                           style={{ marginLeft: '10px' }}
+                           disabled={isCSVButtonLoading}
+                         >
+                           {isCSVButtonLoading ? 'Loading...' : 'Export CSV'}
+                         </button>
+                       )}
 
                       <div className="tooltip-containers">
                         <img src={questionmark} alt="info" className="tooltip-icon" />
                         <span className="tooltip-text">Download consents in CSV format for easy analysis and sharing.</span>
                       </div>
                     </div>
-                  </div>)}
+                                     </div>
 
 
-                {/* Use Custom Toggle Button - Advanced Mode Only */}
-                {activeMode === "Advanced" && (
-                  <div className="togglediv">
+                                 {/* Use Custom Toggle Button */}
+                 <div className="togglediv">
                     <label className="toggle-container">
                       <div className="flex">
                         <span className="toggle-label">Use Custom Toggle Button</span>
@@ -2360,8 +2338,6 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
                       <div className={`toggle ${toggleStates.customToggle ? "toggled" : ""}`}></div>
                     </label>
                   </div>
-
-                )}
 
                 {/* Reset Interactions - Available in BOTH Simple & Advanced Modes */}
                 <div className="togglediv">
@@ -2385,88 +2361,84 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
                   </label>
                 </div>
 
-                {/* Disable Scroll - Advanced Mode Only */}
-                {activeMode === "Advanced" ? (
-                  <div className="togglediv">
-                    <label className="toggle-container">
-                      <div className="flex">
-                        <span className="toggle-label">Disable Scroll</span>
+                {/* Disable Scroll */}
+                <div className="togglediv">
+                  <label className="toggle-container">
+                    <div className="flex">
+                      <span className="toggle-label">Disable Scroll</span>
 
-                        <div className="tooltip-containers">
-                          <img src={questionmark} alt="info" className="tooltip-icon" />
-                          <span className="tooltip-text">This option disables the scroll of the page when banner is shown.</span>
-                        </div>
+                      <div className="tooltip-containers">
+                        <img src={questionmark} alt="info" className="tooltip-icon" />
+                        <span className="tooltip-text">This option disables the scroll of the page when banner is shown.</span>
                       </div>
+                    </div>
 
-                      <input
-                        type="checkbox"
-                        className="toggle-checkbox"
-                        checked={toggleStates.disableScroll}
-                        onChange={() => {
-                          handleToggle("disableScroll");
+                    <input
+                      type="checkbox"
+                      className="toggle-checkbox"
+                      checked={toggleStates.disableScroll}
+                      onChange={() => {
+                        handleToggle("disableScroll");
 
-                        }}
-                      />
+                      }}
+                    />
 
-                      <div className={`toggle ${toggleStates.disableScroll ? "toggled" : ""}`}></div>
-                    </label>
-                  </div>
-                ) : null}
+                    <div className={`toggle ${toggleStates.disableScroll ? "toggled" : ""}`}></div>
+                  </label>
+                </div>
 
-                {/* Close Button - Advanced Mode Only */}
-                {activeMode === "Advanced" ? (
-                  <div className="togglediv">
-                    <label className="toggle-container">
-                      <div className="flex">
-                        <span className="toggle-label">Enable Close Button</span>
+                                 {/* Close Button */}
+                 <div className="togglediv">
+                   <label className="toggle-container">
+                     <div className="flex">
+                       <span className="toggle-label">Enable Close Button</span>
 
-                        <div className="tooltip-containers">
-                          <img src={questionmark} alt="info" className="tooltip-icon" />
-                          <span className="tooltip-text">This option Enable the option to close the Banner</span>
-                        </div>
-                      </div>
+                       <div className="tooltip-containers">
+                         <img src={questionmark} alt="info" className="tooltip-icon" />
+                         <span className="tooltip-text">This option Enable the option to close the Banner</span>
+                       </div>
+                     </div>
 
-                      <input
-                        type="checkbox"
-                        className="toggle-checkbox"
-                        checked={toggleStates.closebutton}
-                        onChange={() => {
-                          handleToggle("closebutton");
+                     <input
+                       type="checkbox"
+                       className="toggle-checkbox"
+                       checked={toggleStates.closebutton}
+                       onChange={() => {
+                         handleToggle("closebutton");
 
-                        }}
-                      />
-                      <div className={`toggle ${toggleStates.closebutton ? "toggled" : ""}`}></div>
-                    </label>
-                  </div>
-                ) : null}
+                       }}
+                     />
+                     <div className={`toggle ${toggleStates.closebutton ? "toggled" : ""}`}></div>
+                   </label>
+                 </div>
 
-                {/* Do Not share Link - Available in BOTH Simple & Advanced Modes */}
+                                 {/* Do Not share Link */}
 
-                {activeMode === "Advanced" && selectedOptions.includes("U.S. State Laws") ?
-                  <div className="togglediv">
-                    <label className="toggle-container">
-                      <div className="flex">
-                        <span className="toggle-label">Do Not Share Link</span>
+                 {selectedOptions.includes("U.S. State Laws") ?
+                   <div className="togglediv">
+                     <label className="toggle-container">
+                       <div className="flex">
+                         <span className="toggle-label">Do Not Share Link</span>
 
-                        <div className="tooltip-containers">
-                          <img src={questionmark} alt="info" className="tooltip-icons" />
-                          <span className="tooltip-text">
-                            Show/hide the 'Do not share my personal information' link content.
-                          </span>
-                        </div>
-                      </div>
+                         <div className="tooltip-containers">
+                           <img src={questionmark} alt="info" className="tooltip-icons" />
+                           <span className="tooltip-text">
+                             Show/hide the 'Do not share my personal information' link content.
+                           </span>
+                         </div>
+                       </div>
 
-                      <button
-                        className="toggle-replace-button"
-                        onClick={() => handleToggle("donotshare")}
-                      >
-                        Open Guide
-                        <img src={rightarrow} alt="icon" className="button-icon" />
+                       <button
+                         className="toggle-replace-button"
+                         onClick={() => handleToggle("donotshare")}
+                       >
+                         Open Guide
+                         <img src={rightarrow} alt="icon" className="button-icon" />
 
-                      </button>
-                    </label>
-                  </div>
-                  : null}
+                       </button>
+                     </label>
+                   </div>
+                   : null}
               </div>
 
 
@@ -2595,9 +2567,11 @@ const App: React.FC = ({ onAuth }: { onAuth: () => void }) => {
           setIsCSVButtonLoading(false);
         }}
       />
+
+      
     </div>
   );
 };
 
-export default App;
+export default CustomizationTab;
 

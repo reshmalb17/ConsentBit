@@ -5,8 +5,10 @@ import NeedHelp from "../components/NeedHelp";
 import { useAuth } from "../hooks/userAuth";
 import webflow from "../types/webflowtypes";
 import { useAppState } from "../hooks/useAppState";
-import { useBannerCreation } from "../hooks/useBannerCreation";
+import { useBannerCreation, BannerConfig } from "../hooks/useBannerCreation";
 import PulseAnimation from "../components/PulseAnimation";
+import SuccessPublish from "../components/SuccessPublish";
+import CustomizationTab from "./CustomizationTab";
 
 
 
@@ -32,22 +34,34 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
+  const [showCustomize, setShowCustomize] = useState(false);
 
   const {
-        colors,
-        ui,
-        config,
-        booleans,
+        bannerStyles,
+        bannerUI,
+        bannerConfig,
+        bannerBooleans,
         popups,
         tooltips,
-        data,
+        siteData,
         buttons,
-        animation,
-        toggleStates,
+        bannerAnimation,
+        bannerToggleStates,
+        bannerLanguages,
         localStorage: localStorageData
       } = useAppState();
       const {user, exchangeAndVerifyIdToken } = useAuth();
-  const { createGDPRBanner, createCCPABanner, createBothBanners, isCreating, showLoading, showSuccess } = useBannerCreation();
+  const { 
+    createGDPRBanner, 
+    createCCPABanner, 
+    createBothBanners, 
+    isCreating, 
+    showLoading, 
+    showSuccess,
+    showSuccessPublish,
+    handleSuccessPublishProceed,
+    handleSuccessPublishGoBack
+  } = useBannerCreation();
   
 
   const handlePublishClick = async () => {
@@ -66,49 +80,49 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
         tooltips.setShowTooltip(false);
         
         // Create banner configuration using actual state values
-        const bannerConfig = {
-          color: colors.color,
-          bgColor: colors.bgColor,
-          btnColor: colors.btnColor,
-          paraColor: colors.paraColor,
-          secondcolor: colors.secondcolor,
-          bgColors: colors.bgColors,
-          headColor: colors.headColor,
-          secondbuttontext: colors.secondbuttontext,
-          primaryButtonText: colors.primaryButtonText,
-          Font: config.Font,
-          style: ui.style,
-          selected: ui.selected,
-          weight: config.weight,
-          borderRadius: config.borderRadius,
-          buttonRadius: config.buttonRadius,
-          animation: animation.animation,
-          easing: animation.easing,
-          language: animation.language,
+        const config: BannerConfig = {
+          color: bannerStyles.color,
+          bgColor: bannerStyles.bgColor,
+          btnColor: bannerStyles.btnColor,
+          paraColor: bannerStyles.paraColor,
+          secondcolor: bannerStyles.secondcolor,
+          bgColors: bannerStyles.bgColors,
+          headColor: bannerStyles.headColor,
+          secondbuttontext: bannerStyles.secondbuttontext,
+          primaryButtonText: bannerStyles.primaryButtonText,
+          Font: bannerStyles.Font,
+          style: bannerUI.style,
+          selected: bannerUI.selected,
+          weight: bannerStyles.weight,
+          borderRadius: bannerStyles.borderRadius,
+          buttonRadius: bannerConfig.buttonRadius,
+          animation: bannerAnimation.animation,
+          easing: bannerAnimation.easing,
+          language: bannerLanguages.language,
           toggleStates: {
-            customToggle: toggleStates.toggleStates.customToggle,
-            disableScroll: toggleStates.toggleStates.disableScroll,
-            closebutton: toggleStates.toggleStates.closebutton,
+            customToggle: bannerToggleStates.toggleStates.customToggle,
+            disableScroll: bannerToggleStates.toggleStates.disableScroll,
+            closebutton: bannerToggleStates.toggleStates.closebutton,
           }
         };
 
-        console.log("Creating banners with config:", bannerConfig);
-        console.log("Selected options:", ui.selectedOptions);
+        console.log("Creating banners with config:", config);
+        console.log("Selected options:", bannerUI.selectedOptions);
         
         // Create banners based on user selection - Default to both banners
-        if (ui.selectedOptions.includes("GDPR") && ui.selectedOptions.includes("U.S. State Laws")) {
+        if (bannerUI.selectedOptions.includes("GDPR") && bannerUI.selectedOptions.includes("U.S. State Laws")) {
           console.log("Creating both banners");
-          await createBothBanners(bannerConfig);
-        } else if (ui.selectedOptions.includes("GDPR")) {
+          await createBothBanners(config);
+        } else if (bannerUI.selectedOptions.includes("GDPR")) {
           console.log("Creating both banners (GDPR selected, defaulting to both)");
-          await createBothBanners(bannerConfig);
-        } else if (ui.selectedOptions.includes("U.S. State Laws")) {
+          await createBothBanners(config);
+        } else if (bannerUI.selectedOptions.includes("U.S. State Laws")) {
           console.log("Creating both banners (CCPA selected, defaulting to both)");
-          await createBothBanners(bannerConfig);
+          await createBothBanners(config);
         } else {
           console.log("Creating both banners (default)");
           // Default to both banners
-          await createBothBanners(bannerConfig);
+          await createBothBanners(config);
         }
         
         popups.setShowPopup(true);
@@ -127,8 +141,29 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
     }
   };
 
+  const handleCustomizeClick = () => {
+    setShowCustomize(true);
+  };
+
+  const handleBackFromCustomize = () => {
+    setShowCustomize(false);
+  };
+
+    // If showCustomize is true, render the CustomizationTab component
+  if (showCustomize) {
+    return <CustomizationTab onAuth={handleBackFromCustomize} />;
+  }
+
   return (
     <div className="publish-container">
+      {/* Success page overlay */}
+      {showSuccessPublish && (
+        <SuccessPublish
+          onProceed={handleSuccessPublishProceed}
+          onGoBack={handleSuccessPublishGoBack}
+        />
+      )}
+      
       {/* Loading overlay with pulse animation */}
       {isCreating && (
          <div className="popup">
@@ -191,7 +226,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
                   </div>
                 </div>
 
-                <div style={{ width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" }}><div className="pay-container"> <button className="pay-now-btn"  >Pay now</button><img src={arrow} alt="" /></div></div>
+                <div style={{ width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" }}><div className="pay-container"> <a href="https://billing.stripe.com/p/login/00gbIJclf5nz4Hm8ww" target="_blank" rel="noopener noreferrer" className="pay-now-btn" style={{ textDecoration: 'none', color: 'inherit' }}>Pay now</a><img src={arrow} alt="" /></div></div>
               </div>
 
 
@@ -224,9 +259,9 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed , }
         </div>
       )}
 
-            <a href="/customize" className="customize-link">
+            <button onClick={handleCustomizeClick} className="customize-link" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
               Customize <img src={arrow} alt="" />
-            </a>
+            </button>
           </div>
 
           {/* RIGHT COLUMN - PREVIEW */}
