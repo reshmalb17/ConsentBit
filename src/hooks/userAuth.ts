@@ -43,7 +43,7 @@ export function useAuth() {
   const { data: authState, isLoading: isAuthLoading } = useQuery<AuthState>({
     queryKey: ["auth"],
     queryFn: async () => {
-      const storedUser = localStorage.getItem("consentbit-userinfo");
+            const storedUser = localStorage.getItem("consentbit-userinfo");
       const wasExplicitlyLoggedOut = localStorage.getItem(
         "explicitly_logged_out"
       );
@@ -55,26 +55,53 @@ export function useAuth() {
 
       try {
         const userData = JSON.parse(storedUser);
-        if (!userData.sessionToken) {
+        
+        // Check if we have the required user data
+        if (!userData.email) {
           return { user: { firstName: "", email: "" }, sessionToken: "" };
         }
 
-        // Decode and validate token
-        const decodedToken = jwtDecode(userData.sessionToken) as DecodedToken;
-        if (decodedToken.exp * 1000 <= Date.now()) {
-          // Token expired - clear storage
-          localStorage.removeItem("consentbit-userinfo");
-          return { user: { firstName: "", email: "" }, sessionToken: "" };
-        }
+        // Handle case where firstName might be undefined but email exists
+        const firstName = userData.firstName || "";
 
-        // Return valid auth state
-        return {
-          user: {
-            firstName: decodedToken.user.firstName,
-            email: decodedToken.user.email,
-          },
-          sessionToken: userData.sessionToken,
-        };
+        // If we have a session token, validate it
+        if (userData.sessionToken) {
+          try {
+            const decodedToken = jwtDecode(userData.sessionToken) as DecodedToken;
+            if (decodedToken.exp * 1000 <= Date.now()) {
+              // Token expired - clear storage
+              localStorage.removeItem("consentbit-userinfo");
+              return { user: { firstName: "", email: "" }, sessionToken: "" };
+            }
+
+                         // Return valid auth state with decoded token data
+             return {
+               user: {
+                 firstName: decodedToken.user.firstName || firstName,
+                 email: decodedToken.user.email,
+               },
+               sessionToken: userData.sessionToken,
+             };
+                    } catch (tokenError) {
+            // Token is invalid, but we have user data - return without session token
+             return {
+               user: {
+                 firstName: firstName,
+                 email: userData.email,
+               },
+               sessionToken: "",
+             };
+          }
+                } else {
+          // No session token but we have user data
+          return {
+             user: {
+               firstName: firstName,
+               email: userData.email,
+             },
+             sessionToken: "",
+           };
+        }
       } catch (error) {
         // Clear invalid data
         localStorage.removeItem("consentbit-userinfo");
@@ -144,8 +171,16 @@ export function useAuth() {
   });
 
   // Function to initiate token exchange process
-  const exchangeAndVerifyIdToken = async () => {
+  const exchangeAndVerifyIdToken = async (isManualAuth: boolean = false) => {
     try {
+      // Check if this is automatic auth restoration during app startup
+      if (!isManualAuth) {
+        const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+        if (wasExplicitlyLoggedOut) {
+          return;
+        }
+      }
+
       // Get new ID token from Webflow
       const idToken = await webflow.getIdToken();
       if (!idToken) {
@@ -232,7 +267,7 @@ export function useAuth() {
 
     const onAuth = async () => {
       try {
-        await exchangeAndVerifyIdToken();
+        await exchangeAndVerifyIdToken(true); // Manual auth
       } catch (error) {
         // Clear any partial auth state
         localStorage.removeItem("consentbit-userinfo");

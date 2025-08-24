@@ -4,10 +4,14 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import SetupStep from "./components/SetupStep";
 import WelcomeScipt from "./components/WelcomeScript";
 import CustomizationTab from "./components/CustomizationTab";
+import ConfirmPublish from "./components/ConfirmPublish";
+import SuccessPublish from "./components/SuccessPublish";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppState } from "./hooks/useAppState";  
 import { useAuth } from "./hooks/userAuth";
 import { use } from "i18next";
+import { serialize } from "v8";
+import { getCurrentSiteId, listCurrentSiteData, clearCurrentSiteData, clearAllData, clearAuthData, clearAuthIfNotAuthorized, checkMigrationStatus, forceMigration, usePersistentState, debugAuthStatus, forceClearAuthData } from "./hooks/usePersistentState";
 
 
 
@@ -16,7 +20,9 @@ import { use } from "i18next";
 const App: React.FC = () => {
 
   const queryClient = useQueryClient();
-  const [skipWelcomeScreen, setSkipWelcomeScreen] = useState(false);
+  const [skipWelcomeScreen, setSkipWelcomeScreen] = usePersistentState("skipWelcomeScreen", false);
+
+  
   
   const {
     bannerStyles,
@@ -28,16 +34,98 @@ const App: React.FC = () => {
     siteData,
     buttons,
     bannerAnimation,
-    localStorage: localStorageData
+    localStorage: localStorageData,
+    componentStates,
   } = useAppState();
 
 
-  const { user, exchangeAndVerifyIdToken } = useAuth();
+  const { user, exchangeAndVerifyIdToken, openAuthScreen } = useAuth();
+
+ 
+
+
+  // Welcome Screen -> WelcomeScript (Scan Project clicked)
+  const handleWelcomeScreen = () => {
+    componentStates.setIsWelcomeScreen(false);
+    bannerBooleans.setFetchScripts(true);
+    componentStates.setWelcomeScipt(true);
+  };
+
+  // WelcomeScript -> SetupStep (Next clicked)
+  const handleWelcomeScipt = () => {
+    componentStates.resetComponentStates();
+    componentStates.setIsSetUpStep(true);
+  };
+
+  // WelcomeScript -> WelcomeScreen (Go back)
+  const handleWelcomeScriptGoBack = () => {
+    // Don't reset script-related states, just change the component
+    componentStates.setWelcomeScipt(false);
+    componentStates.setIsSetUpStep(false);
+    componentStates.setIsConfirmPublish(false);
+    componentStates.setIsSuccessPublish(false);
+    componentStates.setIsCustomizationTab(false);
+    componentStates.setIsWelcomeScreen(true);
+    // Don't set fetchScripts to true - scripts are already loaded and preserved in ScriptContext
+    // bannerBooleans.setFetchScripts(true); // This was causing re-fetching and loading screen
+  };
+
+  // SetupStep -> ConfirmPublish (Proceed to next step clicked)
+  const handleSetUpStep = () => {
+    // Set all states to false first, then set the one we want
+    componentStates.setIsWelcomeScreen(false);
+    componentStates.setWelcomeScipt(false);
+    componentStates.setIsSetUpStep(false);
+    componentStates.setIsSuccessPublish(false);
+    componentStates.setIsCustomizationTab(false);
+    componentStates.setIsConfirmPublish(true);
+  };
+
+  // ConfirmPublish -> SuccessPublish (Publish Banner clicked)
+  const handleConfirmPublish = () => {
+    componentStates.resetComponentStates();
+    componentStates.setIsSuccessPublish(true);
+    // Set flag that banner was added through welcome flow
+    bannerBooleans.setIsBannerAdded(true);
+  };
+
+  // ConfirmPublish -> SetupStep (Go back)
+  const handleConfirmPublishGoBack = () => {
+    // Set all states to false first, then set the one we want
+    componentStates.setIsWelcomeScreen(false);
+    componentStates.setWelcomeScipt(false);
+    componentStates.setIsConfirmPublish(false);
+    componentStates.setIsSuccessPublish(false);
+    componentStates.setIsCustomizationTab(false);
+    componentStates.setIsSetUpStep(true);
+  };
+
+  // SuccessPublish -> CustomizationTab (Customize clicked)
+  const handleCustomize = () => {
+    // Set all states to false first, then set the one we want
+    componentStates.setIsWelcomeScreen(false);
+    componentStates.setWelcomeScipt(false);
+    componentStates.setIsSetUpStep(false);
+    componentStates.setIsConfirmPublish(false);
+    componentStates.setIsSuccessPublish(false);
+    componentStates.setIsCustomizationTab(true);
+  };
+
+  // SuccessPublish -> ConfirmPublish (Go back)
+  const handleSuccessPublishGoBack = () => {
+    // Set all states to false first, then set the one we want
+    componentStates.setIsWelcomeScreen(false);
+    componentStates.setWelcomeScipt(false);
+    componentStates.setIsSetUpStep(false);
+    componentStates.setIsSuccessPublish(false);
+    componentStates.setIsCustomizationTab(false);
+    componentStates.setIsConfirmPublish(true);
+  };
+
 
   // Welcome screen handlers
   const handleWelcomeAuthorize = () => {
-    popups.setShowWelcomeScreen(true);
-    popups.setShowSetUpStep(false);
+    openAuthScreen();
   };
 
   const handleWelcomeNeedHelp = () => {
@@ -46,83 +134,113 @@ const App: React.FC = () => {
   };
 
   const handleBackToWelcome = () => {
-    // Clear the localStorage flag and show welcome screen
-    localStorage.removeItem("bannerAddedThroughWelcome");
+    // Clear the banner added flag and show welcome screen
+    bannerBooleans.setIsBannerAdded(false);
     setSkipWelcomeScreen(false);
-    popups.setShowWelcomeScreen(true);
+    componentStates.resetComponentStates();
+    componentStates.setIsWelcomeScreen(true);
   };
 
-  // Setup step handlers
+  // SetupStep -> WelcomeScript (Go back)
   const handleSetupGoBack = () => {
-    popups.setShowSetUpStep(false);
-    popups.setShowWelcomeScreen(true);
+    // Don't reset fetchScripts to preserve script states
+    componentStates.setIsSetUpStep(false);
+    componentStates.setWelcomeScipt(true);
+    // Don't set fetchScripts to true - scripts are already loaded and preserved in ScriptContext
+    // bannerBooleans.setFetchScripts(true); // This was causing re-fetching and loading screen
   };
 
-  const handleSetupProceed = () => {
-    popups.setShowSetUpStep(false);
-    // Add logic for next step here
-  };
+  
+  
 
 
 
- //authentication
+
+  // Check if banner was already added (for existing users)
   useEffect(() => {
-    const stored = localStorage.getItem("consentbit-userinfo");
-
-    if (!user?.firstName && stored) {
-      const parsed = JSON.parse(stored);
-
-      if (parsed?.sessionToken) {
-        exchangeAndVerifyIdToken();
+    // Add a small delay to ensure all states are properly loaded from localStorage
+    const timer = setTimeout(() => {
+      if (bannerBooleans.isBannerAdded) {
+        // For existing users who already have a banner, show CustomizationTab directly
+        setSkipWelcomeScreen(true);
+        componentStates.resetComponentStates();
+        componentStates.setIsCustomizationTab(true);
       } else {
-       
-        queryClient.setQueryData(["auth"], {
-          user: {
-            firstName: parsed.firstName,
-            email: parsed.email,
-          },
-          sessionToken: "",
-        });
+        // For new users or users without banner, start with welcome screen
+        setSkipWelcomeScreen(false);
+        componentStates.resetComponentStates();
+        componentStates.setIsWelcomeScreen(true);
       }
-    }
-  }, []);
+    }, 100); // Small delay to ensure localStorage is read
 
-  // Check if banner was added through welcome flow
+    return () => clearTimeout(timer);
+  }, [bannerBooleans.isBannerAdded]); // Depend on isBannerAdded state
+
+  // Check and clear invalid authentication data on startup
   useEffect(() => {
-    const bannerAddedThroughWelcome = localStorage.getItem("bannerAddedThroughWelcome");
-    if (bannerAddedThroughWelcome === "true") {
-      setSkipWelcomeScreen(true);
-    }
-  }, []);
+    clearAuthIfNotAuthorized();
+  }, []); // Run once on app startup
 
 
 
 
 
+
+
+
+
+
+  // Debug section - remove this in production
+  const debugInfo = {
+    currentSiteId: getCurrentSiteId(),
+    currentSiteData: listCurrentSiteData(),
+    migrationStatus: checkMigrationStatus(),
+  };
+
+  // Debug function to check auth status
+  const handleDebugAuth = () => {
+    debugAuthStatus();
+  };
 
   return (
-    <div className="app">
+   <div>
+   
+
       {skipWelcomeScreen ? (
         <CustomizationTab onAuth={handleBackToWelcome} />
-      ) : popups.showWelcomeScreen ? (
+      ) : componentStates.isWelcomeScreen ? (
         <WelcomeScreen 
           onAuthorize={handleWelcomeAuthorize}
           onNeedHelp={handleWelcomeNeedHelp}
-          authenticated={user?.firstName ? true : false}
+          authenticated={user?.email ? true : false}
+          handleWelcomeScreen={handleWelcomeScreen}
         />
-      ) : popups.setShowSetUpStep ? (
-        <SetupStep 
+      ) : componentStates.isWelcomeScipt ? (
+        <WelcomeScipt
+          isFetchScripts={bannerBooleans.fetchScripts}
+          handleWelcomeScipt={handleWelcomeScipt}
+          onGoBack={handleWelcomeScriptGoBack}
+        />
+      ) : componentStates.isSetUpStep ? (
+        <SetupStep
           onGoBack={handleSetupGoBack}
-          onProceed={handleSetupProceed}
+          handleSetUpStep={handleSetUpStep}
         />
+      ) : componentStates.isConfirmPublish ? (
+        <ConfirmPublish
+          onGoBack={handleConfirmPublishGoBack}
+          handleCustomize={handleCustomize}
+          handleConfirmPublish={handleConfirmPublish}
+        />
+      ) : componentStates.isSuccessPublish ? (
+        <SuccessPublish
+          onGoBack={handleSuccessPublishGoBack}
+          handleCustomize={handleCustomize}
+        />
+      ) : componentStates.isCustomizationTab ? (
+        <CustomizationTab onAuth={handleBackToWelcome} />
       ) : (
-        <div className="main-app">
-          <h1>Main App Interface</h1>
-          <p>Welcome to the main application!</p>
-          <button onClick={handleBackToWelcome}>
-            Back to Welcome Screen
-          </button>
-        </div>
+        <CustomizationTab onAuth={handleBackToWelcome} />
       )}
        
      

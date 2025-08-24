@@ -1366,8 +1366,8 @@ export const useBannerCreation = () => {
 
       setShowSuccessPublish(true);
       
-      // Set localStorage to indicate banner was added through welcome flow
-      localStorage.setItem("bannerAddedThroughWelcome", "true");
+      // Set flag that banner was added through welcome flow
+      bannerBooleans.setIsBannerAdded(true);
     } catch (error) {
 
       throw error;

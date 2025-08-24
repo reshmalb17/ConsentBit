@@ -27,10 +27,12 @@ const crossmark = new URL("../assets/group.svg", import.meta.url).href;
 
 type ConfirmPublishProps = {
   onGoBack: () => void;
-  onProceed: () => void;
+  handleConfirmPublish: () => void;
+  handleCustomize: () => void;
+  
 };
 
-const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed, }) => {
+const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirmPublish, handleCustomize}) => {
   const [isConfirmed, setIsConfirmed] = useState(true);
   const [showTooltip, setShowTooltip] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
@@ -54,15 +56,11 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed, })
   } = useAppState();
   const { user, exchangeAndVerifyIdToken } = useAuth();
   const {
-    createGDPRBanner,
-    createCCPABanner,
+    
     createBothBanners,
     isCreating,
-    showLoading,
-    showSuccess,
-    showSuccessPublish,
-    handleSuccessPublishProceed,
-    handleSuccessPublishGoBack
+    
+   
   } = useBannerCreation();
 
 
@@ -121,6 +119,8 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed, })
         }
 
         popups.setShowPopup(true);
+        // After successful banner creation, call handleConfirmPublish to show SuccessPublish component
+        handleConfirmPublish();
       } else {
         popups.setShowPopup(false);
         if (!isUserValid) {
@@ -134,7 +134,6 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed, })
       tooltips.setShowTooltip(false);
     }
   };
-
   const handleCustomizeClick = () => {
     setShowCustomize(true);
   };
@@ -154,18 +153,9 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed, })
   }
 
   return (
-    // <>
-    // {showSuccessPublish ? (
-    //   <CustomizationTab onAuth={handleBackFromCustomize} initialActiveTab="Customization" />
-    // ) : (
+
       <div className="publish-container">
-        {/* Success page overlay */}
-                  {showSuccessPublish && (
-            <SuccessPublish
-              onProceed={handleSuccessPublishProceed}
-              onGoBack={handleSuccessPublishGoBack}
-            />
-          )}
+        
        <div className="publish-c">
           {/* Loading overlay with pulse animation */}
           {isCreating && (
@@ -268,7 +258,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, onProceed, })
                   </div>
                 )}
     
-                <button onClick={handleCustomizeClick} className="customize-link" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none' }}>
+                <button onClick={handleCustomize} className="customize-link" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none' }}>
                   Customize <img src={arrow} alt="" />
                 </button>
               </div>

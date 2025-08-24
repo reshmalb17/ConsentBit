@@ -179,12 +179,7 @@ const CSVExportAdvanced: React.FC<CSVExportAdvancedProps> = ({
            });
            
                                                // Verify sorting worked correctly
-            // // console.log('First 3 items after sorting (should be newest first):', sortedVisitors.slice(0, 3).map(v => ({
-            //   id: v.visitorId,
-            //   date: v.lastConsentDate,
-            //   timestamp: new Date(v.lastConsentDate || 0).getTime()
-            // })));
-            
+       
             // Create a new array to ensure the sort is applied
             const finalSortedVisitors = [...sortedVisitors];
             
@@ -194,12 +189,7 @@ const CSVExportAdvanced: React.FC<CSVExportAdvancedProps> = ({
               const dateB = new Date(b.lastConsentDate || 0);
               return dateB.getTime() - dateA.getTime();
             });
-            
-            // console.log('After manual re-sort - First 3 items:', manuallySorted.slice(0, 3).map(v => ({
-            //   id: v.visitorId,
-            //   date: v.lastConsentDate,
-            //   timestamp: new Date(v.lastConsentDate || 0).getTime()
-            // })));
+        
             
             setVisitorData(manuallySorted);
            setTotalRecordsAvailable(sortedVisitors.length);

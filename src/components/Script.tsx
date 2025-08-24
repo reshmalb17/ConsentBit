@@ -6,6 +6,7 @@ import { useScriptContext } from "../context/ScriptContext";
 import PulseAnimation from './PulseAnimation';
 import { usePersistentState } from '../hooks/usePersistentState';
 import webflow from '../types/webflowtypes';
+import { useAppState } from "../hooks/useAppState";
 
 const questionmark = new URL("../assets/blue question.svg", import.meta.url).href;
 const settings = new URL("../assets/setting-2.svg", import.meta.url).href;
@@ -27,39 +28,28 @@ const goto = new URL("../assets/gotosetting.svg", import.meta.url).href;
 
 const Script: React.FC<{
     fetchScripts: boolean;
-    setFetchScripts: React.Dispatch<React.SetStateAction<boolean>>;
     isWelcome?: boolean;
-}> = ({ fetchScripts, setFetchScripts, isWelcome }) => {
+}> = ({ fetchScripts,isWelcome }) => {
     const { scripts, setScripts } = useScriptContext();
+    const { bannerBooleans } = useAppState();
 
     // Debug scripts state changes
     useEffect(() => {
     
     }, [scripts]);
-    const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null);
+    const [isSaving, setIsSaving] = usePersistentState("script_isSaving", false);
+    const [saveStatus, setSaveStatus] = usePersistentState<{ success: boolean; message: string } | null>("script_saveStatus", null);
     const categories = ["Essential", "Personalization", "Analytics", "Marketing"];
     const userinfo = localStorage.getItem("consentbit-userinfo");
-    const [showPopup, setShowPopup] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [showAuthPopup, setShowAuthPopup] = useState(false);
-    const [copiedScriptIndex, setCopiedScriptIndex] = useState<number | null>(null);
+    const [showPopup, setShowPopup] = usePersistentState("script_showPopup", false);
+    const [isLoading, setIsLoading] = usePersistentState("script_isLoading", false);
+    const [showAuthPopup, setShowAuthPopup] = usePersistentState("script_showAuthPopup", false);
+    const [copiedScriptIndex, setCopiedScriptIndex] = usePersistentState<number | null>("script_copiedScriptIndex", null);
     const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
 
-    // Fetch site info when component mounts
-    useEffect(() => {
-        const fetchSiteInfo = async () => {
-            try {
-                const siteInfo = await webflow.getSiteInfo();
-                setSiteInfo(siteInfo);
-            } catch (error) {
-            }
-        };
-
-        if (!siteInfo) {
-            fetchSiteInfo();
-        }
-    }, [siteInfo, setSiteInfo]);
+    // REMOVED: Automatic site info fetching
+    // Site info should only be set when user explicitly authorizes and uses the app
+    // This prevents setting site info before authorization
 
     // Debug logs for siteInfo
     useEffect(() => {
@@ -319,19 +309,19 @@ const Script: React.FC<{
                     await fetchScriptData();
                     // Only reset the flag if not in welcome mode
                     if (!isWelcome) {
-                        setFetchScripts(false);
+                       bannerBooleans.setFetchScripts(false);
                     }
                 } catch (error) {
             
                     // Reset flag even on error if not in welcome mode
                     if (!isWelcome) {
-                        setFetchScripts(false);
+                        bannerBooleans.setFetchScripts(false);
                     }
                 }
             };
             fetchDataAndResetFlag();
         }
-    }, [fetchScripts, fetchScriptData, setFetchScripts, isWelcome]);
+    }, [fetchScripts, fetchScriptData, bannerBooleans.setFetchScripts, isWelcome]);
 
     const handleSaveAll = async () => {
         setIsSaving(true);

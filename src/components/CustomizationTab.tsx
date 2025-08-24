@@ -110,6 +110,14 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [isLoading, setIsLoading] = usePersistentState("isLoading", false);
   const [userlocaldata, setUserlocaldata] = useState<UserData | null>(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  // Reset loading states when component mounts to prevent stuck loading animations
+  React.useEffect(() => {
+    setIsLoading(false);
+    setShowLoadingPopup(false);
+    setIsExporting(false);
+    setIsCSVButtonLoading(false);
+  }, []);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [buttonText, setButtonText] = usePersistentState("buttonText", "Scan Project");
   const [showLoadingPopup, setShowLoadingPopup] = useState(false);
@@ -517,7 +525,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       const parsed = JSON.parse(stored);
 
       if (parsed?.sessionToken) {
-        exchangeAndVerifyIdToken();
+        exchangeAndVerifyIdToken(true); // Manual auth restoration
       } else {
         // fallback manual restore if no sessionToken (dev/test scenarios)
         queryClient.setQueryData(["auth"], {
@@ -538,7 +546,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       // localStorage.removeItem("consentbit-userinfo"); // ❌ REMOVED: This was clearing settings after auth
     }
     const onAuth = async () => {
-      await exchangeAndVerifyIdToken();
+      await exchangeAndVerifyIdToken(true); // Manual auth
     };
     onAuth();
   }, [])
@@ -2479,7 +2487,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             />
           )}
 
-          {activeTab === "Script" && <Script fetchScripts={fetchScripts} setFetchScripts={setFetchScripts} isWelcome={false} />}
+          {activeTab === "Script" && <Script fetchScripts={fetchScripts} isWelcome={false} />}
         </div>
       </div>
       <DonotShare
