@@ -11,25 +11,16 @@ const thumbnail = new URL("../assets/Cover.jpg", import.meta.url).href;
 
 type WelcomeScriptProps = {
   isFetchScripts: boolean;
-  setFetchScripts: (value: boolean) => void;
+  handleWelcomeScipt: () => void;
+  onGoBack?: () => void;
 };
 
-const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts,setFetchScripts }) => {
+const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts, handleWelcomeScipt, onGoBack }) => {
 
-   const {bannerBooleans, popups} = useAppState();
 
-  const handleNextButton = () => {
-    popups.setShowPopupWelcomeSetup(true);
-  };
 
-  const handleGoBack = () => {
-    popups.setShowPopupWelcomeSetup(false);
-  };
 
-  const handleProceed = () => {
-    popups.setShowPopupWelcomeSetup(false);
-    popups.setShowSetUpStep(true);
-  };
+  
 
   return (
     <div className="ws-container">
@@ -76,24 +67,20 @@ const WelcomeScipt: React.FC<WelcomeScriptProps> = ({ isFetchScripts,setFetchScr
       {/* Scripts Section Header */}
       <div className="ws-scripts-header">
         <h2 className="ws-scripts-title">List of scripts to update</h2>
-        <button className="ws-next-btn" onClick={handleNextButton}>
-          Next
-        </button>
+        <div className="ws-navigation-buttons">
+         
+          <button className="ws-next-btn" onClick={handleWelcomeScipt}>
+            Next
+          </button>
+        </div>
       </div>
 
       {/* Scrollable Scripts Area */}
       <div className="ws-scripts-scroll">
-        <Script fetchScripts={isFetchScripts} setFetchScripts={setFetchScripts} isWelcome={true} />
+        <Script fetchScripts={isFetchScripts}  isWelcome={true} />
       </div>
 
-      {/* Popup Setup */}
-      {popups.showPopupWelcomeSetup && (
-        <div className="ws-popup">
-          <div className="ws-popup-content">
-            <SetupStep onGoBack={handleGoBack} onProceed={handleProceed} />
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 };

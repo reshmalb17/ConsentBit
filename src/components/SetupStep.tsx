@@ -14,12 +14,11 @@ const uparrow = new URL("../assets/blue up arrow.svg", import.meta.url).href;
 
 type SetupStepProps = {
   onGoBack: () => void;
-  onProceed: () => void;
+  handleSetUpStep: () => void;
 };
 
-const SetupStep: React.FC<SetupStepProps> = ({ onGoBack, onProceed }) => {
+const SetupStep: React.FC<SetupStepProps> = ({ onGoBack,handleSetUpStep }) => {
   const [isConfirmed, setIsConfirmed] = useState(false);
-  const [showConfirmPublish, setShowConfirmPublish] = useState(false);
   // Asset imports
   const logo = new URL("../assets/icon.svg", import.meta.url).href;
   const questionmark = new URL("../assets/question.svg", import.meta.url).href;
@@ -33,27 +32,13 @@ const SetupStep: React.FC<SetupStepProps> = ({ onGoBack, onProceed }) => {
     window.open('https://www.consentbit.com/help-document', '_blank');
   };
 
-  const handleProceedToConfirmPublish = () => {
-    setShowConfirmPublish(true);
-  };
 
-  const handleGoBackFromConfirmPublish = () => {
-    setShowConfirmPublish(false);
-  };
-
-  const handleConfirmPublishProceed = () => {
-    onProceed();
-  };
+ 
 
 
   return (
     <>
-      {showConfirmPublish ? (
-        <ConfirmPublish
-          onGoBack={handleGoBackFromConfirmPublish}
-          onProceed={handleConfirmPublishProceed}
-        />
-      ) : (
+     
         <div className="popup">
           {/* Main content container */}
           <div className="setup-main-content">
@@ -93,7 +78,7 @@ const SetupStep: React.FC<SetupStepProps> = ({ onGoBack, onProceed }) => {
 
                 <button
                   className="setup-proceed-btn"
-                  onClick={handleProceedToConfirmPublish}
+                  onClick={handleSetUpStep}
                   disabled={!isConfirmed}
                 >
                   Proceed to next step
@@ -149,7 +134,7 @@ const SetupStep: React.FC<SetupStepProps> = ({ onGoBack, onProceed }) => {
             </div>
           </div>
         </div>
-      )}
+   
     </>
   );
 };

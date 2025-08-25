@@ -72,6 +72,7 @@ export function useAuth() {
           user: {
             firstName: decodedToken.user.firstName,
             email: decodedToken.user.email,
+            siteId: userData.siteId, // Include siteId from stored data
           },
           sessionToken: userData.sessionToken,
         };
@@ -123,11 +124,12 @@ export function useAuth() {
           sessionToken: data.sessionToken,
           firstName: data.firstName,
           email: data.email,
+          siteId: data.siteId, // Store the siteId from server response
           exp: decodedToken.exp,
         };
 
-        // Update localStorage
-        localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                 // Update localStorage
+         localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
         localStorage.removeItem("explicitly_logged_out");
 
         // Directly update the query data instead of invalidating
@@ -135,6 +137,7 @@ export function useAuth() {
           user: {
             firstName: decodedToken.user.firstName,
             email: decodedToken.user.email,
+            siteId: data.siteId, // Include siteId in user data
           },
           sessionToken: data.sessionToken,
         });
@@ -184,17 +187,19 @@ export function useAuth() {
         sessionToken: data.sessionToken,
         firstName: data.firstName,
         email: data.email,
+        siteId: siteInfo.siteId, // Store the siteId
         exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
       };
 
-      localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+             localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
       localStorage.removeItem("explicitly_logged_out");
 
       // Update React Query cache
       queryClient.setQueryData<AuthState>(["auth"], {
         user: {
           firstName: data.firstName,
-          email: data.email
+          email: data.email,
+          siteId: siteInfo.siteId
         },
         sessionToken: data.sessionToken
       });
@@ -211,7 +216,7 @@ export function useAuth() {
   const logout = () => {
     // Set logout flag and clear storage
     localStorage.setItem("explicitly_logged_out", "true");
-    localStorage.removeItem("consentbit-userinfo");   
+    localStorage.removeItem("consentbit-userinfo");
     queryClient.setQueryData(["auth"], {
       user: { firstName: "", email: "" },
       sessionToken: "",
@@ -248,6 +253,27 @@ export function useAuth() {
     }, 1000);
   };
 
+  // Function to check if user is authenticated for current site
+  const isAuthenticatedForCurrentSite = async (): Promise<boolean> => {
+    try {
+      // Check if user has basic authentication
+      if (!authState?.user?.email || !authState?.sessionToken) {
+        return false;
+      }
+
+      // Get current site info from Webflow
+      const currentSiteInfo = await webflow.getSiteInfo();
+      if (!currentSiteInfo?.siteId) {
+        return false;
+      }
+
+      // Check if user is authenticated for this specific site
+      return authState.user.siteId === currentSiteInfo.siteId;
+    } catch (error) {
+      return false;
+    }
+  };
+
   return {
     user: authState?.user || { firstName: "", email: "" },
     sessionToken: authState?.sessionToken || "",
@@ -255,5 +281,6 @@ export function useAuth() {
     exchangeAndVerifyIdToken,
     logout,
     openAuthScreen,
+    isAuthenticatedForCurrentSite,
   };
 }

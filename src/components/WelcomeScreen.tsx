@@ -1,7 +1,7 @@
 import React from "react";
 import "../style/styless.css";
 
-import { useAuth } from "../hooks/userAuth";
+
 import { useAppState } from "../hooks/useAppState";
 import WelcomeScipt from "./WelcomeScript";
 import NeedHelp from "./NeedHelp";
@@ -14,43 +14,13 @@ type WelcomeScreenProps = {
   onAuthorize: () => void;
   onNeedHelp: () => void;
   authenticated?:boolean;
+  handleWelcomeScreen: () => void;
 };
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,authenticated}) => {
-     const {bannerBooleans} = useAppState();
-  const base_url = "https://cb-server.web-8fb.workers.dev"
-const { user, exchangeAndVerifyIdToken } = useAuth();
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,authenticated,handleWelcomeScreen}) => {
 
-   // Function to open the authorization popup authorization window
-   const openAuthScreen = () => {
-    const authWindow = window.open(
-      `${base_url}/api/auth/authorize?state=webflow_designer`,
-      "_blank",
-      "width=600,height=600"
-    );
-
-    const onAuth = async () => {
-      await exchangeAndVerifyIdToken();
-    };
-    const checkWindow = setInterval(() => {
-      if (authWindow?.closed) {
-        clearInterval(checkWindow);
-        onAuth();
-      }
-    }, 1000);
-  };
-  const handleScanProject = () => {
-    bannerBooleans.setFetchScripts(true);
-  }
-
- return (
-  <div className="welcome-screen">
-    {bannerBooleans.fetchScripts ? (
-      <WelcomeScipt
-        isFetchScripts={bannerBooleans.fetchScripts}
-        setFetchScripts={bannerBooleans.setFetchScripts}
-      />
-    ) : (
+   return (
+    <div className="welcome-screen">
       <div className="welcome-main-content">
         {/* Background line images */}
         <img src={leftLines} alt="" className="welcome-bg-lines-left" />
@@ -79,21 +49,19 @@ const { user, exchangeAndVerifyIdToken } = useAuth();
           {authenticated ? (
             <button
               className="welcome-authorize-btn scan-project"
-              onClick={handleScanProject}
+              onClick={handleWelcomeScreen}
             >
               Scan Project
             </button>
           ) : (
-            <button className="welcome-authorize-btn" onClick={openAuthScreen}>
+            <button className="welcome-authorize-btn" onClick={onAuthorize}>
               Authorize
             </button>
           )}
         </div>
       </div>
-    )}
-  </div>
-);
-
+    </div>
+  );
 };
 
 export default WelcomeScreen;

@@ -7,21 +7,15 @@ const image = new URL("../assets/customizationscreenshot.svg", import.meta.url).
 const whitearrow = new URL("../assets/→.svg", import.meta.url).href;
 
 type SuccessPublishProps = {
-    onProceed: () => void;
     onGoBack: () => void; 
+    handleCustomize: () => void;
 };
 
-const SuccessPublish: React.FC<SuccessPublishProps> = ({ onProceed, onGoBack }) => {
-    const [isCustomizingClicked, setIsCustomizingClicked] = React.useState(false);
-    const handleCustomizeClick = () => {
-        setIsCustomizingClicked(true);
-    };
-
+const SuccessPublish: React.FC<SuccessPublishProps> = ({  onGoBack ,handleCustomize}) => {
+  
     return (
         <>
-        {isCustomizingClicked ? (
-           <CustomizationTab onAuth={() => {}} initialActiveTab="Customization" /> 
-        ) : (
+       
           <div className="success-overlay">
             <motion.svg
                 className="success-icon"
@@ -78,7 +72,7 @@ const SuccessPublish: React.FC<SuccessPublishProps> = ({ onProceed, onGoBack }) 
                             <li>Smooth animations</li>
                             <li>Region-specific compliance settings</li>
                         </ul>
-                        <button className="customize-btn" onClick={handleCustomizeClick}>
+                        <button className="customize-btn" onClick={handleCustomize}>
                             Start Customizing <img src={whitearrow} alt="" />
                         </button>
                     </div>                   
@@ -88,7 +82,7 @@ const SuccessPublish: React.FC<SuccessPublishProps> = ({ onProceed, onGoBack }) 
                 </div>
             </div>
         </div>
-        )}
+        
         </>
         
     );

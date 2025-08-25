@@ -7,7 +7,9 @@ html, body {
   height: 100%;
   overflow: hidden;
 }
-
+.app{
+  height: 600px;
+}
 /* General Styles */
 body {
   background-color: #0A081B;
@@ -530,7 +532,7 @@ img {
   border: 1px solid rgba(46, 43, 69, 1);
   border-radius: 5px;
   color: #FFFFFF;
-  max-width: 120px;
+  max-width: 123px;
 
 }
 
@@ -557,9 +559,6 @@ input[type="text"] {
   outline: none;
 }
 
-
-
-
     .custom-select {
       position: relative;
       width: 140px;
@@ -572,6 +571,21 @@ input[type="text"] {
       color: #fff;
       background: rgba(217, 217, 217, 0.02);
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .custom-select.open .selected::after {
+      transform: rotate(180deg);
+    }
+    
+    .dropdown-icon {
+      transition: transform 0.2s ease;
+    }
+    
+    .custom-select.open .dropdown-icon {
+      transform: rotate(180deg);
     }
     
     .options {
@@ -602,6 +616,11 @@ input[type="text"] {
       list-style-type: none;
       padding-left: 0;
       margin: 0;
+    }
+
+    /* Size dropdown specific width */
+    .custom-select.size-dropdown {
+      width: 87px;
     }
 
 /* Style the spinner buttons (Chrome, Edge, Safari) */

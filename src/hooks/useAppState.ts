@@ -68,7 +68,7 @@ export const useAppState = () => {
   const [isActive, setIsActive] = usePersistentState("isActive", false);
   const [isLoading, setIsLoading] = usePersistentState("isLoading", false);
   const [isBannerAdded, setIsBannerAdded] = usePersistentState("isBannerAdded", false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribed, setIsSubscribed] = usePersistentState("isSubscribed", false);
   const [fetchScripts, setFetchScripts] = usePersistentState("fetchScripts", false);
 
   // Reset fetchScripts to false on app initialization to ensure we start from welcome screen
@@ -76,32 +76,48 @@ export const useAppState = () => {
     setFetchScripts(false);
   }, []);
 
+  // Function to reset all component states to initial values
+  const resetComponentStates = () => {
+    setIsWelcomeScreen(false);
+    setIsSetUpStep(false);
+    setWelcomeScipt(false);
+    setIsConfirmPublish(false);
+    setIsSuccessPublish(false);
+    setIsCustomizationTab(false);
+  };
+
   // Popup/Modal states
-  const [showPopup, setShowPopup] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
-  const [showLoadingPopup, setShowLoadingPopup] = useState(false);
-  const [showChoosePlan, setShowChoosePlan] = useState(false);
-  const [showCSVExportAdvanced, setShowCSVExportAdvanced] = useState(false);
-  const [showWelcomeScreen, setShowWelcomeScreen] = useState(true);
-  const [showSetSetup,setShowSetUpStep] = useState(false); 
-  const[showPopupWelcomeSetup,setShowPopupWelcomeSetup]=useState(false); 
+  const [showPopup, setShowPopup] = usePersistentState("showPopup", false);
+  const [showSuccessPopup, setShowSuccessPopup] = usePersistentState("showSuccessPopup", false);
+  const [showAuthPopup, setShowAuthPopup] = usePersistentState("showAuthPopup", false);
+  const [showLoadingPopup, setShowLoadingPopup] = usePersistentState("showLoadingPopup", false);
+  const [showChoosePlan, setShowChoosePlan] = usePersistentState("showChoosePlan", false);
+  const [showCSVExportAdvanced, setShowCSVExportAdvanced] = usePersistentState("showCSVExportAdvanced", false);
+  const [showWelcomeScreen, setShowWelcomeScreen] = usePersistentState("showWelcomeScreen", true);
+  const [showSetSetup,setShowSetUpStep] = usePersistentState("showSetSetup", false); 
+  const[showPopupWelcomeSetup,setShowPopupWelcomeSetup] = usePersistentState("showPopupWelcomeSetup", false); 
 
   // Tooltip states
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [fadeOut, setFadeOut] = useState(false);
+  const [showTooltip, setShowTooltip] = usePersistentState("showTooltip", false);
+  const [fadeOut, setFadeOut] = usePersistentState("fadeOut", false);
 
   // Data states
   const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
   const [accessToken, setAccessToken] = usePersistentState<string>("accessToken", '');
   const [pages, setPages] = usePersistentState("pages", []);
-  const [userlocaldata, setUserlocaldata] = useState<UserData | null>(null);
-  const [sessionTokenFromLocalStorage, setSessionToken] = useState(getSessionTokenFromLocalStorage());
+  const [userlocaldata, setUserlocaldata] = usePersistentState<UserData | null>("userlocaldata", null);
+  const [sessionTokenFromLocalStorage, setSessionToken] = usePersistentState<string>("sessionTokenFromLocalStorage", getSessionTokenFromLocalStorage() || '');
 
   // Button states
   const [buttonText, setButtonText] = usePersistentState("buttonText", "Scan Project");
-  const [isExporting, setIsExporting] = useState(false);
-  const [isCSVButtonLoading, setIsCSVButtonLoading] = useState(false);
+  const [isExporting, setIsExporting] = usePersistentState("isExporting", false);
+  const [isCSVButtonLoading, setIsCSVButtonLoading] = usePersistentState("isCSVButtonLoading", false);
+  const [isWelcomeScreen, setIsWelcomeScreen] = usePersistentState("isWelcomeScreen", false);
+  const [isSetUpStep, setIsSetUpStep] = usePersistentState("isSetUpStep", false);
+  const [isWelcomeScipt, setWelcomeScipt] = usePersistentState("isWelcomeScipt", false);
+  const [isConfirmPublish, setIsConfirmPublish] = usePersistentState("isConfirmPublish", false);
+  const [isSuccessPublish, setIsSuccessPublish] = usePersistentState("isSuccessPublish", false);
+  const [isCustomizationTab, setIsCustomizationTab] = usePersistentState("isCustomizationTab", false);
 
   // Local storage data
   const userinfo = localStorage.getItem("consentbit-userinfo");
@@ -125,6 +141,15 @@ export const useAppState = () => {
   // Return all state and setters organized by category
   return {
     // Color states
+    componentStates: {
+      isWelcomeScreen, setIsWelcomeScreen,
+      isSetUpStep, setIsSetUpStep,
+      isWelcomeScipt, setWelcomeScipt,
+      isConfirmPublish, setIsConfirmPublish,
+      isSuccessPublish, setIsSuccessPublish,
+      isCustomizationTab, setIsCustomizationTab,
+      resetComponentStates,
+    },
     bannerStyles: {
       color, setColor,
       bgColor, setBgColor,
@@ -139,6 +164,12 @@ export const useAppState = () => {
       Font, SetFont,
       weight, setWeight,
       borderRadius, setBorderRadius,
+      isWelcomeScreen, setIsWelcomeScreen,
+      isSetUpStep, setIsSetUpStep,
+      isWelcomeScipt, setWelcomeScipt,
+      isConfirmPublish, setIsConfirmPublish,
+      isSuccessPublish, setIsSuccessPublish,
+      isCustomizationTab, setIsCustomizationTab,
     },
 
     // UI/UX states
@@ -220,7 +251,8 @@ export const useAppState = () => {
     },
     bannerLanguages:{
         language, setLanguage,
-    } 
+    } ,
+
   };
 };
 

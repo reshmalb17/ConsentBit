@@ -127,7 +127,6 @@ export const createBannerContent = async (contentConfig: ContentConfig) => {
       buttons
     };
   } catch (error) {
-    console.error("Error creating banner content:", error);
     throw error;
   }
 };
@@ -169,7 +168,6 @@ export const appendBannerContent = async (
       }
     }
   } catch (error) {
-    console.error("Error appending banner content:", error);
     throw error;
   }
 };

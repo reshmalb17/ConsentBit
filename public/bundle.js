@@ -2153,7 +2153,9 @@ html, body {
   height: 100%;
   overflow: hidden;
 }
-
+.app{
+  height: 600px;
+}
 /* General Styles */
 body {
   background-color: #0A081B;
@@ -2676,7 +2678,7 @@ img {
   border: 1px solid rgba(46, 43, 69, 1);
   border-radius: 5px;
   color: #FFFFFF;
-  max-width: 120px;
+  max-width: 123px;
 
 }
 
@@ -2703,9 +2705,6 @@ input[type="text"] {
   outline: none;
 }
 
-
-
-
     .custom-select {
       position: relative;
       width: 140px;
@@ -2718,6 +2717,21 @@ input[type="text"] {
       color: #fff;
       background: rgba(217, 217, 217, 0.02);
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .custom-select.open .selected::after {
+      transform: rotate(180deg);
+    }
+    
+    .dropdown-icon {
+      transition: transform 0.2s ease;
+    }
+    
+    .custom-select.open .dropdown-icon {
+      transform: rotate(180deg);
     }
     
     .options {
@@ -2748,6 +2762,11 @@ input[type="text"] {
       list-style-type: none;
       padding-left: 0;
       margin: 0;
+    }
+
+    /* Size dropdown specific width */
+    .custom-select.size-dropdown {
+      width: 87px;
     }
 
 /* Style the spinner buttons (Chrome, Edge, Safari) */
@@ -7762,7 +7781,8 @@ ___CSS_LOADER_EXPORT___.push([module.id, `.ws-container {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    padding: 20px;
+    height: 583px;
+    padding: 20px 20px 0px 20px;
 }
 
 .ws-info-grid {
@@ -7903,7 +7923,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `.ws-container {
 .ws-scripts-scroll {
     max-height: 358px;
     overflow-y: auto;
-    padding-right: 8px;
+    /* padding-right: 8px; */
     overflow-x: auto;
     font-size: 14px;
     width: 762px;
@@ -43365,10 +43385,27 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _style_styless_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style/styless.css */ "./src/style/styless.css");
 /* harmony import */ var _components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/WelcomeScreen */ "./src/components/WelcomeScreen.tsx");
 /* harmony import */ var _components_SetupStep__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/SetupStep */ "./src/components/SetupStep.tsx");
-/* harmony import */ var _components_CustomizationTab__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components/CustomizationTab */ "./src/components/CustomizationTab.tsx");
-/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
-/* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./hooks/useAppState */ "./src/hooks/useAppState.ts");
-/* harmony import */ var _hooks_userAuth__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./hooks/userAuth */ "./src/hooks/userAuth.ts");
+/* harmony import */ var _components_WelcomeScript__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components/WelcomeScript */ "./src/components/WelcomeScript.tsx");
+/* harmony import */ var _components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/CustomizationTab */ "./src/components/CustomizationTab.tsx");
+/* harmony import */ var _components_ConfirmPublish__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/ConfirmPublish */ "./src/components/ConfirmPublish.tsx");
+/* harmony import */ var _components_SuccessPublish__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./components/SuccessPublish */ "./src/components/SuccessPublish.tsx");
+/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
+/* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./hooks/useAppState */ "./src/hooks/useAppState.ts");
+/* harmony import */ var _hooks_userAuth__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./hooks/userAuth */ "./src/hooks/userAuth.ts");
+/* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
 
 
 
@@ -43378,64 +43415,153 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const App = () => {
-    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_7__.useQueryClient)();
-    const [skipWelcomeScreen, setSkipWelcomeScreen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const { bannerStyles, bannerUI, bannerConfig, bannerBooleans, popups, tooltips, siteData, buttons, bannerAnimation, localStorage: localStorageData } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_5__.useAppState)();
-    const { user, exchangeAndVerifyIdToken } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_6__.useAuth)();
+    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_11__.useQueryClient)();
+    const [skipWelcomeScreen, setSkipWelcomeScreen] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("skipWelcomeScreen", false);
+    const [isAuthenticated, setIsAuthenticated] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const { bannerStyles, bannerUI, bannerConfig, bannerBooleans, popups, tooltips, siteData, buttons, bannerAnimation, localStorage: localStorageData, componentStates, } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_8__.useAppState)();
+    const { user, sessionToken, exchangeAndVerifyIdToken, openAuthScreen, isAuthenticatedForCurrentSite } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_9__.useAuth)();
+    // Welcome Screen -> WelcomeScript (Scan Project clicked)
+    const handleWelcomeScreen = () => {
+        componentStates.setIsWelcomeScreen(false);
+        bannerBooleans.setFetchScripts(true);
+        componentStates.setWelcomeScipt(true);
+    };
+    // WelcomeScript -> SetupStep (Next clicked)
+    const handleWelcomeScipt = () => {
+        componentStates.resetComponentStates();
+        componentStates.setIsSetUpStep(true);
+    };
+    // WelcomeScript -> WelcomeScreen (Go back)
+    const handleWelcomeScriptGoBack = () => {
+        // Don't reset script-related states, just change the component
+        componentStates.setWelcomeScipt(false);
+        componentStates.setIsSetUpStep(false);
+        componentStates.setIsConfirmPublish(false);
+        componentStates.setIsSuccessPublish(false);
+        componentStates.setIsCustomizationTab(false);
+        componentStates.setIsWelcomeScreen(true);
+        // Don't set fetchScripts to true - scripts are already loaded and preserved in ScriptContext
+        // bannerBooleans.setFetchScripts(true); // This was causing re-fetching and loading screen
+    };
+    // SetupStep -> ConfirmPublish (Proceed to next step clicked)
+    const handleSetUpStep = () => {
+        // Set all states to false first, then set the one we want
+        componentStates.setIsWelcomeScreen(false);
+        componentStates.setWelcomeScipt(false);
+        componentStates.setIsSetUpStep(false);
+        componentStates.setIsSuccessPublish(false);
+        componentStates.setIsCustomizationTab(false);
+        componentStates.setIsConfirmPublish(true);
+    };
+    // ConfirmPublish -> SuccessPublish (Publish Banner clicked)
+    const handleConfirmPublish = () => {
+        componentStates.resetComponentStates();
+        componentStates.setIsSuccessPublish(true);
+        // Set flag that banner was added through welcome flow
+        bannerBooleans.setIsBannerAdded(true);
+    };
+    // ConfirmPublish -> SetupStep (Go back)
+    const handleConfirmPublishGoBack = () => {
+        // Set all states to false first, then set the one we want
+        componentStates.setIsWelcomeScreen(false);
+        componentStates.setWelcomeScipt(false);
+        componentStates.setIsConfirmPublish(false);
+        componentStates.setIsSuccessPublish(false);
+        componentStates.setIsCustomizationTab(false);
+        componentStates.setIsSetUpStep(true);
+    };
+    // SuccessPublish -> CustomizationTab (Customize clicked)
+    const handleCustomize = () => {
+        // Set all states to false first, then set the one we want
+        componentStates.setIsWelcomeScreen(false);
+        componentStates.setWelcomeScipt(false);
+        componentStates.setIsSetUpStep(false);
+        componentStates.setIsConfirmPublish(false);
+        componentStates.setIsSuccessPublish(false);
+        componentStates.setIsCustomizationTab(true);
+    };
+    // SuccessPublish -> ConfirmPublish (Go back)
+    const handleSuccessPublishGoBack = () => {
+        // Set all states to false first, then set the one we want
+        componentStates.setIsWelcomeScreen(false);
+        componentStates.setWelcomeScipt(false);
+        componentStates.setIsSetUpStep(false);
+        componentStates.setIsSuccessPublish(false);
+        componentStates.setIsCustomizationTab(false);
+        componentStates.setIsConfirmPublish(true);
+    };
     // Welcome screen handlers
     const handleWelcomeAuthorize = () => {
-        popups.setShowWelcomeScreen(true);
-        popups.setShowSetUpStep(false);
+        openAuthScreen();
+        // The authentication state will be updated when the user completes authorization
+        // through the useEffect that depends on user?.email and sessionToken
     };
     const handleWelcomeNeedHelp = () => {
         // Open help modal or redirect to help page
         window.open('https://www.consentbit.com/help-document', '_blank');
     };
     const handleBackToWelcome = () => {
-        // Clear the localStorage flag and show welcome screen
-        localStorage.removeItem("bannerAddedThroughWelcome");
+        // Clear the banner added flag and show welcome screen
+        bannerBooleans.setIsBannerAdded(false);
         setSkipWelcomeScreen(false);
-        popups.setShowWelcomeScreen(true);
+        componentStates.resetComponentStates();
+        componentStates.setIsWelcomeScreen(true);
     };
-    // Setup step handlers
+    // SetupStep -> WelcomeScript (Go back)
     const handleSetupGoBack = () => {
-        popups.setShowSetUpStep(false);
-        popups.setShowWelcomeScreen(true);
+        // Don't reset fetchScripts to preserve script states
+        componentStates.setIsSetUpStep(false);
+        componentStates.setWelcomeScipt(true);
+        // Don't set fetchScripts to true - scripts are already loaded and preserved in ScriptContext
+        // bannerBooleans.setFetchScripts(true); // This was causing re-fetching and loading screen
     };
-    const handleSetupProceed = () => {
-        popups.setShowSetUpStep(false);
-        // Add logic for next step here
-    };
-    //authentication
+    // Check if banner was already added (for existing users) and set authentication state
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        const stored = localStorage.getItem("consentbit-userinfo");
-        if (!(user === null || user === void 0 ? void 0 : user.firstName) && stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) {
-                exchangeAndVerifyIdToken();
+        // Add a small delay to ensure all states are properly loaded from localStorage
+        const timer = setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
+            // Check both the persistent state and the direct localStorage key
+            const bannerAddedFromStorage = localStorage.getItem('bannerAdded') === 'true';
+            // Check site-specific authentication
+            const isUserAuthenticated = yield isAuthenticatedForCurrentSite();
+            if (bannerAddedFromStorage && isUserAuthenticated) {
+                // For existing users who already have a banner AND are authenticated for this site, show CustomizationTab directly
+                setSkipWelcomeScreen(true);
+                componentStates.resetComponentStates();
+                componentStates.setIsCustomizationTab(true);
             }
             else {
-                queryClient.setQueryData(["auth"], {
-                    user: {
-                        firstName: parsed.firstName,
-                        email: parsed.email,
-                    },
-                    sessionToken: "",
-                });
+                // For new users or users without banner or not authenticated for this site, start with welcome screen
+                setSkipWelcomeScreen(false);
+                componentStates.resetComponentStates();
+                componentStates.setIsWelcomeScreen(true);
             }
-        }
-    }, []);
-    // Check if banner was added through welcome flow
+        }), 1000); // Small delay to ensure localStorage is read
+        return () => clearTimeout(timer);
+    }, [bannerBooleans.isBannerAdded, user === null || user === void 0 ? void 0 : user.email, sessionToken]); // Depend on isBannerAdded state and auth state
+    // Separate useEffect to update authentication state when auth changes
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        const bannerAddedThroughWelcome = localStorage.getItem("bannerAddedThroughWelcome");
-        if (bannerAddedThroughWelcome === "true") {
-            setSkipWelcomeScreen(true);
-        }
-    }, []);
-    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "app" }, skipWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_4__["default"], { onAuth: handleBackToWelcome })) : popups.showWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: (user === null || user === void 0 ? void 0 : user.firstName) ? true : false })) : popups.setShowSetUpStep ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SetupStep__WEBPACK_IMPORTED_MODULE_3__["default"], { onGoBack: handleSetupGoBack, onProceed: handleSetupProceed })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "main-app" },
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "Main App Interface"),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Welcome to the main application!"),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { onClick: handleBackToWelcome }, "Back to Welcome Screen")))));
+        const checkSiteAuthentication = () => __awaiter(void 0, void 0, void 0, function* () {
+            try {
+                const isUserAuthenticated = yield isAuthenticatedForCurrentSite();
+                setIsAuthenticated(isUserAuthenticated);
+            }
+            catch (error) {
+                setIsAuthenticated(false);
+            }
+        });
+        checkSiteAuthentication();
+    }, [user === null || user === void 0 ? void 0 : user.email, sessionToken, user === null || user === void 0 ? void 0 : user.siteId]);
+    // Debug section - remove this in production
+    const debugInfo = {
+        currentSiteId: (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.getCurrentSiteId)(),
+        currentSiteData: (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.listCurrentSiteData)(),
+        migrationStatus: (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.checkMigrationStatus)(),
+    };
+    // Debug function to check auth status
+    const handleDebugAuth = () => {
+        (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.debugAuthStatus)();
+    };
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, skipWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated })) : componentStates.isWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: isAuthenticated, handleWelcomeScreen: handleWelcomeScreen })) : componentStates.isWelcomeScipt ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScript__WEBPACK_IMPORTED_MODULE_4__["default"], { isFetchScripts: bannerBooleans.fetchScripts, handleWelcomeScipt: handleWelcomeScipt, onGoBack: handleWelcomeScriptGoBack })) : componentStates.isSetUpStep ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SetupStep__WEBPACK_IMPORTED_MODULE_3__["default"], { onGoBack: handleSetupGoBack, handleSetUpStep: handleSetUpStep })) : componentStates.isConfirmPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ConfirmPublish__WEBPACK_IMPORTED_MODULE_6__["default"], { onGoBack: handleConfirmPublishGoBack, handleCustomize: handleCustomize, handleConfirmPublish: handleConfirmPublish })) : componentStates.isSuccessPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SuccessPublish__WEBPACK_IMPORTED_MODULE_7__["default"], { onGoBack: handleSuccessPublishGoBack, handleCustomize: handleCustomize })) : componentStates.isCustomizationTab ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
@@ -43577,11 +43703,6 @@ const CSVExportAdvanced = ({ isVisible, onClose, sessionToken, siteInfo, onReset
                         return dateB.getTime() - dateA.getTime();
                     });
                     // Verify sorting worked correctly
-                    // // console.log('First 3 items after sorting (should be newest first):', sortedVisitors.slice(0, 3).map(v => ({
-                    //   id: v.visitorId,
-                    //   date: v.lastConsentDate,
-                    //   timestamp: new Date(v.lastConsentDate || 0).getTime()
-                    // })));
                     // Create a new array to ensure the sort is applied
                     const finalSortedVisitors = [...sortedVisitors];
                     // Double-check the sorting manually
@@ -43590,11 +43711,6 @@ const CSVExportAdvanced = ({ isVisible, onClose, sessionToken, siteInfo, onReset
                         const dateB = new Date(b.lastConsentDate || 0);
                         return dateB.getTime() - dateA.getTime();
                     });
-                    // console.log('After manual re-sort - First 3 items:', manuallySorted.slice(0, 3).map(v => ({
-                    //   id: v.visitorId,
-                    //   date: v.lastConsentDate,
-                    //   timestamp: new Date(v.lastConsentDate || 0).getTime()
-                    // })));
                     setVisitorData(manuallySorted);
                     setTotalRecordsAvailable(sortedVisitors.length);
                 }
@@ -44061,9 +44177,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../hooks/useAppState */ "./src/hooks/useAppState.ts");
 /* harmony import */ var _hooks_useBannerCreation__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../hooks/useBannerCreation */ "./src/hooks/useBannerCreation.ts");
 /* harmony import */ var _components_PulseAnimation__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../components/PulseAnimation */ "./src/components/PulseAnimation.tsx");
-/* harmony import */ var _components_SuccessPublish__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../components/SuccessPublish */ "./src/components/SuccessPublish.tsx");
-/* harmony import */ var _CustomizationTab__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./CustomizationTab */ "./src/components/CustomizationTab.tsx");
-/* harmony import */ var _ChoosePlan__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./ChoosePlan */ "./src/components/ChoosePlan.tsx");
+/* harmony import */ var _CustomizationTab__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./CustomizationTab */ "./src/components/CustomizationTab.tsx");
+/* harmony import */ var _ChoosePlan__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./ChoosePlan */ "./src/components/ChoosePlan.tsx");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -44084,7 +44199,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-
 const confirmIcon = new URL(/* asset import */ __webpack_require__(/*! ../assets/confirmicon.svg */ "./src/assets/confirmicon.svg"), __webpack_require__.b).href;
 const CopyContent = new URL(/* asset import */ __webpack_require__(/*! ../assets/copy.svg */ "./src/assets/copy.svg"), __webpack_require__.b).href;
 const Previewtab = new URL(/* asset import */ __webpack_require__(/*! ../assets/Previewtab.svg */ "./src/assets/Previewtab.svg"), __webpack_require__.b).href;
@@ -44093,7 +44207,7 @@ const whitearrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/
 const logo = new URL(/* asset import */ __webpack_require__(/*! ../assets/icon.svg */ "./src/assets/icon.svg"), __webpack_require__.b).href;
 const errorsheild = new URL(/* asset import */ __webpack_require__(/*! ../assets/warning-2.svg */ "./src/assets/warning-2.svg"), __webpack_require__.b).href;
 const crossmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/group.svg */ "./src/assets/group.svg"), __webpack_require__.b).href;
-const ConfirmPublish = ({ onGoBack, onProceed, }) => {
+const ConfirmPublish = ({ onGoBack, handleConfirmPublish, handleCustomize }) => {
     const [isConfirmed, setIsConfirmed] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
     const [showTooltip, setShowTooltip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
     const [showPopup, setShowPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -44101,10 +44215,10 @@ const ConfirmPublish = ({ onGoBack, onProceed, }) => {
     const [showCustomize, setShowCustomize] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [showChoosePlan, setShowChoosePlan] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const { bannerStyles, bannerUI, bannerConfig, bannerBooleans, popups, tooltips, siteData, buttons, bannerAnimation, bannerToggleStates, bannerLanguages, localStorage: localStorageData } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_6__.useAppState)();
-    const { user, exchangeAndVerifyIdToken } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_4__.useAuth)();
-    const { createGDPRBanner, createCCPABanner, createBothBanners, isCreating, showLoading, showSuccess, showSuccessPublish, handleSuccessPublishProceed, handleSuccessPublishGoBack } = (0,_hooks_useBannerCreation__WEBPACK_IMPORTED_MODULE_7__.useBannerCreation)();
+    const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_4__.useAuth)();
+    const { createBothBanners, isCreating, } = (0,_hooks_useBannerCreation__WEBPACK_IMPORTED_MODULE_7__.useBannerCreation)();
     const handlePublishClick = () => __awaiter(void 0, void 0, void 0, function* () {
-        const isUserValid = user === null || user === void 0 ? void 0 : user.firstName;
+        const isUserValid = yield isAuthenticatedForCurrentSite();
         try {
             const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_5__["default"].getSelectedElement();
             const isInvalidElement = !selectedElement || selectedElement.type === "Body";
@@ -44130,6 +44244,7 @@ const ConfirmPublish = ({ onGoBack, onProceed, }) => {
                     animation: bannerAnimation.animation,
                     easing: bannerAnimation.easing,
                     language: bannerLanguages.language,
+                    selectedOptions: bannerUI.selectedOptions,
                     toggleStates: {
                         customToggle: bannerToggleStates.toggleStates.customToggle,
                         disableScroll: bannerToggleStates.toggleStates.disableScroll,
@@ -44151,6 +44266,8 @@ const ConfirmPublish = ({ onGoBack, onProceed, }) => {
                     yield createBothBanners(config);
                 }
                 popups.setShowPopup(true);
+                // After successful banner creation, call handleConfirmPublish to show SuccessPublish component
+                handleConfirmPublish();
             }
             else {
                 popups.setShowPopup(false);
@@ -44175,18 +44292,12 @@ const ConfirmPublish = ({ onGoBack, onProceed, }) => {
     };
     // If showCustomize is true, render the CustomizationTab component
     if (showCustomize) {
-        return react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CustomizationTab__WEBPACK_IMPORTED_MODULE_10__["default"], { onAuth: handleBackFromCustomize, initialActiveTab: "Customization" });
+        return react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CustomizationTab__WEBPACK_IMPORTED_MODULE_9__["default"], { onAuth: handleBackFromCustomize, initialActiveTab: "Customization" });
     }
     if (showChoosePlan) {
-        return react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ChoosePlan__WEBPACK_IMPORTED_MODULE_11__["default"], { onClose: () => setShowChoosePlan(false) });
+        return react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ChoosePlan__WEBPACK_IMPORTED_MODULE_10__["default"], { onClose: () => setShowChoosePlan(false) });
     }
-    return (
-    // <>
-    // {showSuccessPublish ? (
-    //   <CustomizationTab onAuth={handleBackFromCustomize} initialActiveTab="Customization" />
-    // ) : (
-    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "publish-container" },
-        showSuccessPublish && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SuccessPublish__WEBPACK_IMPORTED_MODULE_9__["default"], { onProceed: handleSuccessPublishProceed, onGoBack: handleSuccessPublishGoBack })),
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "publish-container" },
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "publish-c" },
             isCreating && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-loading-content" },
@@ -44248,7 +44359,7 @@ const ConfirmPublish = ({ onGoBack, onProceed, }) => {
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "global-error-content" },
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("text", null, "To continue, choose an element inside the page Body.")),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: crossmark, onClick: () => { tooltips.setShowTooltip(false); tooltips.setFadeOut(false); }, alt: "" }))),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { onClick: handleCustomizeClick, className: "customize-link", style: { background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none' } },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { onClick: handleCustomize, className: "customize-link", style: { background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none' } },
                             "Customize ",
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: arrow, alt: "" }))),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "publish-right" },
@@ -44311,6 +44422,75 @@ const Customization = ({ animation, setAnimation, easing, setEasing, language, s
     const colorPickerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
     const pickerInstance = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
     const dropdownRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+    // Custom dropdown states
+    const [openDropdown, setOpenDropdown] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    const dropdownRefs = {
+        font: (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null),
+        weight: (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null),
+        size: (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null),
+    };
+    // Dropdown options
+    const fontOptions = [
+        { label: "Montserrat", value: "'Montserrat', sans-serif" },
+        { label: "Lato", value: "'Lato', sans-serif" },
+        { label: "Oswald", value: "'Oswald', sans-serif" },
+        { label: "Merriweather", value: "'Merriweather', serif" },
+        { label: "Open Sans", value: "'Open Sans', sans-serif" },
+        { label: "Ubuntu", value: "'Ubuntu', sans-serif" },
+        { label: "Droid Sans", value: "'Droid Sans', sans-serif" },
+        { label: "Exo", value: "'Exo', sans-serif" },
+    ];
+    const weightOptions = [
+        { label: "Semibold", value: "600" },
+        { label: "Thin", value: "100" },
+        { label: "Light", value: "300" },
+        { label: "Regular", value: "400" },
+        { label: "Bold", value: "700" },
+        { label: "Extra Bold", value: "800" },
+    ];
+    const sizeOptions = [
+        { label: "12px", value: "12" },
+        { label: "13px", value: "13" },
+        { label: "14px", value: "14" },
+        { label: "15px", value: "15" },
+        { label: "16px", value: "16" },
+        { label: "17px", value: "17" },
+        { label: "18px", value: "18" },
+    ];
+    const tooltips = {
+        font: "Select the font family for the cookie banner text.",
+        weight: "Choose the font weight to control text thickness.",
+        size: "Adjust the font size for better readability.",
+    };
+    const getLabel = (opts, val) => (opts.find((o) => o.value === val) || {}).label || val;
+    // Handle click outside for custom dropdowns
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        function handleClickOutside(e) {
+            Object.entries(dropdownRefs).forEach(([key, ref]) => {
+                if (ref.current && !ref.current.contains(e.target)) {
+                    if (openDropdown === key)
+                        setOpenDropdown(null);
+                }
+            });
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [openDropdown]);
+    const renderDropdown = (type, label, value, options, onPick, showLabel = true) => (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-group" },
+        showLabel && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "flex" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, label),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tooltip-container" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "info", className: "tooltip-icon" }),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "tooltip-text" }, tooltips[type])))),
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: `custom-select ${type === "size" ? "size-dropdown" : ""} ${openDropdown === type ? "open" : ""}`, ref: dropdownRefs[type] },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "selected", onClick: () => setOpenDropdown(openDropdown === type ? null : type) },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, getLabel(options, value)),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("svg", { className: "dropdown-icon", width: "12", height: "12", viewBox: "0 0 12 12", fill: "none", xmlns: "http://www.w3.org/2000/svg" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("path", { d: "M3 4.5L6 7.5L9 4.5", stroke: "currentColor", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }))),
+            openDropdown === type && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", { className: "options" }, options.map((opt) => (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", { key: opt.value, onClick: () => {
+                    onPick(opt.value);
+                    setOpenDropdown(null);
+                } }, opt.label))))))));
     const [btnOpen, setBtnOpen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [headOpen, setHeadOpen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [paraOpen, setParaOpen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -44506,34 +44686,10 @@ const Customization = ({ animation, setAnimation, easing, setEasing, language, s
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tooltip-containers" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "info", className: "tooltip-icon" }),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "tooltip-text" }, "Customize font styles and sizes to enhance readability and design."))),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-group" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("select", { id: "Font", value: Font, onChange: (e) => SetFont(e.target.value) },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Montserrat', sans-serif" }, "Montserrat"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Lato', sans-serif" }, "Lato"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Oswald', sans-serif" }, "Oswald"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Merriweather', serif" }, "Merriweather"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Open Sans', sans-serif" }, "Open Sans"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Ubuntu', sans-serif" }, "Ubuntu"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Droid Sans', sans-serif" }, "Droid Sans"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "'Exo', sans-serif" }, "Exo"))),
+                    renderDropdown("font", "Font", Font, fontOptions, SetFont, false),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "flex" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-group" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("select", { id: "weight", value: weight, onChange: (e) => SetWeight(e.target.value) },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "600" }, "Semibold"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "100" }, "Thin"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "300" }, "Light"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "400" }, "Regular"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "700" }, "Bold"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", { value: "800" }, "Extra Bold"))),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-group width" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("select", { id: "font-size", value: size, onChange: (e) => SetSize(e.target.value) },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", null, "12"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", null, "13"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", null, "14"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", null, "15"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", null, "16"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", null, "17"),
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("option", null, "18")))),
+                        renderDropdown("weight", "Font Weight", weight, weightOptions, SetWeight, false),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "width" }, renderDropdown("size", "Font Size", size, sizeOptions, SetSize, false))),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "flex" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Alignment"),
@@ -44836,7 +44992,7 @@ const copyScript = new URL(/* asset import */ __webpack_require__(/*! ../assets/
 const appVersion = _package_json__WEBPACK_IMPORTED_MODULE_14__.version;
 
 
-const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
+const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
     var _a, _b, _c, _d, _e;
     const [color, setColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("color", "#ffffff");
     const [bgColor, setBgColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("bgColor", "#ffffff");
@@ -44882,6 +45038,13 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
     const [isLoading, setIsLoading] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("isLoading", false);
     const [userlocaldata, setUserlocaldata] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     const [showSuccessPopup, setShowSuccessPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    // Reset loading states when component mounts to prevent stuck loading animations
+    react__WEBPACK_IMPORTED_MODULE_0___default().useEffect(() => {
+        setIsLoading(false);
+        setShowLoadingPopup(false);
+        setIsExporting(false);
+        setIsCSVButtonLoading(false);
+    }, []);
     const [showAuthPopup, setShowAuthPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [buttonText, setButtonText] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("buttonText", "Scan Project");
     const [showLoadingPopup, setShowLoadingPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -45221,7 +45384,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
         }
     });
     // const { user } = useAuth();
-    const { user, exchangeAndVerifyIdToken } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_5__.useAuth)();
+    const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_5__.useAuth)();
     // Function to open the authorization popup authorization window
     const openAuthScreen = () => {
         const authWindow = window.open(`${base_url}/api/auth/authorize?state=webflow_designer`, "_blank", "width=600,height=600");
@@ -45236,37 +45399,6 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
         }, 1000);
     };
     const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_17__.useQueryClient)();
-    //authentication
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        const stored = localStorage.getItem("consentbit-userinfo");
-        if (!(user === null || user === void 0 ? void 0 : user.firstName) && stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) {
-                exchangeAndVerifyIdToken();
-            }
-            else {
-                // fallback manual restore if no sessionToken (dev/test scenarios)
-                queryClient.setQueryData(["auth"], {
-                    user: {
-                        firstName: parsed.firstName,
-                        email: parsed.email,
-                    },
-                    sessionToken: "",
-                });
-            }
-        }
-    }, []);
-    //authentication
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        const data = localStorage.getItem('consentbit-userinfo');
-        if (data) {
-            // localStorage.removeItem("consentbit-userinfo"); // ❌ REMOVED: This was clearing settings after auth
-        }
-        const onAuth = () => __awaiter(void 0, void 0, void 0, function* () {
-            yield exchangeAndVerifyIdToken();
-        });
-        onAuth();
-    }, []);
     //GDPR preferences banner
     const handleCreatePreferences = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (skipCommonDiv = false) {
         try {
@@ -46404,10 +46536,13 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tooltip-container" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "info", className: "tooltip-icon" }),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "tooltip-text" }, tooltips[type]))),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "custom-select", ref: dropdownRefs[type] },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "selected", onClick: () => setOpenDropdown(openDropdown === type ? null : type) }, typeof options[0] === "string"
-                ? value
-                : getLabel(options, value)),
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: `custom-select ${openDropdown === type ? "open" : ""}`, ref: dropdownRefs[type] },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "selected", onClick: () => setOpenDropdown(openDropdown === type ? null : type) },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, typeof options[0] === "string"
+                    ? value
+                    : getLabel(options, value)),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("svg", { className: "dropdown-icon", xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("polyline", { points: "6 9 12 15 18 9" }))),
             openDropdown === type && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", { className: "options" }, typeof options[0] === "string"
                 ? options.map((opt) => (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", { key: opt, onClick: () => {
                         onPick(opt);
@@ -46423,7 +46558,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PulseAnimation__WEBPACK_IMPORTED_MODULE_10__["default"], null),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "popup-message" }, "Exporting CSV data...")))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "navbar" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, (user === null || user === void 0 ? void 0 : user.firstName) ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "hello" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, isAuthenticated && (user === null || user === void 0 ? void 0 : user.firstName) ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "hello" },
                 "Hello, ",
                 user.firstName,
                 "!")) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-buttons", onClick: openAuthScreen }, "Authentication"))),
@@ -46453,7 +46588,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
                 activeTab !== "Script" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { position: "relative", display: "inline-block" } },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-button", onClick: () => __awaiter(void 0, void 0, void 0, function* () {
-                                const isUserValid = user === null || user === void 0 ? void 0 : user.firstName;
+                                const isUserValid = yield isAuthenticatedForCurrentSite();
                                 try {
                                     const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSelectedElement();
                                     const isInvalidElement = !selectedElement || selectedElement.type === "Body";
@@ -46477,15 +46612,16 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
                                 }
                             }) }, isBannerAdded ? "Publish your changes" : "Create Component")))),
                 activeTab === "Script" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-buttons", onClick: () => {
-                            if (user === null || user === void 0 ? void 0 : user.firstName) {
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-buttons", onClick: () => __awaiter(void 0, void 0, void 0, function* () {
+                            const isUserValid = yield isAuthenticatedForCurrentSite();
+                            if (isUserValid) {
                                 setFetchScripts(true);
                                 setButtonText("Rescan Project");
                             }
                             else {
                                 setShowAuthPopup(true);
                             }
-                        } }, buttonText))))),
+                        }) }, buttonText))))),
         showAuthPopup && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-overlay" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "success-popup" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-content" },
@@ -46653,7 +46789,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings" }) => {
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "btn-accept", style: { borderRadius: `${buttonRadius}px`, backgroundColor: secondcolor, color: primaryButtonText, fontFamily: Font } }, ((_e = translations[language]) === null || _e === void 0 ? void 0 : _e.accept) || "Accept"))),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null))))),
                 activeTab === "Customization" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Customization__WEBPACK_IMPORTED_MODULE_2__["default"], { animation: animation, setAnimation: setAnimation, easing: easing, setEasing: setEasing, language: language, setLanguage: setLanguage, weight: weight, SetWeight: setWeight, size: size, SetSize: setSize, selected: selected, setSelected: setSelected, Font: Font, SetFont: SetFont, selectedtext: selectedtext, settextSelected: settextSelected, style: style, setStyle: setStyle, borderRadius: borderRadius, setBorderRadius: setBorderRadius, buttonRadius: buttonRadius, setButtonRadius: setButtonRadius, color: color, setColor: setColor, bgColor: bgColor, setBgColor: setBgColor, btnColor: btnColor, setBtnColor: setBtnColor, headColor: headColor, setHeadColor: setHeadColor, paraColor: paraColor, setParaColor: setParaColor, secondcolor: secondcolor, setSecondcolor: setSecondcolor, bgColors: bgColors, setBgColors: setBgColors, secondbuttontext: secondbuttontext, setsecondbuttontext: setsecondbuttontext, primaryButtonText: primaryButtonText, setPrimaryButtonText: setPrimaryButtonText, closebutton: toggleStates.closebutton })),
-                activeTab === "Script" && react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Script__WEBPACK_IMPORTED_MODULE_3__["default"], { fetchScripts: fetchScripts, setFetchScripts: setFetchScripts, isWelcome: false }))),
+                activeTab === "Script" && react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Script__WEBPACK_IMPORTED_MODULE_3__["default"], { fetchScripts: fetchScripts, isWelcome: false }))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_donotshare__WEBPACK_IMPORTED_MODULE_16__["default"], { onClose: () => { }, toggleStates: toggleStates, handleToggle: handleToggle }),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CSVExportAdvanced__WEBPACK_IMPORTED_MODULE_13__["default"], { isVisible: showCSVExportAdvanced, onClose: () => setShowCSVExportAdvanced(false), sessionToken: sessionTokenFromLocalStorage, siteInfo: siteInfo, onReset: () => {
                 // Reset any related state in the main App component if needed
@@ -46791,7 +46927,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _context_ScriptContext__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../context/ScriptContext */ "./src/context/ScriptContext.tsx");
 /* harmony import */ var _PulseAnimation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./PulseAnimation */ "./src/components/PulseAnimation.tsx");
 /* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
-/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
+/* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../hooks/useAppState */ "./src/hooks/useAppState.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -46823,34 +46959,24 @@ const line2 = new URL(/* asset import */ __webpack_require__(/*! ../assets/line.
 const copyScript = new URL(/* asset import */ __webpack_require__(/*! ../assets/copy script.svg */ "./src/assets/copy script.svg"), __webpack_require__.b).href;
 const tickmarkcopy = new URL(/* asset import */ __webpack_require__(/*! ../assets/Vector 23.svg */ "./src/assets/Vector 23.svg"), __webpack_require__.b).href;
 const goto = new URL(/* asset import */ __webpack_require__(/*! ../assets/gotosetting.svg */ "./src/assets/gotosetting.svg"), __webpack_require__.b).href;
-const Script = ({ fetchScripts, setFetchScripts, isWelcome }) => {
+const Script = ({ fetchScripts, isWelcome }) => {
     const { scripts, setScripts } = (0,_context_ScriptContext__WEBPACK_IMPORTED_MODULE_3__.useScriptContext)();
+    const { bannerBooleans } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_6__.useAppState)();
     // Debug scripts state changes
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     }, [scripts]);
-    const [isSaving, setIsSaving] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [saveStatus, setSaveStatus] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    const [isSaving, setIsSaving] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("script_isSaving", false);
+    const [saveStatus, setSaveStatus] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("script_saveStatus", null);
     const categories = ["Essential", "Personalization", "Analytics", "Marketing"];
     const userinfo = localStorage.getItem("consentbit-userinfo");
-    const [showPopup, setShowPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [isLoading, setIsLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showAuthPopup, setShowAuthPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [copiedScriptIndex, setCopiedScriptIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    const [showPopup, setShowPopup] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("script_showPopup", false);
+    const [isLoading, setIsLoading] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("script_isLoading", false);
+    const [showAuthPopup, setShowAuthPopup] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("script_showAuthPopup", false);
+    const [copiedScriptIndex, setCopiedScriptIndex] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("script_copiedScriptIndex", null);
     const [siteInfo, setSiteInfo] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("siteInfo", null);
-    // Fetch site info when component mounts
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        const fetchSiteInfo = () => __awaiter(void 0, void 0, void 0, function* () {
-            try {
-                const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
-                setSiteInfo(siteInfo);
-            }
-            catch (error) {
-            }
-        });
-        if (!siteInfo) {
-            fetchSiteInfo();
-        }
-    }, [siteInfo, setSiteInfo]);
+    // REMOVED: Automatic site info fetching
+    // Site info should only be set when user explicitly authorizes and uses the app
+    // This prevents setting site info before authorization
     // Debug logs for siteInfo
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     }, [siteInfo]);
@@ -47059,19 +47185,19 @@ const Script = ({ fetchScripts, setFetchScripts, isWelcome }) => {
                     yield fetchScriptData();
                     // Only reset the flag if not in welcome mode
                     if (!isWelcome) {
-                        setFetchScripts(false);
+                        bannerBooleans.setFetchScripts(false);
                     }
                 }
                 catch (error) {
                     // Reset flag even on error if not in welcome mode
                     if (!isWelcome) {
-                        setFetchScripts(false);
+                        bannerBooleans.setFetchScripts(false);
                     }
                 }
             });
             fetchDataAndResetFlag();
         }
-    }, [fetchScripts, fetchScriptData, setFetchScripts, isWelcome]);
+    }, [fetchScripts, fetchScriptData, bannerBooleans.setFetchScripts, isWelcome]);
     const handleSaveAll = () => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         setIsSaving(true);
@@ -47403,8 +47529,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _style_styless_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../style/styless.css */ "./src/style/styless.css");
-/* harmony import */ var _ConfirmPublish__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ConfirmPublish */ "./src/components/ConfirmPublish.tsx");
-
 
 
 // Asset imports
@@ -47415,9 +47539,8 @@ const exclamationIcon = new URL(/* asset import */ __webpack_require__(/*! ../as
 const whitearrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/→.svg */ "./src/assets/→.svg"), __webpack_require__.b).href;
 const tickmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/tickmark.svg */ "./src/assets/tickmark.svg"), __webpack_require__.b).href;
 const uparrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/blue up arrow.svg */ "./src/assets/blue up arrow.svg"), __webpack_require__.b).href;
-const SetupStep = ({ onGoBack, onProceed }) => {
+const SetupStep = ({ onGoBack, handleSetUpStep }) => {
     const [isConfirmed, setIsConfirmed] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showConfirmPublish, setShowConfirmPublish] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // Asset imports
     const logo = new URL(/* asset import */ __webpack_require__(/*! ../assets/icon.svg */ "./src/assets/icon.svg"), __webpack_require__.b).href;
     const questionmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/question.svg */ "./src/assets/question.svg"), __webpack_require__.b).href;
@@ -47429,55 +47552,47 @@ const SetupStep = ({ onGoBack, onProceed }) => {
         // Open help modal or redirect to help page
         window.open('https://www.consentbit.com/help-document', '_blank');
     };
-    const handleProceedToConfirmPublish = () => {
-        setShowConfirmPublish(true);
-    };
-    const handleGoBackFromConfirmPublish = () => {
-        setShowConfirmPublish(false);
-    };
-    const handleConfirmPublishProceed = () => {
-        onProceed();
-    };
-    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, showConfirmPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ConfirmPublish__WEBPACK_IMPORTED_MODULE_2__["default"], { onGoBack: handleGoBackFromConfirmPublish, onProceed: handleConfirmPublishProceed })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup" },
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-main-content" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-central-section" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-icon" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: confirmIcon, alt: "Confirm" })),
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-confirmation" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-checkbox-container" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { className: "setup-checkbox-label" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "checkbox", checked: isConfirmed, onChange: (e) => setIsConfirmed(e.target.checked), className: "setup-checkbox" }),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "custom-checkbox3" }, isConfirmed && react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: tickmark, alt: "checked", className: "tick-icon3" })),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "setup-checkbox-text" }, "Confirm that you added all scripts to the backend")))),
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-navigation" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "setup-back-btn", onClick: onGoBack },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: whitearrow, alt: "" }),
-                        " Go back"),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "setup-proceed-btn", onClick: handleProceedToConfirmPublish, disabled: !isConfirmed }, "Proceed to next step"))),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-info-cards" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-top" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-title" }, "Facing any issues?"),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-content" }, "Check our tutorial video to help yourself")),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-bottom" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-help", onClick: onNeedHelp },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-img" },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "Need help?", style: { width: "100%", height: "100%" } })),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "need-help-text" }, "Need help?")),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-youtube-thumbnail" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://vimeo.com/1112446810?share=copy", target: "_blank" },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: youtubethumbnail, alt: "Tutorial Video", className: "setup-video-thumbnail" }))))),
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-logo" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: infologo, alt: "Info", className: "setup-card-info-icon" })),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-text" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "setup-card-info-title" }, "Update the scripts in your project that handle cookie creation"),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "setup-card-info-subtitle" }, "Check your project scripts for any that create cookies. Organize them, replace with our snippet, and follow our tutorial to streamline your workflow."),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "subscribe help" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { className: "link", target: "_blank", href: "https://www.consentbit.com/help-document" },
-                                "Need help? See the docs ",
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("i", null,
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: uparrow, alt: "" }))))))))))));
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-main-content" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-central-section" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-icon" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: confirmIcon, alt: "Confirm" })),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-confirmation" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-checkbox-container" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { className: "setup-checkbox-label" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "checkbox", checked: isConfirmed, onChange: (e) => setIsConfirmed(e.target.checked), className: "setup-checkbox" }),
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "custom-checkbox3" }, isConfirmed && react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: tickmark, alt: "checked", className: "tick-icon3" })),
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "setup-checkbox-text" }, "Confirm that you added all scripts to the backend")))),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-navigation" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "setup-back-btn", onClick: onGoBack },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: whitearrow, alt: "" }),
+                            " Go back"),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "setup-proceed-btn", onClick: handleSetUpStep, disabled: !isConfirmed }, "Proceed to next step"))),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-info-cards" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-top" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-title" }, "Facing any issues?"),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-content" }, "Check our tutorial video to help yourself")),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-bottom" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-help", onClick: onNeedHelp },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-img" },
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "Need help?", style: { width: "100%", height: "100%" } })),
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "need-help-text" }, "Need help?")),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-youtube-thumbnail" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://vimeo.com/1112446810?share=copy", target: "_blank" },
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: youtubethumbnail, alt: "Tutorial Video", className: "setup-video-thumbnail" }))))),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-logo" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: infologo, alt: "Info", className: "setup-card-info-icon" })),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-text" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "setup-card-info-title" }, "Update the scripts in your project that handle cookie creation"),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "setup-card-info-subtitle" }, "Check your project scripts for any that create cookies. Organize them, replace with our snippet, and follow our tutorial to streamline your workflow."),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "subscribe help" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { className: "link", target: "_blank", href: "https://www.consentbit.com/help-document" },
+                                    "Need help? See the docs ",
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("i", null,
+                                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: uparrow, alt: "" })))))))))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SetupStep);
 
@@ -47496,53 +47611,48 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var framer_motion__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! framer-motion */ "./node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs");
+/* harmony import */ var framer_motion__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! framer-motion */ "./node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs");
 /* harmony import */ var _style_succespublish_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../style/succespublish.css */ "./src/style/succespublish.css");
-/* harmony import */ var _CustomizationTab__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CustomizationTab */ "./src/components/CustomizationTab.tsx");
-
 
 
 
 const image = new URL(/* asset import */ __webpack_require__(/*! ../assets/customizationscreenshot.svg */ "./src/assets/customizationscreenshot.svg"), __webpack_require__.b).href;
 const whitearrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/→.svg */ "./src/assets/→.svg"), __webpack_require__.b).href;
-const SuccessPublish = ({ onProceed, onGoBack }) => {
-    const [isCustomizingClicked, setIsCustomizingClicked] = react__WEBPACK_IMPORTED_MODULE_0___default().useState(false);
-    const handleCustomizeClick = () => {
-        setIsCustomizingClicked(true);
-    };
-    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, isCustomizingClicked ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CustomizationTab__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuth: () => { }, initialActiveTab: "Customization" })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "success-overlay" },
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.svg, { className: "success-icon", xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 52 52", initial: "hidden", animate: "visible" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("circle", { cx: "26", cy: "26", r: "21", fill: "rgba(140, 121, 255, 1)" }),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.circle, { cx: "26", cy: "26", r: "25", fill: "none", stroke: "rgba(140, 121, 255, 1)", strokeWidth: "2.5", variants: {
-                    hidden: { pathLength: 0 },
-                    visible: {
-                        pathLength: 1,
-                        transition: { duration: 0.8, ease: "easeInOut" },
-                    },
-                } }),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.path, { fill: "none", stroke: "rgba(33, 30, 57, 1)", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round", d: "M14 27l7 7 16-16", variants: {
-                    hidden: { pathLength: 0 },
-                    visible: {
-                        pathLength: 1,
-                        transition: { duration: 0.6, ease: "easeInOut", delay: 0.8 },
-                    },
-                } })),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "success-message" }, "Successfully published to your site"),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "success-screen" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "customize-section" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "customize-left" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Want to customize further?"),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("br", null),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Match the widget to your brand with:"),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", null,
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", null, "Brand colors and alignment"),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", null, "Smooth animations"),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", null, "Region-specific compliance settings")),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "customize-btn", onClick: handleCustomizeClick },
-                        "Start Customizing ",
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: whitearrow, alt: "" }))),
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "customize-right" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: image, alt: "Customization Preview" }))))))));
+const SuccessPublish = ({ onGoBack, handleCustomize }) => {
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "success-overlay" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_2__.motion.svg, { className: "success-icon", xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 52 52", initial: "hidden", animate: "visible" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("circle", { cx: "26", cy: "26", r: "21", fill: "rgba(140, 121, 255, 1)" }),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_2__.motion.circle, { cx: "26", cy: "26", r: "25", fill: "none", stroke: "rgba(140, 121, 255, 1)", strokeWidth: "2.5", variants: {
+                        hidden: { pathLength: 0 },
+                        visible: {
+                            pathLength: 1,
+                            transition: { duration: 0.8, ease: "easeInOut" },
+                        },
+                    } }),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_2__.motion.path, { fill: "none", stroke: "rgba(33, 30, 57, 1)", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round", d: "M14 27l7 7 16-16", variants: {
+                        hidden: { pathLength: 0 },
+                        visible: {
+                            pathLength: 1,
+                            transition: { duration: 0.6, ease: "easeInOut", delay: 0.8 },
+                        },
+                    } })),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "success-message" }, "Successfully published to your site"),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "success-screen" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "customize-section" },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "customize-left" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Want to customize further?"),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("br", null),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Match the widget to your brand with:"),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", null,
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", null, "Brand colors and alignment"),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", null, "Smooth animations"),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", null, "Region-specific compliance settings")),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "customize-btn", onClick: handleCustomize },
+                            "Start Customizing ",
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: whitearrow, alt: "" }))),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "customize-right" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: image, alt: "Customization Preview" })))))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SuccessPublish);
 
@@ -47562,22 +47672,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _style_styless_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../style/styless.css */ "./src/style/styless.css");
-/* harmony import */ var _hooks_userAuth__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../hooks/userAuth */ "./src/hooks/userAuth.ts");
-/* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../hooks/useAppState */ "./src/hooks/useAppState.ts");
-/* harmony import */ var _WelcomeScript__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./WelcomeScript */ "./src/components/WelcomeScript.tsx");
-/* harmony import */ var _NeedHelp__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./NeedHelp */ "./src/components/NeedHelp.tsx");
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-
-
-
+/* harmony import */ var _NeedHelp__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./NeedHelp */ "./src/components/NeedHelp.tsx");
 
 
 
@@ -47585,39 +47680,21 @@ const logo = new URL(/* asset import */ __webpack_require__(/*! ../assets/icon.s
 const questionmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/question.svg */ "./src/assets/question.svg"), __webpack_require__.b).href;
 const leftLines = new URL(/* asset import */ __webpack_require__(/*! ../assets/leftlines.svg */ "./src/assets/leftlines.svg"), __webpack_require__.b).href;
 const rightLines = new URL(/* asset import */ __webpack_require__(/*! ../assets/rightlines.svg */ "./src/assets/rightlines.svg"), __webpack_require__.b).href;
-const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated }) => {
-    const { bannerBooleans } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_3__.useAppState)();
-    const base_url = "https://cb-server.web-8fb.workers.dev";
-    const { user, exchangeAndVerifyIdToken } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_2__.useAuth)();
-    // Function to open the authorization popup authorization window
-    const openAuthScreen = () => {
-        const authWindow = window.open(`${base_url}/api/auth/authorize?state=webflow_designer`, "_blank", "width=600,height=600");
-        const onAuth = () => __awaiter(void 0, void 0, void 0, function* () {
-            yield exchangeAndVerifyIdToken();
-        });
-        const checkWindow = setInterval(() => {
-            if (authWindow === null || authWindow === void 0 ? void 0 : authWindow.closed) {
-                clearInterval(checkWindow);
-                onAuth();
-            }
-        }, 1000);
-    };
-    const handleScanProject = () => {
-        bannerBooleans.setFetchScripts(true);
-    };
-    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-screen" }, bannerBooleans.fetchScripts ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_WelcomeScript__WEBPACK_IMPORTED_MODULE_4__["default"], { isFetchScripts: bannerBooleans.fetchScripts, setFetchScripts: bannerBooleans.setFetchScripts })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-main-content" },
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: leftLines, alt: "", className: "welcome-bg-lines-left" }),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: rightLines, alt: "", className: "welcome-bg-lines-right" }),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-header" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { display: "flex", justifyContent: "flex-end" } },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_NeedHelp__WEBPACK_IMPORTED_MODULE_5__["default"], null))),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-content" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", { className: "welcome-title" },
-                "Welcome to",
-                " ",
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "welcome-title-highlight" }, "Consentbit")),
-            authenticated ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Scan your Webflow site, review detected scripts, add them to the backend, and publish when you're ready.")) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "The authorization process appears to be incomplete. To continue with the next step, please ensure that all necessary authorization steps have been successfully carried out.")),
-            authenticated ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn scan-project", onClick: handleScanProject }, "Scan Project")) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn", onClick: openAuthScreen }, "Authorize")))))));
+const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeScreen }) => {
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-screen" },
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-main-content" },
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: leftLines, alt: "", className: "welcome-bg-lines-left" }),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: rightLines, alt: "", className: "welcome-bg-lines-right" }),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-header" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { display: "flex", justifyContent: "flex-end" } },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_NeedHelp__WEBPACK_IMPORTED_MODULE_2__["default"], null))),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-content" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", { className: "welcome-title" },
+                    "Welcome to",
+                    " ",
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "welcome-title-highlight" }, "Consentbit")),
+                authenticated ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Scan your Webflow site, review detected scripts, add them to the backend, and publish when you're ready.")) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "The authorization process appears to be incomplete. To continue with the next step, please ensure that all necessary authorization steps have been successfully carried out.")),
+                authenticated ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn scan-project", onClick: handleWelcomeScreen }, "Scan Project")) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn", onClick: onAuthorize }, "Authorize"))))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (WelcomeScreen);
 
@@ -47636,12 +47713,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../hooks/useAppState */ "./src/hooks/useAppState.ts");
-/* harmony import */ var _Script__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Script */ "./src/components/Script.tsx");
-/* harmony import */ var _SetupStep__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./SetupStep */ "./src/components/SetupStep.tsx");
-/* harmony import */ var _style_welcomescript_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../style/welcomescript.css */ "./src/style/welcomescript.css");
-
-
+/* harmony import */ var _Script__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Script */ "./src/components/Script.tsx");
+/* harmony import */ var _style_welcomescript_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../style/welcomescript.css */ "./src/style/welcomescript.css");
 
 
 
@@ -47649,18 +47722,7 @@ const infologo = new URL(/* asset import */ __webpack_require__(/*! ../assets/in
 const questionmark = new URL(/* asset import */ __webpack_require__(/*! ../assets/question.svg */ "./src/assets/question.svg"), __webpack_require__.b).href;
 const uparrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/blue up arrow.svg */ "./src/assets/blue up arrow.svg"), __webpack_require__.b).href;
 const thumbnail = new URL(/* asset import */ __webpack_require__(/*! ../assets/Cover.jpg */ "./src/assets/Cover.jpg"), __webpack_require__.b).href;
-const WelcomeScipt = ({ isFetchScripts, setFetchScripts }) => {
-    const { bannerBooleans, popups } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_1__.useAppState)();
-    const handleNextButton = () => {
-        popups.setShowPopupWelcomeSetup(true);
-    };
-    const handleGoBack = () => {
-        popups.setShowPopupWelcomeSetup(false);
-    };
-    const handleProceed = () => {
-        popups.setShowPopupWelcomeSetup(false);
-        popups.setShowSetUpStep(true);
-    };
+const WelcomeScipt = ({ isFetchScripts, handleWelcomeScipt, onGoBack }) => {
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-container" },
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-info-grid" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-help-card" },
@@ -47686,12 +47748,10 @@ const WelcomeScipt = ({ isFetchScripts, setFetchScripts }) => {
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: uparrow, alt: "\u2197" }))))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-scripts-header" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", { className: "ws-scripts-title" }, "List of scripts to update"),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "ws-next-btn", onClick: handleNextButton }, "Next")),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-navigation-buttons" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "ws-next-btn", onClick: handleWelcomeScipt }, "Next"))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-scripts-scroll" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Script__WEBPACK_IMPORTED_MODULE_2__["default"], { fetchScripts: isFetchScripts, setFetchScripts: setFetchScripts, isWelcome: true })),
-        popups.showPopupWelcomeSetup && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-popup" },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-popup-content" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SetupStep__WEBPACK_IMPORTED_MODULE_3__["default"], { onGoBack: handleGoBack, onProceed: handleProceed }))))));
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Script__WEBPACK_IMPORTED_MODULE_1__["default"], { fetchScripts: isFetchScripts, isWelcome: true }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (WelcomeScipt);
 
@@ -47851,11 +47911,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
+
 
 const ScriptContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(undefined);
 
 const ScriptProvider = ({ children }) => {
-    const [scripts, setScripts] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
+    const [scripts, setScripts] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("scriptContext_scripts", []);
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ScriptContext.Provider, { value: { scripts, setScripts } }, children));
 };
 const useScriptContext = () => {
@@ -48339,6 +48401,8 @@ const createCookieccpaPreferences = (...args_1) => __awaiter(void 0, [...args_1]
                     yield mainDivBlock.setDomId("toggle-consent-btn");
                 }
             }
+            // Set bannerAdded to true in localStorage
+            localStorage.setItem('bannerAdded', 'true');
             // webflow.notify({ type: "Success", message: "ConsentBit banner added successfully!" });
         }
         catch (error) {
@@ -48846,6 +48910,8 @@ const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(
             }
             else {
             }
+            // Set bannerAdded to true in localStorage
+            localStorage.setItem('bannerAdded', 'true');
             // webflow.notify({ type: "Success", message: "ConsentBit banner added successfully!" }
         }
         catch (error) {
@@ -48915,35 +48981,50 @@ const useAppState = () => {
     const [isActive, setIsActive] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isActive", false);
     const [isLoading, setIsLoading] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isLoading", false);
     const [isBannerAdded, setIsBannerAdded] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isBannerAdded", false);
-    const [isSubscribed, setIsSubscribed] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [isSubscribed, setIsSubscribed] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isSubscribed", false);
     const [fetchScripts, setFetchScripts] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("fetchScripts", false);
     // Reset fetchScripts to false on app initialization to ensure we start from welcome screen
     react__WEBPACK_IMPORTED_MODULE_0___default().useEffect(() => {
         setFetchScripts(false);
     }, []);
+    // Function to reset all component states to initial values
+    const resetComponentStates = () => {
+        setIsWelcomeScreen(false);
+        setIsSetUpStep(false);
+        setWelcomeScipt(false);
+        setIsConfirmPublish(false);
+        setIsSuccessPublish(false);
+        setIsCustomizationTab(false);
+    };
     // Popup/Modal states
-    const [showPopup, setShowPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showSuccessPopup, setShowSuccessPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showAuthPopup, setShowAuthPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showLoadingPopup, setShowLoadingPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showChoosePlan, setShowChoosePlan] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showCSVExportAdvanced, setShowCSVExportAdvanced] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showWelcomeScreen, setShowWelcomeScreen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
-    const [showSetSetup, setShowSetUpStep] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showPopupWelcomeSetup, setShowPopupWelcomeSetup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [showPopup, setShowPopup] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showPopup", false);
+    const [showSuccessPopup, setShowSuccessPopup] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showSuccessPopup", false);
+    const [showAuthPopup, setShowAuthPopup] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showAuthPopup", false);
+    const [showLoadingPopup, setShowLoadingPopup] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showLoadingPopup", false);
+    const [showChoosePlan, setShowChoosePlan] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showChoosePlan", false);
+    const [showCSVExportAdvanced, setShowCSVExportAdvanced] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showCSVExportAdvanced", false);
+    const [showWelcomeScreen, setShowWelcomeScreen] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showWelcomeScreen", true);
+    const [showSetSetup, setShowSetUpStep] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showSetSetup", false);
+    const [showPopupWelcomeSetup, setShowPopupWelcomeSetup] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showPopupWelcomeSetup", false);
     // Tooltip states
-    const [showTooltip, setShowTooltip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [fadeOut, setFadeOut] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [showTooltip, setShowTooltip] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("showTooltip", false);
+    const [fadeOut, setFadeOut] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("fadeOut", false);
     // Data states
     const [siteInfo, setSiteInfo] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("siteInfo", null);
     const [accessToken, setAccessToken] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("accessToken", '');
     const [pages, setPages] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("pages", []);
-    const [userlocaldata, setUserlocaldata] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-    const [sessionTokenFromLocalStorage, setSessionToken] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(getSessionTokenFromLocalStorage());
+    const [userlocaldata, setUserlocaldata] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("userlocaldata", null);
+    const [sessionTokenFromLocalStorage, setSessionToken] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("sessionTokenFromLocalStorage", getSessionTokenFromLocalStorage() || '');
     // Button states
     const [buttonText, setButtonText] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("buttonText", "Scan Project");
-    const [isExporting, setIsExporting] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [isCSVButtonLoading, setIsCSVButtonLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [isExporting, setIsExporting] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isExporting", false);
+    const [isCSVButtonLoading, setIsCSVButtonLoading] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isCSVButtonLoading", false);
+    const [isWelcomeScreen, setIsWelcomeScreen] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isWelcomeScreen", false);
+    const [isSetUpStep, setIsSetUpStep] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isSetUpStep", false);
+    const [isWelcomeScipt, setWelcomeScipt] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isWelcomeScipt", false);
+    const [isConfirmPublish, setIsConfirmPublish] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isConfirmPublish", false);
+    const [isSuccessPublish, setIsSuccessPublish] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isSuccessPublish", false);
+    const [isCustomizationTab, setIsCustomizationTab] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isCustomizationTab", false);
     // Local storage data
     const userinfo = localStorage.getItem("consentbit-userinfo");
     const tokenss = JSON.parse(userinfo || '{}');
@@ -48964,6 +49045,15 @@ const useAppState = () => {
     // Return all state and setters organized by category
     return {
         // Color states
+        componentStates: {
+            isWelcomeScreen, setIsWelcomeScreen,
+            isSetUpStep, setIsSetUpStep,
+            isWelcomeScipt, setWelcomeScipt,
+            isConfirmPublish, setIsConfirmPublish,
+            isSuccessPublish, setIsSuccessPublish,
+            isCustomizationTab, setIsCustomizationTab,
+            resetComponentStates,
+        },
         bannerStyles: {
             color, setColor,
             bgColor, setBgColor,
@@ -48978,6 +49068,12 @@ const useAppState = () => {
             Font, SetFont,
             weight, setWeight,
             borderRadius, setBorderRadius,
+            isWelcomeScreen, setIsWelcomeScreen,
+            isSetUpStep, setIsSetUpStep,
+            isWelcomeScipt, setWelcomeScipt,
+            isConfirmPublish, setIsConfirmPublish,
+            isSuccessPublish, setIsSuccessPublish,
+            isCustomizationTab, setIsCustomizationTab,
         },
         // UI/UX states
         bannerUI: {
@@ -49048,7 +49144,7 @@ const useAppState = () => {
         },
         bannerLanguages: {
             language, setLanguage,
-        }
+        },
     };
 };
 
@@ -49067,13 +49163,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
-/* harmony import */ var _services_api__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/api */ "./src/services/api.ts");
-/* harmony import */ var _util_Session__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util/Session */ "./src/util/Session.ts");
-/* harmony import */ var _gdprPreference__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./gdprPreference */ "./src/hooks/gdprPreference.ts");
-/* harmony import */ var _ccpaPreference__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./ccpaPreference */ "./src/hooks/ccpaPreference.ts");
-/* harmony import */ var _package_json__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../package.json */ "./package.json");
-/* harmony import */ var _useAppState__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./useAppState */ "./src/hooks/useAppState.ts");
+/* harmony import */ var _useAppState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./useAppState */ "./src/hooks/useAppState.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -49085,118 +49175,12 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
-
-
-
-
-
-
-const appVersion = _package_json__WEBPACK_IMPORTED_MODULE_6__.version;
-// Translations object from App_backup.tsx
-const translations = {
-    English: {
-        heading: "Cookie Settings",
-        description: "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.",
-        accept: "Accept",
-        reject: "Reject",
-        preferences: "Preference",
-        ccpa: {
-            heading: "We value your Privacy",
-            description: "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.",
-            doNotShare: "Do Not Share My Personal Information"
-        }
-    },
-    Spanish: {
-        heading: "Configuración de Cookies",
-        description: "Utilizamos cookies para brindarle la mejor experiencia posible. También nos permiten analizar el comportamiento del usuario para mejorar constantemente el sitio web para usted.",
-        accept: "Aceptar",
-        reject: "Rechazar",
-        preferences: "Preferencias",
-        ccpa: {
-            heading: "Valoramos tu Privacidad",
-            description: "Utilizamos cookies para brindarle la mejor experiencia posible. También nos permiten analizar el comportamiento del usuario para mejorar constantemente el sitio web para usted.",
-            doNotShare: "No Compartir Mi Información Personal"
-        }
-    },
-    French: {
-        heading: "Paramètres des Cookies",
-        description: "Nous utilisons des cookies pour vous offrir la meilleure expérience possible. Ils nous permettent également d'analyser le comportement des utilisateurs afin d'améliorer constamment le site Web pour vous.",
-        accept: "Accepter",
-        reject: "Refuser",
-        preferences: "Préférences",
-        ccpa: {
-            heading: "Nous Respectons Votre Vie Privée",
-            description: "Nous utilisons des cookies pour vous offrir la meilleure expérience possible. Ils nous permettent également d'analyser le comportement des utilisateurs afin d'améliorer constamment le site Web pour vous.",
-            doNotShare: "Ne Pas Partager Mes Informations Personnelles"
-        }
-    },
-    German: {
-        heading: "Cookie-Einstellungen",
-        description: "Wir verwenden Cookies, um Ihnen das bestmögliche Erlebnis zu bieten. Sie helfen uns auch, das Nutzerverhalten zu analysieren, um die Website kontinuierlich für Sie zu verbessern.",
-        accept: "Akzeptieren",
-        reject: "Ablehnen",
-        preferences: "Einstellungen",
-        ccpa: {
-            heading: "Wir Respektieren Ihre Privatsphäre",
-            description: "Wir verwenden Cookies, um Ihnen das bestmögliche Erlebnis zu bieten. Sie helfen uns auch, das Nutzerverhalten zu analysieren, um die Website kontinuierlich für Sie zu verbessern.",
-            doNotShare: "Meine persönlichen Informationen nicht weitergeben"
-        }
-    },
-    Swedish: {
-        heading: "Cookie-inställningar",
-        description: "Vi använder cookies för att ge dig den bästa möjliga upplevelsen. De låter oss också analysera användarbeteende för att ständigt förbättra webbplatsen för dig.",
-        accept: "Acceptera",
-        reject: "Avvisa",
-        preferences: "Inställningar",
-        ccpa: {
-            heading: "Vi Värdesätter Din Integritet",
-            description: "Vi använder cookies för att ge dig den bästa möjliga upplevelsen. De låter oss också analysera användarbeteende för att ständigt förbättra webbplatsen för dig.",
-            doNotShare: "Dela Inte Min Personliga Information"
-        }
-    },
-    Dutch: {
-        heading: "Cookie-instellingen",
-        description: "We gebruiken cookies om u de best mogelijke ervaring te bieden. Ze stellen ons ook in staat om gebruikersgedrag te analyseren om de website voortdurend voor u te verbeteren.",
-        accept: "Accepteren",
-        reject: "Weigeren",
-        preferences: "Voorkeuren",
-        ccpa: {
-            heading: "We Waarderen Uw Privacy",
-            description: "We gebruiken cookies om u de best mogelijke ervaring te bieden. Ze stellen ons ook in staat om gebruikersgedrag te analyseren om de website voortdurend voor u te verbeteren.",
-            doNotShare: "Deel Mijn Persoonlijke Informatie Niet"
-        }
-    },
-    Italian: {
-        heading: "Impostazioni Cookie",
-        description: "Utilizziamo i cookie per fornirti la migliore esperienza possibile. Ci permettono anche di analizzare il comportamento degli utenti per migliorare costantemente il sito web per te.",
-        accept: "Accetta",
-        reject: "Rifiuta",
-        preferences: "Preferenze",
-        ccpa: {
-            heading: "Rispettiamo la Tua Privacy",
-            description: "Utilizziamo i cookie per fornirti la migliore esperienza possibile. Ci permettono anche di analizzare il comportamento degli utenti per migliorare costantemente il sito web per te.",
-            doNotShare: "Non Condividere Le Mie Informazioni Personali"
-        }
-    },
-    Portuguese: {
-        heading: "Configurações de Cookies",
-        description: "Usamos cookies para fornecer a melhor experiência possível. Eles também nos permitem analisar o comportamento do usuário para melhorar constantemente o site para você.",
-        accept: "Aceitar",
-        reject: "Rejeitar",
-        preferences: "Preferências",
-        ccpa: {
-            heading: "Valorizamos Sua Privacidade",
-            description: "Usamos cookies para fornecer a melhor experiência possível. Eles também nos permitem analisar o comportamento do usuário para melhorar constantemente o site para você.",
-            doNotShare: "Não Compartilhar Minhas Informações Pessoais"
-        }
-    }
-};
 const useBannerCreation = () => {
     const [isCreating, setIsCreating] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [showLoading, setShowLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [showSuccess, setShowSuccess] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [showSuccessPublish, setShowSuccessPublish] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const { bannerStyles, bannerUI, bannerConfig, bannerBooleans, popups, bannerAnimation, bannerToggleStates, bannerLanguages, } = (0,_useAppState__WEBPACK_IMPORTED_MODULE_7__.useAppState)();
+    const { bannerBooleans, } = (0,_useAppState__WEBPACK_IMPORTED_MODULE_1__.useAppState)();
     const handleBannerSuccess = () => {
         setShowSuccess(true);
         setTimeout(() => {
@@ -49205,516 +49189,22 @@ const useBannerCreation = () => {
     };
     const handleBannerError = (error) => {
         // Error handling
-        _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].notify({ type: "error", message: "An error occurred while creating the banner." });
     };
     const handleSuccessPublishProceed = () => {
         setShowSuccessPublish(false);
-        // Add any additional logic for proceeding from success page
     };
     const handleSuccessPublishGoBack = () => {
         setShowSuccessPublish(false);
-        // Add any additional logic for going back from success page
     };
-    const fetchAnalyticsBlockingsScripts = () => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_3__.getSessionTokenFromLocalStorage)();
-            if (!token) {
-                throw new Error("No token available");
-            }
-            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getSiteInfo();
-            const hostingScript = yield _services_api__WEBPACK_IMPORTED_MODULE_2__.customCodeApi.registerAnalyticsBlockingScript(token);
-            if (hostingScript) {
-                const scriptId = hostingScript.result.id;
-                const version = hostingScript.result.version;
-                const params = {
-                    targetType: 'site',
-                    targetId: siteIdinfo.siteId,
-                    scriptId: scriptId,
-                    location: 'header',
-                    version: version
-                };
-                yield _services_api__WEBPACK_IMPORTED_MODULE_2__.customCodeApi.applyScript(params, token);
-            }
-        }
-        catch (error) {
-            throw error;
-            throw error;
-        }
-    });
-    const fetchAnalyticsBlockingsScriptsV2 = () => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_3__.getSessionTokenFromLocalStorage)();
-            if (!token) {
-                throw new Error("No token available");
-            }
-            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getSiteInfo();
-            const hostingScript = yield _services_api__WEBPACK_IMPORTED_MODULE_2__.customCodeApi.registerV2BannerCustomCode(token);
-            if (hostingScript) {
-                const scriptId = hostingScript.result.id;
-                const version = hostingScript.result.version;
-                const params = {
-                    targetType: 'site',
-                    targetId: siteIdinfo.siteId,
-                    scriptId: scriptId,
-                    location: 'header',
-                    version: version
-                };
-                yield _services_api__WEBPACK_IMPORTED_MODULE_2__.customCodeApi.applyV2Script(params, token);
-            }
-        }
-        catch (error) {
-            throw error;
-            throw error;
-        }
-    });
     const createGDPRBanner = (config_1, ...args_1) => __awaiter(void 0, [config_1, ...args_1], void 0, function* (config, skipCommonDiv = false) {
-        var _a, _b, _c, _d, _e, _f;
         setIsCreating(true);
         setShowLoading(true);
         try {
-            // Cleanup existing banners
-            const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getAllElements();
-            const idsToCheck = ["consent-banner", "main-banner", "toggle-consent-btn"];
-            const domIdPromises = allElements.map((el) => __awaiter(void 0, void 0, void 0, function* () {
-                var _a;
-                const domId = yield ((_a = el.getDomId) === null || _a === void 0 ? void 0 : _a.call(el));
-                return { el, domId };
-            }));
-            const elementsWithDomIds = yield Promise.all(domIdPromises);
-            const matchingElements = elementsWithDomIds
-                .filter(({ domId }) => domId && idsToCheck.includes(domId))
-                .map(({ el }) => el);
-            if (matchingElements.length > 0) {
-                yield Promise.all(matchingElements.map((el) => __awaiter(void 0, void 0, void 0, function* () {
-                    var _a;
-                    try {
-                        const children = yield ((_a = el.getChildren) === null || _a === void 0 ? void 0 : _a.call(el));
-                        if (children === null || children === void 0 ? void 0 : children.length) {
-                            yield Promise.all(children.map(child => child.remove()));
-                        }
-                        yield el.remove();
-                    }
-                    catch (err) {
-                        // Error handling
-                    }
-                })));
-            }
-            const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getSelectedElement();
-            if (!selectedElement) {
-                throw new Error("No element selected in the Designer.");
-            }
-            const newDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-            if (!newDiv) {
-                throw new Error("Failed to create div.");
-            }
-            if (newDiv.setDomId) {
-                yield newDiv.setDomId("consent-banner");
-            }
-            const styleNames = {
-                divStyleName: "consentbit-gdpr_banner_div",
-                paragraphStyleName: "consentbit-gdpr_banner_text",
-                buttonContainerStyleName: "consentbit-banner_button_container",
-                prefrenceButtonStyleName: "consentbit-banner_button_preference",
-                declineButtonStyleName: "consentbit-banner_button_decline",
-                buttonStyleName: "consentbit-banner_accept",
-                headingStyleName: "consentbit-banner_headings",
-                innerDivStyleName: "consentbit-innerdiv",
-                secondBackgroundStyleName: "consentbit-banner_second-bg",
-                closebutton: 'close-consent'
-            };
-            const styles = yield Promise.all(Object.values(styleNames).map((name) => __awaiter(void 0, void 0, void 0, function* () {
-                return (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getStyleByName(name)) || (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].createStyle(name));
-            })));
-            const [divStyle, paragraphStyle, buttonContainerStyle, prefrenceButtonStyle, declineButtonStyle, buttonStyle, headingStyle, innerDivStyle, secondBackgroundStyle, closebutton] = styles;
-            const animationAttribute = bannerAnimation.animation || "fade";
-            const divPropertyMap = {
-                "background-color": config.color,
-                "position": "fixed",
-                "z-index": "99999",
-                "padding-top": "20px",
-                "padding-right": "20px",
-                "padding-bottom": "20px",
-                "padding-left": "20px",
-                "border-radius": `${config.borderRadius}px`,
-                "display": "none",
-                "flex-direction": "column",
-                "align-items": "center",
-                "justify-content": "center",
-                "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-                "font-family": config.Font,
-            };
-            if (window.innerWidth <= 768) {
-                divPropertyMap["width"] = "100%";
-                divPropertyMap["height"] = "40%";
-            }
-            divPropertyMap["bottom"] = "3%";
-            switch (config.selected) {
-                case "left":
-                    divPropertyMap["left"] = "3%";
-                    divPropertyMap["right"] = "auto";
-                    divPropertyMap["transform"] = "translate3d(0px, 0, 0)";
-                    break;
-                case "center":
-                    divPropertyMap["left"] = "50%";
-                    delete divPropertyMap["right"];
-                    divPropertyMap["transform"] = "translate3d(-50%, 0, 0)";
-                    break;
-                case "right":
-                default:
-                    divPropertyMap["right"] = "3%";
-                    divPropertyMap["transform"] = "translate3d(0px, 0, 0)";
-                    divPropertyMap["left"] = "auto";
-                    break;
-            }
-            switch (config.style) {
-                case "bigstyle":
-                    divPropertyMap["width"] = "370px";
-                    divPropertyMap["min-height"] = "284px";
-                    break;
-                case "fullwidth":
-                    divPropertyMap["width"] = "100%";
-                    divPropertyMap["min-height"] = "167px";
-                    divPropertyMap["left"] = "0px";
-                    divPropertyMap["right"] = "0px";
-                    divPropertyMap["bottom"] = "0px";
-                    divPropertyMap["transform"] = "translate3d(0px, 0, 0)";
-                    break;
-                case "centeralign":
-                    divPropertyMap["width"] = "566px";
-                    divPropertyMap["min-height"] = "167px";
-                    break;
-                case "align":
-                case "alignstyle":
-                default:
-                    divPropertyMap["width"] = "438px";
-                    divPropertyMap["min-height"] = "220px";
-                    break;
-            }
-            const responsivePropertyMap = {
-                "max-width": "100%",
-                "width": "100%",
-                "bottom": "0",
-                "left": "0",
-                "right": "0",
-                "top": "auto",
-                "transform": "none"
-            };
-            const responsiveOptions = { breakpoint: "small", pseudoClass: "" };
-            const paragraphPropertyMap = {
-                "color": config.paraColor,
-                "font-size": "16px",
-                "font-weight": `${config.weight}`,
-                "line-height": "1.5",
-                "text-align": "left",
-                "margin-top": "0",
-                "margin-right": "0",
-                "margin-bottom": "10px",
-                "margin-left": "0",
-                "display": "block",
-                "width": "100%",
-            };
-            if (config.style === "centeralign") {
-                paragraphPropertyMap["text-align"] = "center";
-            }
-            const buttonContainerPropertyMap = {
-                "display": "flex",
-                "justify-content": "right",
-                "margin-top": "10px",
-                "width": "100%",
-            };
-            if (config.style === "centeralign") {
-                buttonContainerPropertyMap["justify-content"] = "center";
-            }
-            const buttonPropertyMap = {
-                "border-radius": `${config.buttonRadius}px`,
-                "cursor": "pointer",
-                "background-color": config.secondcolor,
-                "margin-left": "5px",
-                "margin-right": "5px",
-                "min-width": "80px",
-                "color": config.primaryButtonText,
-                "text-align": "center",
-                "display": "flex",
-                "justify-content": "center",
-            };
-            const responsivebuttonPropertyMap = {
-                "margin-bottom": "10px",
-                "flex-direction": "column",
-                "justify-content": "center",
-                "text-align": "center",
-                "display": "flex",
-                "row-gap": "12px"
-            };
-            const declineButtonPropertyMap = {
-                "border-radius": `${config.buttonRadius}px`,
-                "cursor": "pointer",
-                "background-color": config.btnColor,
-                "color": config.secondbuttontext,
-                "margin-left": "5px",
-                "margin-right": "5px",
-                "min-width": "80px",
-                "text-align": "center",
-                "display": "flex",
-                "justify-content": "center",
-            };
-            const secondbackgroundPropertyMap = {
-                "position": "absolute",
-                "background-color": config.bgColors,
-                "width": "35%",
-                "right": "0px",
-                "height": "100%",
-                "z-index": "-3",
-                "opacity": "30%",
-                "bottom": "0px",
-                "border-bottom-right-radius": `${config.borderRadius}px`,
-                "border-top-right-radius": `${config.borderRadius}px`
-            };
-            const headingPropertyMap = {
-                "color": config.headColor,
-                "font-size": "20px",
-                "font-weight": `${config.weight}`,
-                "text-align": "left",
-                "margin-top": "0",
-                "margin-bottom": "10px",
-                "width": "100%",
-            };
-            if (config.style === "centeralign") {
-                headingPropertyMap["text-align"] = "center";
-            }
-            const innerdivPropertyMap = {
-                "max-width": "877px",
-                "margin-left": "auto",
-                "margin-right": "auto",
-            };
-            const CloseButtonPropertyMap = {
-                "color": "#000",
-                "justify-content": "center",
-                "align-items": "center",
-                "width": "25px",
-                "height": "25px",
-                "display": "flex",
-                "position": "absolute",
-                "top": "5%",
-                "left": "auto",
-                "right": "2%",
-                "z-index": "99",
-                "cursor": "pointer",
-                "font-family": "'Montserrat', sans-serif",
-            };
-            yield divStyle.setProperties(divPropertyMap);
-            yield divStyle.setProperties(responsivePropertyMap, responsiveOptions);
-            yield paragraphStyle.setProperties(paragraphPropertyMap);
-            yield buttonContainerStyle.setProperties(buttonContainerPropertyMap);
-            yield buttonContainerStyle.setProperties(responsivebuttonPropertyMap, responsiveOptions);
-            yield buttonStyle.setProperties(buttonPropertyMap);
-            yield declineButtonStyle.setProperties(declineButtonPropertyMap);
-            yield prefrenceButtonStyle.setProperties(declineButtonPropertyMap);
-            yield headingStyle.setProperties(headingPropertyMap);
-            yield secondBackgroundStyle.setProperties(secondbackgroundPropertyMap);
-            yield innerDivStyle.setProperties(innerdivPropertyMap);
-            yield closebutton.setProperties(CloseButtonPropertyMap);
-            if (newDiv.setStyles) {
-                yield newDiv.setStyles([divStyle]);
-            }
-            if (newDiv.setCustomAttribute) {
-                // Only set animation attribute if it has a valid value
-                if (animationAttribute && animationAttribute.trim() !== "") {
-                    try {
-                        const animationPromise = newDiv.setCustomAttribute("data-animation", animationAttribute);
-                        const animationTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Animation attribute timeout")), 5000));
-                        yield Promise.race([animationPromise, animationTimeout]);
-                    }
-                    catch (error) {
-                        throw error;
-                    }
-                }
-                try {
-                    const cookieBannerPromise = newDiv.setCustomAttribute("data-cookie-banner", config.toggleStates.disableScroll ? "true" : "false");
-                    const cookieBannerTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Cookie banner attribute timeout")), 5000));
-                    yield Promise.race([cookieBannerPromise, cookieBannerTimeout]);
-                }
-                catch (error) {
-                    throw error;
-                }
-            }
-            let innerdiv;
-            try {
-                // Add timeout to prevent hanging
-                const innerdivPromise = selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Element creation timeout")), 10000));
-                innerdiv = (yield Promise.race([innerdivPromise, timeoutPromise]));
-                if (innerdiv && innerdiv.setStyles) {
-                    yield innerdiv.setStyles([innerDivStyle]);
-                }
-            }
-            catch (error) {
-                throw new Error(`Failed to create innerdiv: ${error}`);
-            }
-            let SecondDiv;
-            if (config.style === "alignstyle") {
-                SecondDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-                if (SecondDiv.setStyles) {
-                    yield SecondDiv.setStyles([secondBackgroundStyle]);
-                }
-            }
-            const tempHeading = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Heading);
-            if (!tempHeading) {
-                throw new Error("Failed to create heading");
-            }
-            if (tempHeading.setHeadingLevel) {
-                yield tempHeading.setHeadingLevel(2);
-            }
-            if (tempHeading.setStyles) {
-                yield tempHeading.setStyles([headingStyle]);
-            }
-            if (tempHeading.setTextContent) {
-                const language = config.language || "English";
-                const headingText = ((_a = translations[language]) === null || _a === void 0 ? void 0 : _a.heading) || "Cookie Settings";
-                yield tempHeading.setTextContent(headingText);
-            }
-            let Closebuttons = null;
-            if (config.toggleStates.closebutton) {
-                Closebuttons = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Paragraph);
-                if (!Closebuttons) {
-                    throw new Error("Failed to create paragraph");
-                }
-                if (Closebuttons.setStyles) {
-                    yield Closebuttons.setStyles([closebutton]);
-                    yield Closebuttons.setTextContent("X");
-                    yield Closebuttons.setCustomAttribute("consentbit", "close");
-                }
-            }
-            const tempParagraph = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Paragraph);
-            if (!tempParagraph) {
-                throw new Error("Failed to create paragraph");
-            }
-            if (tempParagraph.setStyles) {
-                yield tempParagraph.setStyles([paragraphStyle]);
-            }
-            if (tempParagraph.setTextContent) {
-                const language = config.language || "English";
-                const paragraphText = ((_b = translations[language]) === null || _b === void 0 ? void 0 : _b.description) || "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.";
-                yield tempParagraph.setTextContent(paragraphText);
-            }
-            const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-            if (!buttonContainer) {
-                throw new Error("Failed to create button container");
-            }
-            yield buttonContainer.setStyles([buttonContainerStyle]);
-            const prefrenceButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Button);
-            if (!prefrenceButton) {
-                throw new Error("Failed to create preference button");
-            }
-            yield prefrenceButton.setStyles([prefrenceButtonStyle]);
-            const language = config.language || "English";
-            yield prefrenceButton.setTextContent(((_c = translations[language]) === null || _c === void 0 ? void 0 : _c.preferences) || "Preferences");
-            if (prefrenceButton.setDomId) {
-                yield prefrenceButton.setDomId("preferences-btn");
-            }
-            const acceptButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Button);
-            if (!acceptButton) {
-                throw new Error("Failed to create accept button");
-            }
-            yield acceptButton.setStyles([buttonStyle]);
-            yield acceptButton.setTextContent(((_d = translations[language]) === null || _d === void 0 ? void 0 : _d.accept) || "Accept");
-            if (acceptButton.setDomId) {
-                yield acceptButton.setDomId("accept-btn");
-            }
-            const declineButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Button);
-            if (!declineButton) {
-                throw new Error("Failed to create decline button");
-            }
-            yield declineButton.setStyles([declineButtonStyle]);
-            yield declineButton.setTextContent(((_e = translations[language]) === null || _e === void 0 ? void 0 : _e.reject) || "Reject");
-            if (declineButton.setDomId) {
-                yield declineButton.setDomId("decline-btn");
-            }
-            if (newDiv.append && innerdiv && tempHeading && tempParagraph && buttonContainer) {
-                yield newDiv.append(innerdiv);
-                if (Closebuttons) {
-                    yield newDiv.append(Closebuttons);
-                }
-                if (SecondDiv) {
-                    yield innerdiv.append(SecondDiv);
-                }
-                yield innerdiv.append(tempHeading);
-                yield innerdiv.append(tempParagraph);
-                yield innerdiv.append(buttonContainer);
-                if (buttonContainer.append && prefrenceButton && declineButton && acceptButton) {
-                    yield buttonContainer.append(prefrenceButton);
-                    yield buttonContainer.append(declineButton);
-                    yield buttonContainer.append(acceptButton);
-                }
-            }
-            try {
-                yield (0,_gdprPreference__WEBPACK_IMPORTED_MODULE_4__["default"])(["essential", "analytics", "marketing", "preferences"], bannerLanguages.language, bannerStyles.color, bannerStyles.btnColor, bannerStyles.headColor, bannerStyles.paraColor, bannerStyles.secondcolor, bannerConfig.buttonRadius, bannerAnimation.animation, bannerToggleStates.toggleStates.customToggle, bannerStyles.primaryButtonText, bannerStyles.secondbuttontext, skipCommonDiv, bannerToggleStates.toggleStates.disableScroll, bannerToggleStates.toggleStates.closebutton);
-                // Display list of created DOM elements with IDs
-                try {
-                    const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getAllElements();
-                    const elementsWithIds = [];
-                    for (const element of allElements) {
-                        try {
-                            const domId = yield ((_f = element.getDomId) === null || _f === void 0 ? void 0 : _f.call(element));
-                            if (domId) {
-                                elementsWithIds.push({
-                                    id: domId,
-                                    element: element
-                                });
-                            }
-                        }
-                        catch (err) {
-                            // Skip elements that don't have getDomId method
-                        }
-                    }
-                    elementsWithIds.forEach((item, index) => {
-                    });
-                    // Show specific banner-related IDs
-                    const bannerIds = elementsWithIds.filter(item => item.id.includes('consent') ||
-                        item.id.includes('banner') ||
-                        item.id.includes('preference') ||
-                        item.id.includes('toggle') ||
-                        item.id.includes('accept') ||
-                        item.id.includes('decline') ||
-                        item.id.includes('preferences'));
-                    if (bannerIds.length > 0) {
-                        bannerIds.forEach((item, index) => {
-                        });
-                    }
-                }
-                catch (error) {
-                }
-            }
-            catch (error) {
-                throw error;
-            }
-            try {
-                if (appVersion === '1.0.0') {
-                    yield fetchAnalyticsBlockingsScripts();
-                }
-                else {
-                    yield fetchAnalyticsBlockingsScriptsV2();
-                }
-                // Add a delay to ensure script is loaded
-                yield new Promise(resolve => setTimeout(resolve, 3000));
-                // Check if the script is loaded
-                const scripts = document.querySelectorAll('script[src*="consent"]');
-                scripts.forEach((script, index) => {
-                    const scriptElement = script;
-                });
-                // Check if the script is loaded in the head
-                const headScripts = document.head.querySelectorAll('script');
-                headScripts.forEach((script, index) => {
-                    const scriptElement = script;
-                    if (scriptElement.src && scriptElement.src.includes('consent')) {
-                    }
-                });
-            }
-            catch (error) {
-                throw error;
-            }
-            setTimeout(() => {
-                handleBannerSuccess();
-            }, 30000);
+            // Set bannerAdded to true in localStorage
+            localStorage.setItem('bannerAdded', 'true');
+            // Set the banner boolean state
+            bannerBooleans.setIsBannerAdded(true);
+            setShowSuccessPublish(true);
         }
         catch (error) {
             handleBannerError(error);
@@ -49725,394 +49215,14 @@ const useBannerCreation = () => {
         }
     });
     const createCCPABanner = (config) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
         setIsCreating(true);
         setShowLoading(true);
         try {
-            // Cleanup existing banners
-            const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getAllElements();
-            const idsToCheck = ["initial-consent-banner", "main-consent-banner", "toggle-consent-btn"];
-            const domIdPromises = allElements.map((el) => __awaiter(void 0, void 0, void 0, function* () {
-                var _a;
-                const domId = yield ((_a = el.getDomId) === null || _a === void 0 ? void 0 : _a.call(el));
-                return { el, domId };
-            }));
-            const elementsWithDomIds = yield Promise.all(domIdPromises);
-            const matchingElements = elementsWithDomIds
-                .filter(({ domId }) => domId && idsToCheck.includes(domId))
-                .map(({ el }) => el);
-            yield Promise.all(matchingElements.map((el) => __awaiter(void 0, void 0, void 0, function* () {
-                var _a;
-                try {
-                    const children = yield ((_a = el.getChildren) === null || _a === void 0 ? void 0 : _a.call(el));
-                    if (children === null || children === void 0 ? void 0 : children.length) {
-                        yield Promise.all(children.map(child => child.remove()));
-                    }
-                    yield el.remove();
-                }
-                catch (err) {
-                }
-            })));
-            const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getSelectedElement();
-            if (!selectedElement) {
-                throw new Error("No element selected in the Designer.");
-            }
-            const newDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-            if (!newDiv) {
-                throw new Error("Failed to create div.");
-            }
-            if (newDiv.setDomId) {
-                yield newDiv.setDomId("initial-consent-banner");
-            }
-            const styleNames = {
-                divStyleName: "consentbit-ccpa-banner-div",
-                paragraphStyleName: "consentbit-ccpa-banner-text",
-                buttonContainerStyleName: "consentbit-ccpa-button-container",
-                headingStyleName: "consentbit-ccpa-banner-heading",
-                linktextstyle: "consentbit-ccpa-linkblock",
-                innerDivStyleName: "consentbit-ccpa-innerdiv",
-                secondBackgroundStyleName: "consentbit-banner-ccpasecond-bg",
-                closebutton: `close-consentbit`,
-            };
-            const styles = yield Promise.all(Object.values(styleNames).map((name) => __awaiter(void 0, void 0, void 0, function* () {
-                return (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getStyleByName(name)) || (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].createStyle(name));
-            })));
-            const [divStyle, paragraphStyle, buttonContainerStyle, headingStyle, Linktext, innerDivStyle, secondBackgroundStyle, closebutton] = styles;
-            const animationAttribute = bannerAnimation.animation || "fade";
-            const divPropertyMap = {
-                "background-color": bannerStyles.color,
-                "position": "fixed",
-                "z-index": "99999",
-                "padding-top": "20px",
-                "padding-right": "20px",
-                "padding-bottom": "20px",
-                "padding-left": "20px",
-                "border-radius": `${config.borderRadius}px`,
-                "display": "none",
-                "flex-direction": "column",
-                "align-items": "center",
-                "justify-content": "center",
-                "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-                "font-family": config.Font,
-            };
-            if (window.innerWidth <= 768) {
-                divPropertyMap["width"] = "100%";
-                divPropertyMap["height"] = "40%";
-            }
-            divPropertyMap["bottom"] = "3%";
-            switch (config.selected) {
-                case "left":
-                    divPropertyMap["left"] = "3%";
-                    divPropertyMap["right"] = "auto";
-                    divPropertyMap["transform"] = "translate3d(0px, 0, 0)";
-                    break;
-                case "center":
-                    divPropertyMap["left"] = "50%";
-                    delete divPropertyMap["right"];
-                    divPropertyMap["transform"] = "translate3d(-50%, 0, 0)";
-                    break;
-                case "right":
-                default:
-                    divPropertyMap["right"] = "3%";
-                    divPropertyMap["transform"] = "translate3d(0px, 0, 0)";
-                    divPropertyMap["left"] = "auto";
-                    break;
-            }
-            switch (config.style) {
-                case "bigstyle":
-                    divPropertyMap["width"] = "370px";
-                    divPropertyMap["min-height"] = "284px";
-                    break;
-                case "fullwidth":
-                    divPropertyMap["width"] = "100%";
-                    divPropertyMap["min-height"] = "167px";
-                    divPropertyMap["left"] = "0px";
-                    divPropertyMap["right"] = "0px";
-                    divPropertyMap["bottom"] = "0px";
-                    divPropertyMap["transform"] = "translate3d(0px, 0, 0)";
-                    break;
-                case "centeralign":
-                    divPropertyMap["width"] = "566px";
-                    divPropertyMap["min-height"] = "167px";
-                    break;
-                case "align":
-                case "alignstyle":
-                default:
-                    divPropertyMap["width"] = "438px";
-                    divPropertyMap["min-height"] = "220px";
-                    break;
-            }
-            const responsivePropertyMap = {
-                "max-width": "100%",
-                "width": "100%",
-                "bottom": "0",
-                "left": "0",
-                "right": "0",
-                "top": "auto",
-                "transform": "none"
-            };
-            const responsiveOptions = { breakpoint: "small", pseudoClass: "" };
-            const paragraphPropertyMap = {
-                "color": config.paraColor,
-                "font-size": "16px",
-                "font-weight": `${config.weight}`,
-                "line-height": "1.5",
-                "text-align": "left",
-                "margin-top": "0",
-                "margin-right": "0",
-                "margin-bottom": "10px",
-                "margin-left": "0",
-                "display": "block",
-                "width": "100%",
-            };
-            if (config.style === "centeralign") {
-                paragraphPropertyMap["text-align"] = "center";
-            }
-            const buttonContainerPropertyMap = {
-                "display": "flex",
-                "justify-content": "left",
-                "margin-top": "10px",
-                "width": "100%",
-            };
-            if (config.style === "centeralign") {
-                buttonContainerPropertyMap["justify-content"] = "center";
-            }
-            const declineButtonPropertyMap = {
-                "border-radius": "48px",
-                "cursor": "pointer",
-                "background-color": "rgba(241, 241, 241, 1)",
-                "color": "rgba(72, 57, 153, 1)",
-                "margin-left": "5px",
-                "margin-right": "5px",
-                "min-width": "80px",
-            };
-            const headingPropertyMap = {
-                "color": config.headColor,
-                "font-size": "20px",
-                "font-weight": `${config.weight}`,
-                "text-align": "left",
-                "margin-top": "0",
-                "margin-bottom": "10px",
-                "width": "100%",
-            };
-            if (config.style === "centeralign") {
-                headingPropertyMap["text-align"] = "center";
-            }
-            const innerdivPropertyMap = {
-                "max-width": "877px",
-                "margin-left": "auto",
-                "margin-right": "auto",
-            };
-            const secondbackgroundPropertyMap = {
-                "position": "absolute",
-                "background-color": config.bgColors,
-                "width": "35%",
-                "right": "0px",
-                "height": "100%",
-                "z-index": "-3",
-                "opacity": "30%",
-                "bottom": "0px",
-                "border-bottom-right-radius": `${config.borderRadius}px`,
-                "border-top-right-radius": `${config.borderRadius}px`
-            };
-            const CloseButtonPropertyMap = {
-                "color": "#000",
-                "justify-content": "center",
-                "align-items": "center",
-                "width": "25px",
-                "height": "25px",
-                "display": "flex",
-                "position": "absolute",
-                "top": "5%",
-                "left": "auto",
-                "right": "2%",
-                "z-index": "99",
-                "cursor": "pointer",
-                "font-family": "'Montserrat', sans-serif",
-            };
-            yield divStyle.setProperties(divPropertyMap);
-            yield divStyle.setProperties(responsivePropertyMap, responsiveOptions);
-            yield paragraphStyle.setProperties(paragraphPropertyMap);
-            yield buttonContainerStyle.setProperties(buttonContainerPropertyMap);
-            yield Linktext.setProperties(declineButtonPropertyMap);
-            yield headingStyle.setProperties(headingPropertyMap);
-            yield innerDivStyle.setProperties(innerdivPropertyMap);
-            yield secondBackgroundStyle.setProperties(secondbackgroundPropertyMap);
-            yield closebutton.setProperties(CloseButtonPropertyMap);
-            if (newDiv.setStyles) {
-                yield newDiv.setStyles([divStyle]);
-            }
-            if (newDiv.setCustomAttribute) {
-                // Only set animation attribute if it has a valid value
-                if (animationAttribute && animationAttribute.trim() !== "") {
-                    try {
-                        const animationPromise = newDiv.setCustomAttribute("data-animation", animationAttribute);
-                        const animationTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("CCPA animation attribute timeout")), 5000));
-                        yield Promise.race([animationPromise, animationTimeout]);
-                    }
-                    catch (error) {
-                        throw error;
-                    }
-                }
-                else {
-                }
-                try {
-                    const cookieBannerPromise = newDiv.setCustomAttribute("data-cookie-banner", bannerToggleStates.toggleStates.disableScroll ? "true" : "false");
-                    const cookieBannerTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("CCPA cookie banner attribute timeout")), 5000));
-                    yield Promise.race([cookieBannerPromise, cookieBannerTimeout]);
-                }
-                catch (error) {
-                    throw error;
-                }
-            }
-            // Create inner elements following App_backup.tsx pattern
-            const innerdiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-            yield innerdiv.setStyles([innerDivStyle]);
-            let SecondDiv;
-            if (config.style === "alignstyle") {
-                SecondDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-                if (SecondDiv.setStyles) {
-                    yield SecondDiv.setStyles([secondBackgroundStyle]);
-                }
-            }
-            const tempHeading = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Heading);
-            if (!tempHeading) {
-                throw new Error("Failed to create heading");
-            }
-            if (tempHeading.setHeadingLevel) {
-                yield tempHeading.setHeadingLevel(2);
-            }
-            if (tempHeading.setStyles) {
-                yield tempHeading.setStyles([headingStyle]);
-            }
-            if (tempHeading.setTextContent) {
-                const language = config.language || "English";
-                const headingText = ((_a = translations[language]) === null || _a === void 0 ? void 0 : _a.ccpa.heading) || "We value your Privacy";
-                yield tempHeading.setTextContent(headingText);
-            }
-            let Closebuttons = null;
-            if (bannerToggleStates.toggleStates.closebutton) {
-                Closebuttons = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Paragraph);
-                if (!Closebuttons) {
-                    throw new Error("Failed to create paragraph");
-                }
-                if (Closebuttons.setStyles) {
-                    yield Closebuttons.setStyles([closebutton]);
-                    yield Closebuttons.setTextContent("X");
-                    yield Closebuttons.setCustomAttribute("consentbit", "close");
-                }
-            }
-            const tempParagraph = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.Paragraph);
-            if (!tempParagraph) {
-                throw new Error("Failed to create paragraph");
-            }
-            if (tempParagraph.setStyles) {
-                yield tempParagraph.setStyles([paragraphStyle]);
-            }
-            if (tempParagraph.setTextContent) {
-                const language = config.language || "English";
-                const paragraphText = ((_b = translations[language]) === null || _b === void 0 ? void 0 : _b.ccpa.description) || "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.";
-                yield tempParagraph.setTextContent(paragraphText);
-            }
-            const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-            if (!buttonContainer) {
-                throw new Error("Failed to create button container");
-            }
-            yield buttonContainer.setStyles([buttonContainerStyle]);
-            const prefrenceButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.LinkBlock);
-            if (!prefrenceButton) {
-                throw new Error("Failed to create preference button");
-            }
-            yield prefrenceButton.setStyles([Linktext]);
-            const language = config.language || "English";
-            yield prefrenceButton.setTextContent(((_c = translations[language]) === null || _c === void 0 ? void 0 : _c.ccpa.doNotShare) || "Do Not Share My Personal Information");
-            if (prefrenceButton.setDomId) {
-                yield prefrenceButton.setDomId("do-not-share-link");
-            }
-            if (newDiv.append && innerdiv && tempHeading && tempParagraph && buttonContainer) {
-                yield newDiv.append(innerdiv);
-                if (Closebuttons) {
-                    yield newDiv.append(Closebuttons);
-                }
-                if (SecondDiv) {
-                    yield innerdiv.append(SecondDiv);
-                }
-                yield innerdiv.append(tempHeading);
-                yield innerdiv.append(tempParagraph);
-                yield innerdiv.append(buttonContainer);
-                if (buttonContainer.append && prefrenceButton) {
-                    yield buttonContainer.append(prefrenceButton);
-                }
-            }
-            try {
-                yield (0,_ccpaPreference__WEBPACK_IMPORTED_MODULE_5__["default"])(bannerLanguages.language, bannerStyles.color, bannerStyles.btnColor, bannerStyles.headColor, bannerStyles.paraColor, bannerStyles.secondcolor, bannerConfig.buttonRadius, bannerAnimation.animation, bannerStyles.primaryButtonText, bannerStyles.secondbuttontext, bannerToggleStates.toggleStates.disableScroll, bannerToggleStates.toggleStates.closebutton, false, bannerStyles.Font);
-                // Display list of created DOM elements with IDs for CCPA
-                try {
-                    const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getAllElements();
-                    const elementsWithIds = [];
-                    for (const element of allElements) {
-                        try {
-                            const domId = yield ((_d = element.getDomId) === null || _d === void 0 ? void 0 : _d.call(element));
-                            if (domId) {
-                                elementsWithIds.push({
-                                    id: domId,
-                                    element: element
-                                });
-                            }
-                        }
-                        catch (err) {
-                            // Skip elements that don't have getDomId method
-                        }
-                    }
-                    elementsWithIds.forEach((item, index) => {
-                    });
-                    // Show specific CCPA banner-related IDs
-                    const ccpaBannerIds = elementsWithIds.filter(item => item.id.includes('consent') ||
-                        item.id.includes('banner') ||
-                        item.id.includes('preference') ||
-                        item.id.includes('toggle') ||
-                        item.id.includes('ccpa') ||
-                        item.id.includes('initial') ||
-                        item.id.includes('do-not-share'));
-                    if (ccpaBannerIds.length > 0) {
-                        ccpaBannerIds.forEach((item, index) => {
-                        });
-                    }
-                }
-                catch (error) {
-                }
-            }
-            catch (error) {
-                throw error;
-            }
-            try {
-                if (appVersion === '1.0.0') {
-                    yield fetchAnalyticsBlockingsScripts();
-                }
-                else {
-                    yield fetchAnalyticsBlockingsScriptsV2();
-                }
-                // Add a delay to ensure script is loaded
-                yield new Promise(resolve => setTimeout(resolve, 3000));
-                // Check if the script is loaded
-                const scripts = document.querySelectorAll('script[src*="consent"]');
-                scripts.forEach((script, index) => {
-                    const scriptElement = script;
-                });
-                // Check if the script is loaded in the head
-                const headScripts = document.head.querySelectorAll('script');
-                headScripts.forEach((script, index) => {
-                    const scriptElement = script;
-                    if (scriptElement.src && scriptElement.src.includes('consent')) {
-                    }
-                });
-            }
-            catch (error) {
-                throw error;
-            }
-            setTimeout(() => {
-                handleBannerSuccess();
-            }, 20000);
+            // Set bannerAdded to true in localStorage
+            localStorage.setItem('bannerAdded', 'true');
+            // Set the banner boolean state
+            bannerBooleans.setIsBannerAdded(true);
+            setShowSuccessPublish(true);
         }
         catch (error) {
             handleBannerError(error);
@@ -50123,29 +49233,62 @@ const useBannerCreation = () => {
         }
     });
     const createBothBanners = (config) => __awaiter(void 0, void 0, void 0, function* () {
+        setIsCreating(true);
+        setShowLoading(true);
         try {
-            yield createGDPRBanner(config, true);
-            yield createCCPABanner(config);
-            // Show success page after both banners are created
+            // Import the actual banner creation functions
+            const { default: createCookiePreferences } = yield Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../hooks/gdprPreference */ "./src/hooks/gdprPreference.ts"));
+            const { default: createCookieccpaPreferences } = yield Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../hooks/ccpaPreference */ "./src/hooks/ccpaPreference.ts"));
+            // Get the selected options from the config (this should be passed from ConfirmPublish)
+            const selectedOptions = config.selectedOptions || ['GDPR', 'U.S. State Laws'];
+            // Create banners based on user selection
+            if (selectedOptions.includes('GDPR') && selectedOptions.includes('U.S. State Laws')) {
+                // Create both GDPR and CCPA banners
+                const selectedPreferences = ['essential', 'marketing', 'preferences', 'analytics'];
+                yield createCookiePreferences(selectedPreferences, config.language, config.color, config.btnColor, config.headColor, config.paraColor, config.secondcolor, config.buttonRadius, config.animation, config.toggleStates.customToggle, config.primaryButtonText, config.secondbuttontext, false, // skipCommonDiv
+                config.toggleStates.disableScroll, config.toggleStates.closebutton);
+                yield createCookieccpaPreferences(config.language, config.color, config.btnColor, config.headColor, config.paraColor, config.secondcolor, config.buttonRadius, config.animation, config.primaryButtonText, config.secondbuttontext, config.toggleStates.disableScroll, config.toggleStates.closebutton, false, // skipCommonDiv
+                config.Font);
+            }
+            else if (selectedOptions.includes('GDPR')) {
+                // Create only GDPR banner
+                const selectedPreferences = ['essential', 'marketing', 'preferences', 'analytics'];
+                yield createCookiePreferences(selectedPreferences, config.language, config.color, config.btnColor, config.headColor, config.paraColor, config.secondcolor, config.buttonRadius, config.animation, config.toggleStates.customToggle, config.primaryButtonText, config.secondbuttontext, false, // skipCommonDiv
+                config.toggleStates.disableScroll, config.toggleStates.closebutton);
+            }
+            else if (selectedOptions.includes('U.S. State Laws')) {
+                // Create only CCPA banner
+                yield createCookieccpaPreferences(config.language, config.color, config.btnColor, config.headColor, config.paraColor, config.secondcolor, config.buttonRadius, config.animation, config.primaryButtonText, config.secondbuttontext, config.toggleStates.disableScroll, config.toggleStates.closebutton, false, // skipCommonDiv
+                config.Font);
+            }
+            else {
+                // Default to GDPR banner
+                const selectedPreferences = ['essential', 'marketing', 'preferences', 'analytics'];
+                yield createCookiePreferences(selectedPreferences, config.language, config.color, config.btnColor, config.headColor, config.paraColor, config.secondcolor, config.buttonRadius, config.animation, config.toggleStates.customToggle, config.primaryButtonText, config.secondbuttontext, false, // skipCommonDiv
+                config.toggleStates.disableScroll, config.toggleStates.closebutton);
+            }
+            // Set bannerAdded to true in localStorage
+            localStorage.setItem('bannerAdded', 'true');
+            // Set the banner boolean state
+            bannerBooleans.setIsBannerAdded(true);
+            // Show success page after banners are created
             setShowSuccessPublish(true);
-            // Set localStorage to indicate banner was added through welcome flow
-            localStorage.setItem("bannerAddedThroughWelcome", "true");
         }
         catch (error) {
-            throw error;
+            handleBannerError(error);
+        }
+        finally {
+            setIsCreating(false);
+            setShowLoading(false);
         }
     });
     // Simple test function to isolate the issue
     const testSimpleBannerCreation = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getSelectedElement();
-            if (!selectedElement) {
-                throw new Error("No element selected");
-            }
-            const simpleDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].elementPresets.DivBlock);
-            if (simpleDiv && simpleDiv.setDomId) {
-                yield simpleDiv.setDomId("test-banner");
-            }
+            // Set bannerAdded to true in localStorage
+            localStorage.setItem('bannerAdded', 'true');
+            // Set the banner boolean state
+            bannerBooleans.setIsBannerAdded(true);
         }
         catch (error) {
             throw error;
@@ -50176,17 +49319,365 @@ const useBannerCreation = () => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   canSetSiteInfo: () => (/* binding */ canSetSiteInfo),
+/* harmony export */   checkMigrationStatus: () => (/* binding */ checkMigrationStatus),
+/* harmony export */   clearAllData: () => (/* binding */ clearAllData),
+/* harmony export */   clearAuthData: () => (/* binding */ clearAuthData),
+/* harmony export */   clearAuthIfNotAuthorized: () => (/* binding */ clearAuthIfNotAuthorized),
+/* harmony export */   clearCurrentSiteData: () => (/* binding */ clearCurrentSiteData),
+/* harmony export */   debugAuthStatus: () => (/* binding */ debugAuthStatus),
+/* harmony export */   forceClearAuthData: () => (/* binding */ forceClearAuthData),
+/* harmony export */   forceMigration: () => (/* binding */ forceMigration),
+/* harmony export */   getCurrentSiteId: () => (/* binding */ getCurrentSiteId),
+/* harmony export */   listCurrentSiteData: () => (/* binding */ listCurrentSiteData),
+/* harmony export */   setSiteInfoAfterAuth: () => (/* binding */ setSiteInfoAfterAuth),
 /* harmony export */   usePersistentState: () => (/* binding */ usePersistentState)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 
+// Function to migrate old data to new site-specific format
+function migrateOldData() {
+    if (typeof window === 'undefined')
+        return;
+    const migrationKey = 'migration_done';
+    if (localStorage.getItem(migrationKey)) {
+        return; // Migration already done
+    }
+    // Only migrate wf_hybrid_user to consentbit-userinfo
+    const oldWfHybridUser = localStorage.getItem('wf_hybrid_user');
+    if (oldWfHybridUser !== null) {
+        // Migrate wf_hybrid_user to consentbit-userinfo
+        localStorage.setItem('consentbit-userinfo', oldWfHybridUser);
+        localStorage.removeItem('wf_hybrid_user');
+    }
+    // Mark migration as complete
+    localStorage.setItem(migrationKey, 'true');
+}
+// Function to get key (simple approach - no site-specific storage)
+function getSiteSpecificKey(key) {
+    // Simple approach - just return the key without any site-specific prefixing
+    return key;
+}
+// Utility function to get current site ID
+function getCurrentSiteId() {
+    if (typeof window === 'undefined')
+        return 'default';
+    // Check if user is authorized first
+    const userInfo = localStorage.getItem('consentbit-userinfo');
+    if (!userInfo) {
+        // User not authorized - return default
+        return 'default';
+    }
+    try {
+        const parsed = JSON.parse(userInfo);
+        // Check if user has valid session token, email, and siteId
+        if (!(parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) || !(parsed === null || parsed === void 0 ? void 0 : parsed.email) || !(parsed === null || parsed === void 0 ? void 0 : parsed.siteId)) {
+            // User not properly authorized - return default
+            return 'default';
+        }
+    }
+    catch (error) {
+        // Invalid auth data - return default
+        return 'default';
+    }
+    // User is authorized - now get site ID
+    const siteInfo = localStorage.getItem('siteInfo');
+    if (siteInfo) {
+        try {
+            const parsed = JSON.parse(siteInfo);
+            return parsed.siteId || parsed.shortName || 'default';
+        }
+        catch (e) {
+            return 'default';
+        }
+    }
+    if (window.location.hostname) {
+        const hostname = window.location.hostname;
+        if (hostname.includes('webflow.com')) {
+            const parts = hostname.split('.');
+            if (parts.length > 2) {
+                return parts[0];
+            }
+        }
+        else {
+            return hostname.replace(/[^a-zA-Z0-9]/g, '_');
+        }
+    }
+    return 'default';
+}
+// Utility function to clear all data for current site
+function clearCurrentSiteData(includeAuth = false) {
+    if (typeof window === 'undefined')
+        return;
+    // Simple approach - clear all app-related keys
+    const keysToRemove = [];
+    // Clear all app-related keys (excluding auth unless requested)
+    const appKeys = [
+        'isWelcomeScreen', 'isSetUpStep', 'isWelcomeScipt', 'isConfirmPublish', 'isSuccessPublish', 'isCustomizationTab',
+        'showPopup', 'showSuccessPopup', 'showAuthPopup', 'showLoadingPopup', 'showChoosePlan', 'showCSVExportAdvanced', 'showWelcomeScreen', 'showSetSetup', 'showPopupWelcomeSetup',
+        'showTooltip', 'fadeOut', 'isExporting', 'isCSVButtonLoading', 'isSubscribed', 'fetchScripts',
+        'userlocaldata', 'sessionTokenFromLocalStorage', 'script_isSaving', 'script_saveStatus', 'script_showPopup',
+        'script_isLoading', 'script_showAuthPopup', 'script_copiedScriptIndex', 'scriptContext_scripts',
+        'bannerAddedThroughWelcome', 'skipWelcomeScreen', 'isBannerAdded', 'bannerAdded',
+        'color', 'bgColor', 'btnColor', 'paraColor', 'secondcolor', 'bgColors', 'headColor', 'secondbuttontext', 'primaryButtonText',
+        'size', 'font', 'weight', 'borderRadius', 'buttonRadius', 'cookieExpiration',
+        'activeTab', 'activeMode', 'selected', 'selectedOption', 'selectedOptions', 'selectedtext', 'style',
+        'expires', 'buttonText', 'animation', 'easing', 'language', 'toggleStates'
+    ];
+    appKeys.forEach(key => {
+        if (localStorage.getItem(key) !== null) {
+            localStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    });
+    // Also clear authentication data if requested
+    if (includeAuth) {
+        const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo'];
+        authKeys.forEach(key => {
+            if (localStorage.getItem(key) !== null) {
+                localStorage.removeItem(key);
+                keysToRemove.push(key);
+            }
+        });
+    }
+}
+// Utility function to clear ALL data including authentication
+function clearAllData() {
+    if (typeof window === 'undefined')
+        return;
+    // Simple approach - clear all app-related keys and auth data
+    const keysToRemove = [];
+    // Clear all app-related keys
+    const appKeys = [
+        'isWelcomeScreen', 'isSetUpStep', 'isWelcomeScipt', 'isConfirmPublish', 'isSuccessPublish', 'isCustomizationTab',
+        'showPopup', 'showSuccessPopup', 'showAuthPopup', 'showLoadingPopup', 'showChoosePlan', 'showCSVExportAdvanced', 'showWelcomeScreen', 'showSetSetup', 'showPopupWelcomeSetup',
+        'showTooltip', 'fadeOut', 'isExporting', 'isCSVButtonLoading', 'isSubscribed', 'fetchScripts',
+        'userlocaldata', 'sessionTokenFromLocalStorage', 'script_isSaving', 'script_saveStatus', 'script_showPopup',
+        'script_isLoading', 'script_showAuthPopup', 'script_copiedScriptIndex', 'scriptContext_scripts',
+        'bannerAddedThroughWelcome', 'isBannerAdded', 'skipWelcomeScreen', 'bannerAdded',
+        'color', 'bgColor', 'btnColor', 'paraColor', 'secondcolor', 'bgColors', 'headColor', 'secondbuttontext', 'primaryButtonText',
+        'size', 'font', 'weight', 'borderRadius', 'buttonRadius', 'cookieExpiration',
+        'activeTab', 'activeMode', 'selected', 'selectedOption', 'selectedOptions', 'selectedtext', 'style',
+        'expires', 'buttonText', 'animation', 'easing', 'language', 'toggleStates'
+    ];
+    appKeys.forEach(key => {
+        if (localStorage.getItem(key) !== null) {
+            localStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    });
+    // Clear authentication data
+    const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo'];
+    authKeys.forEach(key => {
+        if (localStorage.getItem(key) !== null) {
+            localStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    });
+}
+// Utility function to clear only authentication data
+function clearAuthData() {
+    if (typeof window === 'undefined')
+        return;
+    const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo', 'explicitly_logged_out'];
+    const keysToRemove = [];
+    authKeys.forEach(key => {
+        if (localStorage.getItem(key) !== null) {
+            localStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    });
+    // Also clear any site-specific auth keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
+            localStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    }
+}
+// Utility function to set site info after authorization
+function setSiteInfoAfterAuth(siteInfo) {
+    if (typeof window === 'undefined')
+        return;
+    // Check if user is authorized
+    const userInfo = localStorage.getItem('consentbit-userinfo');
+    if (!userInfo) {
+        return;
+    }
+    try {
+        const parsed = JSON.parse(userInfo);
+        if (!(parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) || !(parsed === null || parsed === void 0 ? void 0 : parsed.firstName) || !(parsed === null || parsed === void 0 ? void 0 : parsed.email)) {
+            return;
+        }
+    }
+    catch (error) {
+        return;
+    }
+    // User is authorized - set site info
+    localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+}
+// Utility function to check if user can set site info
+function canSetSiteInfo() {
+    if (typeof window === 'undefined')
+        return false;
+    const userInfo = localStorage.getItem('consentbit-userinfo');
+    if (!userInfo)
+        return false;
+    try {
+        const parsed = JSON.parse(userInfo);
+        return !!((parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) && (parsed === null || parsed === void 0 ? void 0 : parsed.firstName) && (parsed === null || parsed === void 0 ? void 0 : parsed.email));
+    }
+    catch (error) {
+        return false;
+    }
+}
+// Debug function to check auth status
+function debugAuthStatus() {
+    if (typeof window === 'undefined')
+        return;
+    const userInfo = localStorage.getItem('consentbit-userinfo');
+    const wfHybridUser = localStorage.getItem('wf_hybrid_user');
+    const siteInfo = localStorage.getItem('siteInfo');
+    const explicitlyLoggedOut = localStorage.getItem('explicitly_logged_out');
+    if (userInfo) {
+        try {
+            const parsed = JSON.parse(userInfo);
+        }
+        catch (error) {
+            // Auth data is corrupted
+        }
+    }
+    if (wfHybridUser) {
+        try {
+            const parsed = JSON.parse(wfHybridUser);
+        }
+        catch (error) {
+            // Auth data is corrupted
+        }
+    }
+}
+// Force clear all auth data and prevent restoration
+function forceClearAuthData() {
+    if (typeof window === 'undefined')
+        return;
+    // Clear all auth-related keys
+    const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo', 'explicitly_logged_out'];
+    authKeys.forEach(key => localStorage.removeItem(key));
+    // Clear any site-specific auth keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
+            localStorage.removeItem(key);
+        }
+    }
+    // Set explicitly logged out flag to prevent restoration
+    localStorage.setItem('explicitly_logged_out', 'true');
+}
+// Utility function to clear authentication data if user is not authorized
+function clearAuthIfNotAuthorized() {
+    if (typeof window === 'undefined')
+        return;
+    const userInfo = localStorage.getItem('consentbit-userinfo');
+    if (!userInfo) {
+        return;
+    }
+    try {
+        const parsed = JSON.parse(userInfo);
+        // Check if user has valid session token, email, and siteId
+        if (!(parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) || !(parsed === null || parsed === void 0 ? void 0 : parsed.email) || !(parsed === null || parsed === void 0 ? void 0 : parsed.siteId)) {
+            clearAuthData();
+            // Also clear site info if user is not authorized
+            localStorage.removeItem('siteInfo');
+        }
+    }
+    catch (error) {
+        clearAuthData();
+        // Also clear site info if auth data is corrupted
+        localStorage.removeItem('siteInfo');
+    }
+}
+// Utility function to list all data for current site
+function listCurrentSiteData() {
+    if (typeof window === 'undefined')
+        return {};
+    const siteId = getCurrentSiteId();
+    const siteData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`${siteId}_`)) {
+            try {
+                const value = localStorage.getItem(key);
+                siteData[key] = value ? JSON.parse(value) : value;
+            }
+            catch (e) {
+                siteData[key] = localStorage.getItem(key);
+            }
+        }
+    }
+    return siteData;
+}
+// Utility function to check migration status
+function checkMigrationStatus() {
+    if (typeof window === 'undefined')
+        return { migrated: false, oldKeysFound: 0, newKeysFound: 0 };
+    const migrationKey = 'migration_done';
+    const migrated = localStorage.getItem(migrationKey) === 'true';
+    // Only check for wf_hybrid_user migration
+    const oldKeysFound = localStorage.getItem('wf_hybrid_user') !== null ? 1 : 0;
+    const newKeysFound = localStorage.getItem('consentbit-userinfo') !== null ? 1 : 0;
+    return { migrated, oldKeysFound, newKeysFound };
+}
+// Utility function to force migration
+function forceMigration() {
+    if (typeof window === 'undefined')
+        return;
+    const migrationKey = 'migration_done';
+    localStorage.removeItem(migrationKey); // Remove migration flag
+    migrateOldData(); // Run migration again
+}
 function usePersistentState(key, defaultValue) {
+    // Run migration for wf_hybrid_user -> consentbit-userinfo
+    migrateOldData();
+    const siteSpecificKey = getSiteSpecificKey(key);
+    // Check if user is authorized for siteInfo
+    const isAuthorized = (() => {
+        if (key === 'siteInfo') {
+            const userInfo = localStorage.getItem('consentbit-userinfo');
+            if (!userInfo)
+                return false;
+            try {
+                const parsed = JSON.parse(userInfo);
+                return !!((parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) && (parsed === null || parsed === void 0 ? void 0 : parsed.firstName) && (parsed === null || parsed === void 0 ? void 0 : parsed.email));
+            }
+            catch (error) {
+                return false;
+            }
+        }
+        return true; // For other keys, allow setting
+    })();
     const [state, setState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
         if (typeof window === 'undefined')
             return defaultValue;
+        // If not authorized for siteInfo, return default value
+        if (key === 'siteInfo' && !isAuthorized) {
+            return defaultValue;
+        }
         try {
-            const savedState = localStorage.getItem(key);
+            // First try to get from new site-specific key
+            let savedState = localStorage.getItem(siteSpecificKey);
+            // Simple approach - no migration logic
+            if (!savedState && key !== 'siteInfo') {
+                // Only handle wf_hybrid_user -> consentbit-userinfo migration
+                if (key === 'consentbit-userinfo') {
+                    savedState = localStorage.getItem('wf_hybrid_user');
+                    if (savedState) {
+                        localStorage.setItem(siteSpecificKey, savedState);
+                        localStorage.removeItem('wf_hybrid_user');
+                    }
+                }
+            }
             if (!savedState || savedState === "undefined")
                 return defaultValue;
             return JSON.parse(savedState);
@@ -50195,12 +49686,38 @@ function usePersistentState(key, defaultValue) {
             return defaultValue;
         }
     });
+    // Create a wrapped setState that respects authorization
+    const authorizedSetState = react__WEBPACK_IMPORTED_MODULE_0___default().useCallback((newState) => {
+        // For siteInfo, only allow setting if authorizedS
+        if (key === 'siteInfo' && !isAuthorized) {
+            return;
+        }
+        // Always update the state, but localStorage will be handled in useEffect
+        setState(newState);
+    }, [key, isAuthorized]);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         if (typeof window !== 'undefined') {
-            localStorage.setItem(key, JSON.stringify(state));
+            // Special handling for siteInfo - only allow setting if user is authorized
+            if (key === 'siteInfo') {
+                const userInfo = localStorage.getItem('consentbit-userinfo');
+                if (!userInfo) {
+                    return;
+                }
+                try {
+                    const parsed = JSON.parse(userInfo);
+                    if (!(parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) || !(parsed === null || parsed === void 0 ? void 0 : parsed.email)) {
+                        return;
+                    }
+                }
+                catch (error) {
+                    return;
+                }
+            }
+            // Always save to localStorage for non-siteInfo keys, or for siteInfo if authorized
+            localStorage.setItem(siteSpecificKey, JSON.stringify(state));
         }
-    }, [key, state]);
-    return [state, setState];
+    }, [siteSpecificKey, state, key]);
+    return [state, authorizedSetState];
 }
 
 
@@ -50290,6 +49807,7 @@ function useAuth() {
                     user: {
                         firstName: decodedToken.user.firstName,
                         email: decodedToken.user.email,
+                        siteId: userData.siteId, // Include siteId from stored data
                     },
                     sessionToken: userData.sessionToken,
                 };
@@ -50335,6 +49853,7 @@ function useAuth() {
                     sessionToken: data.sessionToken,
                     firstName: data.firstName,
                     email: data.email,
+                    siteId: data.siteId, // Store the siteId from server response
                     exp: decodedToken.exp,
                 };
                 // Update localStorage
@@ -50345,6 +49864,7 @@ function useAuth() {
                     user: {
                         firstName: decodedToken.user.firstName,
                         email: decodedToken.user.email,
+                        siteId: data.siteId, // Include siteId in user data
                     },
                     sessionToken: data.sessionToken,
                 });
@@ -50388,6 +49908,7 @@ function useAuth() {
                 sessionToken: data.sessionToken,
                 firstName: data.firstName,
                 email: data.email,
+                siteId: siteInfo.siteId, // Store the siteId
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
             };
             localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
@@ -50396,7 +49917,8 @@ function useAuth() {
             queryClient.setQueryData(["auth"], {
                 user: {
                     firstName: data.firstName,
-                    email: data.email
+                    email: data.email,
+                    siteId: siteInfo.siteId
                 },
                 sessionToken: data.sessionToken
             });
@@ -50440,6 +49962,26 @@ function useAuth() {
             }
         }, 1000);
     };
+    // Function to check if user is authenticated for current site
+    const isAuthenticatedForCurrentSite = () => __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        try {
+            // Check if user has basic authentication
+            if (!((_a = authState === null || authState === void 0 ? void 0 : authState.user) === null || _a === void 0 ? void 0 : _a.email) || !(authState === null || authState === void 0 ? void 0 : authState.sessionToken)) {
+                return false;
+            }
+            // Get current site info from Webflow
+            const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getSiteInfo();
+            if (!(currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId)) {
+                return false;
+            }
+            // Check if user is authenticated for this specific site
+            return authState.user.siteId === currentSiteInfo.siteId;
+        }
+        catch (error) {
+            return false;
+        }
+    });
     return {
         user: (authState === null || authState === void 0 ? void 0 : authState.user) || { firstName: "", email: "" },
         sessionToken: (authState === null || authState === void 0 ? void 0 : authState.sessionToken) || "",
@@ -50447,6 +49989,7 @@ function useAuth() {
         exchangeAndVerifyIdToken,
         logout,
         openAuthScreen,
+        isAuthenticatedForCurrentSite,
     };
 }
 

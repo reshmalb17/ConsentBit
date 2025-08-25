@@ -61,9 +61,10 @@ type UserData = {
 interface CustomizationTabProps {
   onAuth: () => void;
   initialActiveTab?: string;
+  isAuthenticated?: boolean;
 }
 
-const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings" }) => {
+const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
   const [color, setColor] = usePersistentState("color", "#ffffff");
   const [bgColor, setBgColor] = usePersistentState("bgColor", "#ffffff");
   const [btnColor, setBtnColor] = usePersistentState("btnColor", "#C9C9C9");
@@ -110,6 +111,14 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [isLoading, setIsLoading] = usePersistentState("isLoading", false);
   const [userlocaldata, setUserlocaldata] = useState<UserData | null>(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  // Reset loading states when component mounts to prevent stuck loading animations
+  React.useEffect(() => {
+    setIsLoading(false);
+    setShowLoadingPopup(false);
+    setIsExporting(false);
+    setIsCSVButtonLoading(false);
+  }, []);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [buttonText, setButtonText] = usePersistentState("buttonText", "Scan Project");
   const [showLoadingPopup, setShowLoadingPopup] = useState(false);
@@ -484,7 +493,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   }
 
   // const { user } = useAuth();
-  const { user, exchangeAndVerifyIdToken } = useAuth();
+  const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite } = useAuth();
 
 
 
@@ -509,39 +518,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
   const queryClient = useQueryClient();
 
-  //authentication
-  useEffect(() => {
-    const stored = localStorage.getItem("consentbit-userinfo");
 
-    if (!user?.firstName && stored) {
-      const parsed = JSON.parse(stored);
-
-      if (parsed?.sessionToken) {
-        exchangeAndVerifyIdToken();
-      } else {
-        // fallback manual restore if no sessionToken (dev/test scenarios)
-        queryClient.setQueryData(["auth"], {
-          user: {
-            firstName: parsed.firstName,
-            email: parsed.email,
-          },
-          sessionToken: "",
-        });
-      }
-    }
-  }, []);
-
-  //authentication
-  useEffect(() => {
-    const data = localStorage.getItem('consentbit-userinfo')
-    if (data) {
-      // localStorage.removeItem("consentbit-userinfo"); // ❌ REMOVED: This was clearing settings after auth
-    }
-    const onAuth = async () => {
-      await exchangeAndVerifyIdToken();
-    };
-    onAuth();
-  }, [])
 
   //GDPR preferences banner
   const handleCreatePreferences = async (skipCommonDiv: boolean = false) => {
@@ -1903,46 +1880,66 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         </div>
       </div>
 
-      <div className="custom-select" ref={dropdownRefs[type]}>
-        <div
-          className="selected"
-          onClick={() =>
-            setOpenDropdown(openDropdown === type ? null : type)
-          }
-        >
-          {typeof options[0] === "string"
-            ? value
-            : getLabel(options, value)}
-        </div>
+<div
+  className={`custom-select ${openDropdown === type ? "open" : ""}`}
+  ref={dropdownRefs[type]}
+>
+  <div
+    className="selected"
+    onClick={() =>
+      setOpenDropdown(openDropdown === type ? null : type)
+    }
+  >
+    <span>
+      {typeof options[0] === "string"
+        ? value
+        : getLabel(options, value)}
+    </span>
+    <svg
+      className="dropdown-icon"
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  </div>
 
-        {openDropdown === type && (
-          <ul className="options">
-            {typeof options[0] === "string"
-              ? options.map((opt) => (
-                <li
-                  key={opt}
-                  onClick={() => {
-                    onPick(opt);
-                    setOpenDropdown(null);
-                  }}
-                >
-                  {opt}
-                </li>
-              ))
-              : options.map((opt) => (
-                <li
-                  key={opt.value}
-                  onClick={() => {
-                    onPick(opt.value);
-                    setOpenDropdown(null);
-                  }}
-                >
-                  {opt.label}
-                </li>
-              ))}
-          </ul>
-        )}
-      </div>
+  {openDropdown === type && (
+    <ul className="options">
+      {typeof options[0] === "string"
+        ? options.map((opt) => (
+            <li
+              key={opt}
+              onClick={() => {
+                onPick(opt);
+                setOpenDropdown(null);
+              }}
+            >
+              {opt}
+            </li>
+          ))
+        : options.map((opt) => (
+            <li
+              key={opt.value}
+              onClick={() => {
+                onPick(opt.value);
+                setOpenDropdown(null);
+              }}
+            >
+              {opt.label}
+            </li>
+          ))}
+    </ul>
+  )}
+</div>
+
     </div>
   );
 
@@ -1961,7 +1958,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       {/* Top Navigation */}
       <div className="navbar">
         <div>
-          {user?.firstName ? (
+          {isAuthenticated && user?.firstName ? (
             <p className="hello">Hello, {user.firstName}!</p>
           ) : (
             <button className="publish-buttons" onClick={openAuthScreen}>
@@ -2017,7 +2014,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                 <button
                   className="publish-button"
                   onClick={async () => {
-                    const isUserValid = user?.firstName;
+                    const isUserValid = await isAuthenticatedForCurrentSite();
                     try {
                       const selectedElement = await webflow.getSelectedElement() as { type?: string };
 
@@ -2052,8 +2049,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             <div>
               <button
                 className="publish-buttons"
-                onClick={() => {
-                  if (user?.firstName) {
+                onClick={async () => {
+                  const isUserValid = await isAuthenticatedForCurrentSite();
+                  if (isUserValid) {
                     setFetchScripts(true);
                     setButtonText("Rescan Project");
                   } else {
@@ -2598,7 +2596,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             />
           )}
 
-          {activeTab === "Script" && <Script fetchScripts={fetchScripts} setFetchScripts={setFetchScripts} isWelcome={false} />}
+          {activeTab === "Script" && <Script fetchScripts={fetchScripts} isWelcome={false} />}
         </div>
       </div>
       <DonotShare

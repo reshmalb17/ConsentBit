@@ -112,6 +112,119 @@ const Customization: React.FC<CustomizationProps> = ({
   const pickerInstance = useRef<any>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  
+  // Custom dropdown states
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = {
+    font: useRef<HTMLDivElement>(null),
+    weight: useRef<HTMLDivElement>(null),
+    size: useRef<HTMLDivElement>(null),
+  };
+
+  // Dropdown options
+  const fontOptions = [
+    { label: "Montserrat", value: "'Montserrat', sans-serif" },
+    { label: "Lato", value: "'Lato', sans-serif" },
+    { label: "Oswald", value: "'Oswald', sans-serif" },
+    { label: "Merriweather", value: "'Merriweather', serif" },
+    { label: "Open Sans", value: "'Open Sans', sans-serif" },
+    { label: "Ubuntu", value: "'Ubuntu', sans-serif" },
+    { label: "Droid Sans", value: "'Droid Sans', sans-serif" },
+    { label: "Exo", value: "'Exo', sans-serif" },
+  ];
+
+  const weightOptions = [
+    { label: "Semibold", value: "600" },
+    { label: "Thin", value: "100" },
+    { label: "Light", value: "300" },
+    { label: "Regular", value: "400" },
+    { label: "Bold", value: "700" },
+    { label: "Extra Bold", value: "800" },
+  ];
+
+  const sizeOptions = [
+    { label: "12px", value: "12" },
+    { label: "13px", value: "13" },
+    { label: "14px", value: "14" },
+    { label: "15px", value: "15" },
+    { label: "16px", value: "16" },
+    { label: "17px", value: "17" },
+    { label: "18px", value: "18" },
+  ];
+
+  const tooltips = {
+    font: "Select the font family for the cookie banner text.",
+    weight: "Choose the font weight to control text thickness.",
+    size: "Adjust the font size for better readability.",
+  };
+
+  const getLabel = (opts: any[], val: string) =>
+    (opts.find((o) => o.value === val) || {}).label || val;
+
+  // Handle click outside for custom dropdowns
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      Object.entries(dropdownRefs).forEach(([key, ref]) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) {
+          if (openDropdown === key) setOpenDropdown(null);
+        }
+      });
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openDropdown]);
+
+  const renderDropdown = (
+    type: "font" | "weight" | "size",
+    label: string,
+    value: string,
+    options: any[],
+    onPick: (val: string) => void,
+    showLabel: boolean = true
+  ) => (
+    <div className="settings-group">
+      {showLabel && (
+        <div className="flex">
+          <label>{label}</label>
+          <div className="tooltip-container">
+            <img src={questionmark} alt="info" className="tooltip-icon" />
+            <span className="tooltip-text">{tooltips[type]}</span>
+          </div>
+        </div>
+      )}
+
+      <div className={`custom-select ${type === "size" ? "size-dropdown" : ""} ${openDropdown === type ? "open" : ""}`} ref={dropdownRefs[type]}>
+        <div
+          className="selected"
+          onClick={() =>
+            setOpenDropdown(openDropdown === type ? null : type)
+          }
+        >
+          <span>{getLabel(options, value)}</span>
+          <svg className="dropdown-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        {openDropdown === type && (
+          <ul className="options">
+            {options.map((opt) => (
+              <li
+                key={opt.value}
+                onClick={() => {
+                  onPick(opt.value);
+                  setOpenDropdown(null);
+                }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+
 
   const [btnOpen, setBtnOpen] = useState(false);
   const [headOpen, setHeadOpen] = useState(false);
@@ -369,42 +482,12 @@ const Customization: React.FC<CustomizationProps> = ({
               </div>
             </div>
 
-            <div className="settings-group">
-              <select id="Font" value={Font} onChange={(e) => SetFont(e.target.value)}>
-                <option value="'Montserrat', sans-serif">Montserrat</option>
-                <option value="'Lato', sans-serif">Lato</option>
-                <option value="'Oswald', sans-serif">Oswald</option>
-                <option value="'Merriweather', serif">Merriweather</option>
-                <option value="'Open Sans', sans-serif">Open Sans</option>
-                <option value="'Ubuntu', sans-serif">Ubuntu</option>
-                <option value="'Droid Sans', sans-serif">Droid Sans</option>
-                <option value="'Exo', sans-serif">Exo</option>
-              </select>
-
-            </div>
+            {renderDropdown("font", "Font", Font, fontOptions, SetFont, false)}
 
             <div className="flex">
-              <div className="settings-group">
-                <select id="weight" value={weight} onChange={(e) => SetWeight(e.target.value)}>
-                  <option value="600">Semibold</option>
-                  <option value="100">Thin</option>
-                  <option value="300">Light</option>
-                  <option value="400">Regular</option>
-                  <option value="700">Bold</option>
-                  <option value="800">Extra Bold</option>
-                </select>
-              </div>
-
-              <div className="settings-group width">
-                <select id="font-size" value={size} onChange={(e) => SetSize(e.target.value)}>
-                  <option>12</option>
-                  <option>13</option>
-                  <option>14</option>
-                  <option>15</option>
-                  <option>16</option>
-                  <option>17</option>
-                  <option>18</option>
-                </select>
+              {renderDropdown("weight", "Font Weight", weight, weightOptions, SetWeight, false)}
+              <div className="width">
+                {renderDropdown("size", "Font Size", size, sizeOptions, SetSize, false)}
               </div>
             </div>
 

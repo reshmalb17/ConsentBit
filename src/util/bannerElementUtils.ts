@@ -37,12 +37,11 @@ export const cleanupExistingBanners = async (idsToCheck: string[]) => {
 
         await el.remove();
       } catch (err) {
-        console.error("Error removing element:", err);
+        // Error removing element
         webflow.notify({ type: "error", message: "Failed to remove a banner." });
       }
     }));
   } catch (error) {
-    console.error("Error cleaning up existing banners:", error);
     throw error;
   }
 };
@@ -61,7 +60,6 @@ export const createBannerContainer = async (selectedElement: any, domId: string)
 
     return newDiv;
   } catch (error) {
-    console.error("Error creating banner container:", error);
     throw error;
   }
 };
@@ -76,7 +74,6 @@ export const createBannerStyles = async (styleNames: Record<string, string>) => 
 
     return styles;
   } catch (error) {
-    console.error("Error creating banner styles:", error);
     throw error;
   }
 };
@@ -131,7 +128,6 @@ export const createBannerElement = async (
 
     return element;
   } catch (error) {
-    console.error("Error creating banner element:", error);
     throw error;
   }
 };
