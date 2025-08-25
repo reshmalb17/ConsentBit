@@ -1814,7 +1814,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   // No need to show welcome screen when coming from ConfirmPublish
 
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-
+ console.log("user",user?.firstName)
 
   const dropdownRefs = {
     language: useRef<HTMLDivElement>(null),
