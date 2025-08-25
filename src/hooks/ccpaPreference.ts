@@ -537,6 +537,9 @@ const createCookieccpaPreferences = async (language: string = "English", color: 
                 }
             }
 
+            // Set bannerAdded to true in localStorage
+            localStorage.setItem('bannerAdded', 'true');
+
             // webflow.notify({ type: "Success", message: "ConsentBit banner added successfully!" });
 
 

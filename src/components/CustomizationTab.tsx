@@ -61,9 +61,10 @@ type UserData = {
 interface CustomizationTabProps {
   onAuth: () => void;
   initialActiveTab?: string;
+  isAuthenticated?: boolean;
 }
 
-const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings" }) => {
+const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
   const [color, setColor] = usePersistentState("color", "#ffffff");
   const [bgColor, setBgColor] = usePersistentState("bgColor", "#ffffff");
   const [btnColor, setBtnColor] = usePersistentState("btnColor", "#C9C9C9");
@@ -492,7 +493,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   }
 
   // const { user } = useAuth();
-  const { user, exchangeAndVerifyIdToken } = useAuth();
+  const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite } = useAuth();
 
 
 
@@ -517,39 +518,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
   const queryClient = useQueryClient();
 
-  //authentication
-  useEffect(() => {
-    const stored = localStorage.getItem("consentbit-userinfo");
 
-    if (!user?.firstName && stored) {
-      const parsed = JSON.parse(stored);
-
-      if (parsed?.sessionToken) {
-        exchangeAndVerifyIdToken(true); // Manual auth restoration
-      } else {
-        // fallback manual restore if no sessionToken (dev/test scenarios)
-        queryClient.setQueryData(["auth"], {
-          user: {
-            firstName: parsed.firstName,
-            email: parsed.email,
-          },
-          sessionToken: "",
-        });
-      }
-    }
-  }, []);
-
-  //authentication
-  useEffect(() => {
-    const data = localStorage.getItem('consentbit-userinfo')
-    if (data) {
-      // localStorage.removeItem("consentbit-userinfo"); // ❌ REMOVED: This was clearing settings after auth
-    }
-    const onAuth = async () => {
-      await exchangeAndVerifyIdToken(true); // Manual auth
-    };
-    onAuth();
-  }, [])
 
   //GDPR preferences banner
   const handleCreatePreferences = async (skipCommonDiv: boolean = false) => {
@@ -1854,7 +1823,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       {/* Top Navigation */}
       <div className="navbar">
         <div>
-          {user?.firstName ? (
+          {isAuthenticated && user?.firstName ? (
             <p className="hello">Hello, {user.firstName}!</p>
           ) : (
             <button className="publish-buttons" onClick={openAuthScreen}>
@@ -1910,7 +1879,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                 <button
                   className="publish-button"
                   onClick={async () => {
-                    const isUserValid = user?.firstName;
+                    const isUserValid = await isAuthenticatedForCurrentSite();
                     try {
                       const selectedElement = await webflow.getSelectedElement() as { type?: string };
 
@@ -1945,8 +1914,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             <div>
               <button
                 className="publish-buttons"
-                onClick={() => {
-                  if (user?.firstName) {
+                onClick={async () => {
+                  const isUserValid = await isAuthenticatedForCurrentSite();
+                  if (isUserValid) {
                     setFetchScripts(true);
                     setButtonText("Rescan Project");
                   } else {

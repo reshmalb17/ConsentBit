@@ -21,7 +21,7 @@ const App: React.FC = () => {
 
   const queryClient = useQueryClient();
   const [skipWelcomeScreen, setSkipWelcomeScreen] = usePersistentState("skipWelcomeScreen", false);
-
+const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   
   const {
@@ -39,7 +39,7 @@ const App: React.FC = () => {
   } = useAppState();
 
 
-  const { user, exchangeAndVerifyIdToken, openAuthScreen } = useAuth();
+  const { user, sessionToken, exchangeAndVerifyIdToken, openAuthScreen, isAuthenticatedForCurrentSite } = useAuth();
 
  
 
@@ -126,6 +126,8 @@ const App: React.FC = () => {
   // Welcome screen handlers
   const handleWelcomeAuthorize = () => {
     openAuthScreen();
+    // The authentication state will be updated when the user completes authorization
+    // through the useEffect that depends on user?.email and sessionToken
   };
 
   const handleWelcomeNeedHelp = () => {
@@ -156,30 +158,47 @@ const App: React.FC = () => {
 
 
 
-  // Check if banner was already added (for existing users)
+  // Check if banner was already added (for existing users) and set authentication state
   useEffect(() => {
     // Add a small delay to ensure all states are properly loaded from localStorage
-    const timer = setTimeout(() => {
-      if (bannerBooleans.isBannerAdded) {
-        // For existing users who already have a banner, show CustomizationTab directly
+    const timer = setTimeout(async() => {
+      // Check both the persistent state and the direct localStorage key
+      const bannerAddedFromStorage = localStorage.getItem('bannerAdded') === 'true';
+
+      // Check site-specific authentication
+      const isUserAuthenticated = await isAuthenticatedForCurrentSite();
+      
+      if (bannerAddedFromStorage && isUserAuthenticated) {
+        // For existing users who already have a banner AND are authenticated for this site, show CustomizationTab directly
         setSkipWelcomeScreen(true);
         componentStates.resetComponentStates();
         componentStates.setIsCustomizationTab(true);
       } else {
-        // For new users or users without banner, start with welcome screen
+        // For new users or users without banner or not authenticated for this site, start with welcome screen
         setSkipWelcomeScreen(false);
         componentStates.resetComponentStates();
         componentStates.setIsWelcomeScreen(true);
       }
-    }, 100); // Small delay to ensure localStorage is read
+      
+    }, 1000); // Small delay to ensure localStorage is read
 
     return () => clearTimeout(timer);
-  }, [bannerBooleans.isBannerAdded]); // Depend on isBannerAdded state
+  }, [bannerBooleans.isBannerAdded, user?.email, sessionToken]); // Depend on isBannerAdded state and auth state
 
-  // Check and clear invalid authentication data on startup
+  // Separate useEffect to update authentication state when auth changes
   useEffect(() => {
-    clearAuthIfNotAuthorized();
-  }, []); // Run once on app startup
+    const checkSiteAuthentication = async () => {
+      try {
+        const isUserAuthenticated = await isAuthenticatedForCurrentSite();
+        setIsAuthenticated(isUserAuthenticated);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkSiteAuthentication();
+  }, [user?.email, sessionToken, user?.siteId]);
+
 
 
 
@@ -207,12 +226,12 @@ const App: React.FC = () => {
    
 
       {skipWelcomeScreen ? (
-        <CustomizationTab onAuth={handleBackToWelcome} />
+        <CustomizationTab onAuth={handleBackToWelcome} isAuthenticated={isAuthenticated} />
       ) : componentStates.isWelcomeScreen ? (
         <WelcomeScreen 
           onAuthorize={handleWelcomeAuthorize}
           onNeedHelp={handleWelcomeNeedHelp}
-          authenticated={user?.email ? true : false}
+          authenticated={isAuthenticated}
           handleWelcomeScreen={handleWelcomeScreen}
         />
       ) : componentStates.isWelcomeScipt ? (
@@ -238,9 +257,9 @@ const App: React.FC = () => {
           handleCustomize={handleCustomize}
         />
       ) : componentStates.isCustomizationTab ? (
-        <CustomizationTab onAuth={handleBackToWelcome} />
+        <CustomizationTab onAuth={handleBackToWelcome} isAuthenticated={isAuthenticated} />
       ) : (
-        <CustomizationTab onAuth={handleBackToWelcome} />
+        <CustomizationTab onAuth={handleBackToWelcome} isAuthenticated={isAuthenticated} />
       )}
        
      

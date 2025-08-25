@@ -54,7 +54,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
     bannerLanguages,
     localStorage: localStorageData
   } = useAppState();
-  const { user, exchangeAndVerifyIdToken } = useAuth();
+  const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite } = useAuth();
   const {
     
     createBothBanners,
@@ -65,9 +65,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
 
 
   const handlePublishClick = async () => {
-
-
-    const isUserValid = user?.firstName;
+    const isUserValid = await isAuthenticatedForCurrentSite();
     try {
       const selectedElement = await webflow.getSelectedElement() as { type?: string };
 
@@ -96,6 +94,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
           animation: bannerAnimation.animation,
           easing: bannerAnimation.easing,
           language: bannerLanguages.language,
+          selectedOptions: bannerUI.selectedOptions,
           toggleStates: {
             customToggle: bannerToggleStates.toggleStates.customToggle,
             disableScroll: bannerToggleStates.toggleStates.disableScroll,
@@ -103,11 +102,8 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
           }
         };
 
-        
-
         // Create banners based on user selection - Default to both banners
         if (bannerUI.selectedOptions.includes("GDPR") && bannerUI.selectedOptions.includes("U.S. State Laws")) {
-  
           await createBothBanners(config);
         } else if (bannerUI.selectedOptions.includes("GDPR")) {
           await createBothBanners(config);

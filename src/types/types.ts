@@ -3,27 +3,20 @@ export interface TokenResponse {
     sessionToken: string;
   }
   
-  export interface DecodedToken {
-    user: {
-      firstName: string;
-      email: string;
-    };
-    exp: number;
-  }
-  
   // JWT Decoded Token Type
-  export interface DecodedToken {
-    user: User;
-    exp: number;
-    // Add other JWT claims as needed
-    iat?: number;
-    iss?: string;
-  }
+export interface DecodedToken {
+  user: User;
+  exp: number;
+  // Add other JWT claims as needed
+  iat?: number;
+  iss?: string;
+}
   
   export interface User {
-    firstName: string;
-    email: string;
-  }
+  firstName: string;
+  email: string;
+  siteId?: string;
+}
   
   export interface StoredUser extends User {
     sessionToken: string;
