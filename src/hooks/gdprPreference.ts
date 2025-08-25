@@ -7,7 +7,7 @@ type BreakpointAndPseudo = {
   pseudoClass: string;
 };
 
-const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false) => {
+const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false, borderRadius: number) => {
   console.log('🔥🔥🔥 GDPR createCookiePreferences FUNCTION CALLED WITH:', selectedPreferences);
   
   try {
@@ -79,7 +79,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "top": "50%",
       "left": "50%",
       "transform": "translate(-50%, -50%)",
-      "border-radius": "12px",
+      "border-radius": `${borderRadius}px`,
       "flex-direction": "column",
       "align-items": "center",
       "justify-content": "flex-start",

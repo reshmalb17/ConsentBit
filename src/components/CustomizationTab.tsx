@@ -106,8 +106,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [accessToken, setAccessToken] = usePersistentState<string>("accessToken", '');
   const [pages, setPages] = usePersistentState("pages", []);
   const [fetchScripts, setFetchScripts] = usePersistentState("fetchScripts", false);
-  const [borderRadius, setBorderRadius] = usePersistentState<number>("borderRadius", 16);
-  const [buttonRadius, setButtonRadius] = usePersistentState<number>("buttonRadius", 2);
+  const [borderRadius, setBorderRadius] = usePersistentState<number>("borderRadius", 4);
+  const [buttonRadius, setButtonRadius] = usePersistentState<number>("buttonRadius", 3);
   const [isLoading, setIsLoading] = usePersistentState("isLoading", false);
   const [userlocaldata, setUserlocaldata] = useState<UserData | null>(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -542,7 +542,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       }
 
       await createCookiePreferences(
-        selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton
+        selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton, borderRadius
       );
     } catch (error) {
       // Error creating cookie preferences
@@ -553,7 +553,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   //CCPA preferences banner
   const handleCreatePreferencesccpa = async () => {
     try {
-      await createCookieccpaPreferences(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font);
+      await createCookieccpaPreferences(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font, borderRadius);
     } catch (error) {
       // Error creating cookie preferences
     }

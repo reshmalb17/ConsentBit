@@ -21,6 +21,7 @@ export interface BannerConfig {
     closebutton?: boolean;
   };
   Font?: string;
+borderRadius: number | string;
 }
 type BreakpointAndPseudo = {
   breakpoint: string;
@@ -666,7 +667,7 @@ export const useBannerCreation = () => {
         config.btnColor,          // btnColor
         config.headColor,         // headColor
         config.paraColor,         // paraColor 
-        config.secondcolor,       // secondcolor
+        config.secondcolor, 
         typeof config.buttonRadius === 'number' ? config.buttonRadius : parseInt(config.buttonRadius as string), // buttonRadius
         config.animation,         // animation
         config.toggleStates?.customToggle || false, // customToggle
@@ -674,7 +675,10 @@ export const useBannerCreation = () => {
         config.secondbuttontext,  // secondbuttontext
         false,                    // skipCommonDiv (false to create toggle button)
         config.toggleStates?.disableScroll || false, // disableScroll
-        config.toggleStates?.closebutton || false    // closebutton
+        config.toggleStates?.closebutton || false  ,  // closebutton
+       typeof config.buttonRadius === 'number' 
+       ? config.buttonRadius 
+       : parseInt(config.buttonRadius as string),
       );
       
       console.log('GDPR preferences modal created successfully');
@@ -703,9 +707,11 @@ export const useBannerCreation = () => {
         config.toggleStates?.disableScroll || false, // disableScroll
         config.toggleStates?.closebutton || false,   // closebutton
         true,                     // skipCommonDiv (true to avoid duplicate toggle button)
-        config.Font    // Font
-      );
-      
+        config.Font ,
+           typeof config.buttonRadius === 'number' 
+       ? config.buttonRadius 
+       : parseInt(config.buttonRadius as string),
+      );    
       console.log('CCPA preferences modal created successfully');
     } catch (error) {
       console.error('Error creating CCPA preferences:', error);
