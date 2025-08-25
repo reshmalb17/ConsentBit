@@ -160,16 +160,19 @@ export const useBannerCreation = () => {
       };
 
       const buttonPropertyMap: Record<string, string> = {
-        "border-radius":"3px",
+        "border-radius": "2px",
+        "background-color": "rgb(0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "font-family": "Montserrat",
         "cursor": "pointer",
-        "background-color":"#C9C9C9",
-        "margin-left": "5px",
-        "margin-right": "5px",
+        "margin-left": "0",
+        "margin-right": "0",
         "min-width": "80px",
-        "color":"#ffffff",
         "text-align": "center",
         "display": "flex",
         "justify-content": "center",
+        "magin-left":"5px",
+        "magin-right":"5px"
       };
       
       const responsivebuttonPropertyMap: Record<string, string> = {
@@ -184,16 +187,18 @@ export const useBannerCreation = () => {
       const responsivebuttonOptions = { breakpoint: "small" } as BreakpointAndPseudo;
 
       const declineButtonPropertyMap: Record<string, string> = {
-        "border-radius": "3px",
+        "border-radius": "2px",
+        "background-color": "rgb(201, 201, 201)",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "Montserrat",
         "cursor": "pointer",
-        "background-color": "white",
-        "color": "000000",
-        "margin-left": "5px",
-        "margin-right": "5px",
+        "margin-left": "0",
+        "margin-right": "0",
         "min-width": "80px",
         "text-align": "center",
         "display": "flex",
         "justify-content": "center",
+
       };
 
 
@@ -253,7 +258,9 @@ export const useBannerCreation = () => {
       await closebutton.setProperties(CloseButtonPropertyMap);
       // Line 316: Properties applied to buttonContainerStyle
        await buttonContainerStyle.setProperties(buttonContainerPropertyMap);
-       await prefrenceButtonStyle.setProperties(buttonPropertyMap);
+       await prefrenceButtonStyle.setProperties(declineButtonPropertyMap);
+       await declineButtonStyle.setProperties(declineButtonPropertyMap);
+       await buttonStyle.setProperties(buttonPropertyMap);
 
 // Line 318: Style attached to button container element
       if (newDiv.setStyles) {
@@ -290,7 +297,7 @@ export const useBannerCreation = () => {
         await tempHeading.setStyles([headingStyle]);
       }
       if (tempHeading.setTextContent) {
-        await tempHeading.setTextContent('Cookie Consent');
+        await tempHeading.setTextContent('Cookie Settings');
       }
 
       // Step 7: Create paragraph with proper styles and black text
@@ -307,7 +314,7 @@ export const useBannerCreation = () => {
         await tempParagraph.setStyles([paragraphStyle]);
       }
       if (tempParagraph.setTextContent) {
-        await tempParagraph.setTextContent('We use cookies to enhance your browsing experience and provide personalized content.');
+        await tempParagraph.setTextContent('We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.');
       }
 
       // Step 8: Create button container with proper styles
@@ -357,7 +364,7 @@ export const useBannerCreation = () => {
         throw new Error("Failed to create decline button");
       }
       await declineButton.setStyles([declineButtonStyle]);
-      await declineButton.setTextContent('Decline');
+      await declineButton.setTextContent('Reject');
       
       if ((declineButton as any).setDomId) {
         await (declineButton as any).setDomId("decline-btn"); // Type assertion
@@ -704,15 +711,27 @@ export const useBannerCreation = () => {
       const existingBanners = await webflow.getAllElements();
       for (const element of existingBanners) {
         try {
-          // Check if the element has the getCustomAttribute method
-          if (element && typeof element.getCustomAttribute === 'function') {
-            const id = element.getCustomAttribute('id');
-            if (id && (id === 'consent-banner' || id === 'initial-consent-banner' || 
-                       id === 'main-banner' || id === 'main-consent-banner' || 
-                       id === 'toggle-consent-btn')) {
-              console.log('Removing existing banner with ID:', id);
+          // Check for DOM ID using getDomId method
+          if (element && typeof (element as any).getDomId === 'function') {
+            const domId = await (element as any).getDomId();
+            if (domId && (domId === 'consent-banner' || domId === 'initial-consent-banner' || 
+                         domId === 'main-banner' || domId === 'main-consent-banner' || 
+                         domId === 'toggle-consent-btn')) {
+              console.log('Removing existing banner with DOM ID:', domId);
               if (typeof element.remove === 'function') {
-                element.remove();
+                await element.remove();
+              }
+            }
+          }
+          // Also check for custom attributes as fallback
+          else if (element && typeof element.getCustomAttribute === 'function') {
+            const customId = element.getCustomAttribute('id');
+            if (customId && (customId === 'consent-banner' || customId === 'initial-consent-banner' || 
+                           customId === 'main-banner' || customId === 'main-consent-banner' || 
+                           customId === 'toggle-consent-btn')) {
+              console.log('Removing existing banner with custom ID:', customId);
+              if (typeof element.remove === 'function') {
+                await element.remove();
               }
             }
           }
