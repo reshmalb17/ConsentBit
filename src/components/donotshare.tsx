@@ -6,7 +6,14 @@ const cros = new URL("../assets/white cros.svg", import.meta.url).href;
 const thumb = new URL("../assets/thumb.jpg", import.meta.url).href;
 const uparrow = new URL("../assets/upaarow.svg", import.meta.url).href;
 
-
+// inline tick SVG (white, 13x13)
+const tickSVG =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16">
+    <path fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8l3 3 7-7"/>
+    </svg>
+   `);
 
 
 type ChoosePlanProps = {
@@ -55,40 +62,42 @@ const DonotShare: React.FC<ChoosePlanProps> = ({ onClose, toggleStates, handleTo
                     <img
                       src={copyScript}
                       alt="Copy"
-                      style={{
-                        width: "13px",
-                        height: "13px",
-                        cursor: "pointer",
-                        opacity: "0.7"
-                      }}
-                       onMouseDown={(event) => {
-                        const img = event.target as HTMLImageElement;
-                        if (img) {
-                          img.style.opacity = "0.4"; 
-                        }
-                      }}
+                      style={{ width: "13px", height: "13px", cursor: "pointer", opacity: "0.7" }}
                       onClick={(event) => {
-                        navigator.clipboard.writeText("consentbit-data-donotshare")
+                        const img = event.target as HTMLImageElement;
+
+                        navigator.clipboard
+                          .writeText("consentbit-data-donotshare")
                           .then(() => {
-                    
-                            const img = event?.target as HTMLImageElement;
                             if (img) {
-                              img.style.opacity = "1";
-                              setTimeout(() => img.style.opacity = "0.7", 500);
+                              img.src = tickSVG; // swap to tick
+                              setTimeout(() => {
+                                img.src = copyScript; // revert back
+                                img.style.opacity = "0.7";
+                              }, 500);
                             }
                           })
                           .catch(() => {
-                            const textArea = document.createElement('textarea');
+                            const textArea = document.createElement("textarea");
                             textArea.value = "consentbit-data-donotshare";
                             document.body.appendChild(textArea);
                             textArea.select();
-                            document.execCommand('copy');
+                            document.execCommand("copy");
                             document.body.removeChild(textArea);
+
+                            if (img) {
+                              img.src = tickSVG;
+                              setTimeout(() => {
+                                img.src = copyScript;
+                                img.style.opacity = "0.7";
+                              }, 500);
+                            }
                           });
                       }}
                       title="Copy text"
                     />
                   </div>
+
 
                 </div>
               </div>
@@ -116,31 +125,49 @@ const DonotShare: React.FC<ChoosePlanProps> = ({ onClose, toggleStates, handleTo
                       onMouseDown={(event) => {
                         const img = event.target as HTMLImageElement;
                         if (img) {
-                          img.style.opacity = "0.4"; 
+                          img.style.opacity = "0.4";
                         }
                       }}
                       onClick={(event) => {
-                        navigator.clipboard.writeText("consentbit-link-donotshare")
+                        const img = event?.target as HTMLImageElement;
+
+                        const copyText = "consentbit-link-donotshare";
+
+                        navigator.clipboard
+                          .writeText(copyText)
                           .then(() => {
-                    
-                            const img = event?.target as HTMLImageElement;
                             if (img) {
+                              img.src = tickSVG; // show tick
                               img.style.opacity = "1";
-                              setTimeout(() => img.style.opacity = "0.7", 500);
+                              setTimeout(() => {
+                                img.src = copyScript; // revert back
+                                img.style.opacity = "0.7";
+                              }, 500);
                             }
                           })
                           .catch(() => {
-                            const textArea = document.createElement('textarea');
-                            textArea.value = "consentbit-link-donotshare";
+                            // fallback for older browsers
+                            const textArea = document.createElement("textarea");
+                            textArea.value = copyText;
                             document.body.appendChild(textArea);
                             textArea.select();
-                            document.execCommand('copy');
+                            document.execCommand("copy");
                             document.body.removeChild(textArea);
+
+                            if (img) {
+                              img.src = tickSVG;
+                              img.style.opacity = "1";
+                              setTimeout(() => {
+                                img.src = copyScript;
+                                img.style.opacity = "0.7";
+                              }, 500);
+                            }
                           });
                       }}
                       title="Copy text"
                     />
                   </div>
+
                 </div>
               </div>
             </div>
@@ -168,14 +195,14 @@ const DonotShare: React.FC<ChoosePlanProps> = ({ onClose, toggleStates, handleTo
                     <p style={{ margin: "0" }}>
                       <span style={{ color: "#fff" }}>Step 4 -</span> Paste the copied value as the custom attribute
                     </p>
-                    <div style={{width:"85%"}}>
+                    <div style={{ width: "85%" }}>
                       <p>*Place the cookie banner inside a reusable component and include it across all pages of the site.</p>
                     </div>
                   </div>
                   <div style={{ width: "242px", justifyContent: "left", display: "flex", flexDirection: "column" }}>
                     <p style={{ marginBottom: "12px", fontSize: "12px", color: "#ffffffff" }}>Watch tutorial</p>
                     <div>
-                      <a target="_blank" href="https://vimeo.com/1107523507"><img style={{ marginBottom: "5px", width:"118px", height:"70px" }} src={thumb} alt="" /></a>
+                      <a target="_blank" href="https://vimeo.com/1107523507"><img style={{ marginBottom: "5px", width: "118px", height: "70px" }} src={thumb} alt="" /></a>
                     </div>
                     <a style={{ textDecoration: "none", color: "#A0A0B0", fontSize: "12px", display: "flex" }} target="_blank" href="https://vimeo.com/1107523507">How to enable do not share link<img src={uparrow} alt="" /> </a>
                   </div>

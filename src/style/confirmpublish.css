@@ -185,6 +185,7 @@
   /* margin-top: auto; */
   display: flex;
   gap: 3px;
+  text-decoration: underline;
 }
 
 .customize-link:hover {

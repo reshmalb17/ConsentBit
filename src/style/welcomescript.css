@@ -34,7 +34,7 @@
     gap: 12px;
     background: rgba(20, 17, 40, 1);
     border-radius: 8px;
-    padding: 20px;
+    padding: 17px;
     color: #fff;
     max-height: 105px;
     min-width: 454px;
@@ -51,7 +51,7 @@
 .ws-info-text {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 9px;
 }
 
 .ws-info-title {
@@ -140,6 +140,14 @@
     border: none;
     width: 91px;
     cursor: pointer;
+    transition: all 0.3s ease;
+  opacity: 1;
+  transform: rotate(0deg);
+}
+
+.ws-next-btn:hover {
+  background: #7A6BFF;
+  transform: translateY(-2px);
 }
 
 .ws-scripts-scroll {

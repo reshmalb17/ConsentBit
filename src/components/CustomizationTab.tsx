@@ -968,7 +968,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
           setIsBannerAdded(true);
           setShowSuccessPopup(true);
           setIsLoading(false);
-        }, 20000);
+        }, 40000);
         saveBannerDetails()
 
              } catch (error) {
@@ -1467,9 +1467,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         setTimeout(() => {
           setShowPopup(false);
           setIsBannerAdded(true);
-          setShowSuccessPopup(true);
+          // setShowSuccessPopup(true);
           setIsLoading(false);
-        }, 30000);
+        }, 45000);
 
         saveBannerDetails()
 
@@ -2118,14 +2118,13 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             <div className="flex down">
               {isBannerAdded ? (
                 <>
-                  <span className="spanbox">Before proceeding, make sure you're not selecting the ConsentBit element in the Webflow Designer.</span>
-
-
+                  <span className="spanbox">Before proceeding, make sure you're not selecting the Consentbit element in the Webflow Designer.</span>
                   <span className="spanbox">Hang tight! We're updating your banner with the latest changes.</span>
                   <span className="spanbox">Applying your updates to the project now!.</span>
                 </>
               ) : (
                 <>
+                  {/* <span className="spanbox">Before proceeding, make sure you're not selecting the Consentbit element in the Webflow Designer.</span> */}
                   <span className="spanbox">We are installing the script in your site custom code.</span>
                   <span className="spanbox">We are adding a banner on your project.</span>
                 </>
