@@ -358,6 +358,9 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
     return true; // For other keys, allow setting
   })();
   
+  // Track if value was explicitly set (not just initialized with default)
+  const wasExplicitlySet = React.useRef(false);
+
   const [state, setState] = useState<T>(() => {
     if (typeof window === 'undefined') return defaultValue;
     
@@ -396,10 +399,13 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
       return;
     }
     
+    // Mark that this value was explicitly set (not just initialized)
+    wasExplicitlySet.current = true;
+    
     // Always update the state, but localStorage will be handled in useEffect
     setState(newState);
   }, [key, isAuthorized]);
-
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Special handling for siteInfo - only allow setting if user is authorized
@@ -419,8 +425,25 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
         }
       }
       
-      // Always save to localStorage for non-siteInfo keys, or for siteInfo if authorized
-      localStorage.setItem(siteSpecificKey, JSON.stringify(state));
+      // Check if user is authenticated before saving any data
+      const userInfo = localStorage.getItem('consentbit-userinfo');
+      const isUserAuthenticated = (() => {
+        if (!userInfo) return false;
+        try {
+          const parsed = JSON.parse(userInfo);
+          return !!(parsed?.sessionToken && parsed?.email);
+        } catch {
+          return false;
+        }
+      })();
+      
+      // Only save to localStorage if:
+      // 1. User is authenticated, OR
+      // 2. Value was explicitly set (not just initialized), OR
+      // 3. We're loading an existing value from localStorage
+      if (isUserAuthenticated || wasExplicitlySet.current) {
+        localStorage.setItem(siteSpecificKey, JSON.stringify(state));
+      }
     }
   }, [siteSpecificKey, state, key]);
 

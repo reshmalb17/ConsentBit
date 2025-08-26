@@ -319,7 +319,18 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   });
 
   useEffect(() => {
-    localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+    // Only save cookie preferences if user is authenticated
+    const userInfo = localStorage.getItem('consentbit-userinfo');
+    if (userInfo) {
+      try {
+        const parsed = JSON.parse(userInfo);
+        if (parsed?.sessionToken && parsed?.email) {
+          localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+        }
+      } catch (error) {
+        // Invalid auth data, don't save
+      }
+    }
   }, [cookiePreferences]);
 
   const toggleCategory = (category) => {
@@ -476,7 +487,6 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
       if (hostingScript) {
         try {
-
           const scriptId = hostingScript.result.id;
           const version = hostingScript.result.version;
 
@@ -487,16 +497,15 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             location: 'header',
             version: version
           };
+          
           const applyScriptResponse = await customCodeApi.applyScript(params, token);
 
         }
         catch (error) {
-          throw error; // or handle it differently based on your needs
+          throw error;
         }
       }
     }
-
-
     catch (error) {
       // Component Error
     }
@@ -504,6 +513,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
   // const { user } = useAuth();
   const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite } = useAuth();
+
 
 
 
@@ -958,10 +968,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
         handleCreatePreferencesccpa()
+        
+        // Script registration for CCPA banners
         if (appVersion === '1.0.0') {
           fetchAnalyticsBlockingsScripts();
-        } else if (appVersion === '2.0.0') {
-          fetchAnalyticsBlockingsScriptsV2(); // Make sure this function is defined
+        } else if (appVersion === '2.0.0'|| appVersion === '2.0.1') {
+          fetchAnalyticsBlockingsScriptsV2();
         }
         setTimeout(() => {
           setShowPopup(false);
@@ -997,7 +1009,6 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
       if (hostingScript) {
         try {
-
           const scriptId = hostingScript.result.id;
           const version = hostingScript.result.version;
 
@@ -1008,19 +1019,18 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             location: 'header',
             version: version
           };
+          
           const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
 
         }
-                 catch (error) {
-           throw error; // or handle it differently based on your needs
-         }
-       }
-     }
-
-
-     catch (error) {
-       // Component error handling
-     }
+        catch (error) {
+          throw error;
+        }
+      }
+    }
+    catch (error) {
+      // Component error handling
+    }
   }
 
 
@@ -1459,10 +1469,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
         handleCreatePreferences(skipCommonDiv);
+        
+        // Script registration for GDPR banners
         if (appVersion === '1.0.0') {
           fetchAnalyticsBlockingsScripts();
-        } else if (appVersion === '2.0.0') {
-          fetchAnalyticsBlockingsScriptsV2(); // Make sure this function is defined
+        } else if (appVersion === '2.0.0'|| appVersion === '2.0.1') {
+          fetchAnalyticsBlockingsScriptsV2();
         }
         setTimeout(() => {
           setShowPopup(false);
@@ -1749,7 +1761,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
   // Removed early return to prevent hooks order issues
   const checkAndRegisterV2ConsentScript = async () => {
-    if (appVersion !== "2.0.0") return;
+    if (appVersion !== "2.0.0" && appVersion !== "2.0.1") return;
 
     try {
       const token = getSessionTokenFromLocalStorage();
@@ -1814,7 +1826,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   // No need to show welcome screen when coming from ConfirmPublish
 
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
- console.log("user",user?.firstName)
+
 
   const dropdownRefs = {
     language: useRef<HTMLDivElement>(null),
@@ -2350,7 +2362,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                                  <div className="export-csv">
                     <div className="flex">
                       {/* Export CSV Buttons - Only show one based on version */}
-                      {(appVersion === '1.0.0' || appVersion !== '2.0.0') && (
+                      {(appVersion === '1.0.0' || (appVersion !== '2.0.0' && appVersion !== '2.0.1')) && (
                         <button
                           className="exportbutton"
                           onClick={handleExportCSV}
@@ -2359,7 +2371,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                           {isExporting ? 'Exporting...' : 'Export CSV'}
                         </button>
                       )}
-                                             {appVersion === '2.0.0' && (
+                                             {appVersion === '2.0.0'||appVersion ==='2.0.1'&& (
                          <button
                            className="exportbutton"
                            onClick={() => {

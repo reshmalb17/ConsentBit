@@ -68,20 +68,15 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
 
 
   const handlePublishClick = async () => {
-    console.log('🚀 Publish button clicked - starting handlePublishClick');
-
+    
     try {
       const isUserValid = await isAuthenticatedForCurrentSite();
-      console.log('👤 User authentication check result:', isUserValid);
-
+      
       const selectedElement = await webflow.getSelectedElement() as { type?: string };
-      console.log('🎯 Selected element:', selectedElement);
 
       const isInvalidElement = !selectedElement || selectedElement.type === "Body";
-      console.log('❌ Invalid element check:', isInvalidElement);
 
       if (isUserValid && !isInvalidElement) {
-        console.log('✅ Proceeding with banner creation...');
         tooltips.setShowTooltip(false);
 
         // Create banner configuration using actual state values
@@ -106,48 +101,41 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
         };
 
         // Create banners based on user selection
-        console.log('Selected options:', bannerUI.selectedOptions);
-        console.log('Full config being passed:', config);
-
+        
         try {
-          console.log('About to call banner creation function...');
-
           // Create complete banner structure (both GDPR and CCPA banners)
           await createCompleteBannerStructureWithExistingFunctions(config);
-
-          console.log('Banner creation completed successfully');
+          
         } catch (bannerCreationError) {
-          console.error('Error in banner creation:', bannerCreationError);
           throw bannerCreationError;
         }
 
         popups.setShowPopup(true);
         // After successful banner creation, call handleConfirmPublish to show SuccessPublish component
+         
         handleConfirmPublish();
       } else {
-        console.log('❌ Cannot proceed with banner creation:');
-        console.log('  - User valid:', isUserValid);
-        console.log('  - Element valid:', !isInvalidElement);
 
+        
         popups.setShowPopup(false);
         if (!isUserValid) {
-          console.log('🔐 User not authenticated - showing auth popup');
+
           tooltips.setShowTooltip(false);
           popups.setShowAuthPopup(true);
         } else if (isInvalidElement) {
-          console.log('🎯 Invalid element selected - showing tooltip');
+
           tooltips.setShowTooltip(true);
         }
       }
     } catch (error) {
-      console.error('Error in handlePublishClick:', error);
+
       tooltips.setShowTooltip(false);
       // Show error notification to user
       if (typeof webflow !== 'undefined' && webflow.notify) {
         webflow.notify({ type: "error", message: "Failed to publish banners. Please try again." });
       }
       // Note: isCreating state is managed by useBannerCreation hook
-      console.log('Current isCreating state:', isCreating);
+
     }
   };
   const handleCustomizeClick = () => {

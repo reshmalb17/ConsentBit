@@ -30,10 +30,12 @@ export const customCodeApi = {
           'Content-Type': 'application/json'
         },
       });
+      
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}, text: ${errorText}`);
       }
+      
       const data = await response.json();
       return data;
     } catch (error) {
@@ -351,9 +353,11 @@ downloadPDFFromUrl: async (token: string, pdfUrl: string, filename: string) => {
         },
        
       });
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
       return await response.json();
     } catch (error) {
       throw error;

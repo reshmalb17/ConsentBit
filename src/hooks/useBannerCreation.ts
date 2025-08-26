@@ -3,6 +3,13 @@ import { useAppState } from './useAppState';
 import webflow from '../types/webflowtypes';
 import createCookiePreferences from './gdprPreference';
 import createCookieccpaPreferences from './ccpaPreference';
+import { getSessionTokenFromLocalStorage } from '../util/Session'; 
+import { customCodeApi } from '../services/api';
+import { CodeApplication } from 'src/types/types';
+import { useAuth } from '../hooks/userAuth';
+import { usePersistentState } from './usePersistentState';
+  const base_url = "https://cb-server.web-8fb.workers.dev"
+
 
 export interface BannerConfig {
   language: string;
@@ -32,6 +39,9 @@ export const useBannerCreation = () => {
   const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showSuccessPublish, setShowSuccessPublish] = useState(false);
+  const { user, exchangeAndVerifyIdToken } = useAuth();
+  const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
+
   
   const {
     bannerBooleans,
@@ -49,7 +59,6 @@ export const useBannerCreation = () => {
   };
 
   const handleBannerError = (error: any) => {
-    console.error('Banner creation error:', error);
     setIsCreating(false);
     setShowLoading(false);
   };
@@ -64,7 +73,6 @@ export const useBannerCreation = () => {
 
   const createSimpleGDPRBanner = async (selectedElement: any, config: BannerConfig, animationAttribute: string) => {
     try {
-      console.log('Creating simple GDPR banner...');
       
       // Step 1: Create main banner div using selectedElement.before() exactly like GDPR function
       const newDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
@@ -387,19 +395,15 @@ export const useBannerCreation = () => {
           await buttonContainer.append(acceptButton);
         }
       }
-      
-      console.log('Simple GDPR banner created successfully');
     }
       
     } catch (error) {
-      console.error('Error creating simple GDPR banner:', error);
       throw error;
     }
   };
 
   const createSimpleCCPABanner = async (selectedElement: any, config: BannerConfig, animationAttribute: string) => {
     try {
-      console.log('Creating simple CCPA banner...');
 
 
 
@@ -645,11 +649,7 @@ export const useBannerCreation = () => {
          }
          
       
-      
-      console.log('Simple CCPA banner created successfully');
-      
     } catch (error) {
-      console.error('Error creating simple CCPA banner:', error);
       throw error;
     }
   };
@@ -657,7 +657,6 @@ export const useBannerCreation = () => {
 
   const createGDPRPreferencesWithExistingFunction = async (selectedElement: any, config: BannerConfig) => {
     try {
-      console.log('Creating GDPR preferences modal using createCookiePreferences...');
       
       // Call createCookiePreferences with all required parameters - black text for content, config colors for buttons
         await createCookiePreferences(
@@ -681,16 +680,13 @@ export const useBannerCreation = () => {
        : parseInt(config.buttonRadius as string),
       );
       
-      console.log('GDPR preferences modal created successfully');
     } catch (error) {
-      console.error('Error creating GDPR preferences:', error);
       throw error;
     }
   };
 
   const createCCPAPreferencesWithExistingFunction = async (selectedElement: any, config: BannerConfig) => {
     try {
-      console.log('Creating CCPA preferences modal using createCookieccpaPreferences...');
       
       // Call createCookieccpaPreferences with all required parameters - black text for content, config colors for buttons
       await createCookieccpaPreferences(
@@ -712,17 +708,70 @@ export const useBannerCreation = () => {
        ? config.buttonRadius 
        : parseInt(config.buttonRadius as string),
       );    
-      console.log('CCPA preferences modal created successfully');
     } catch (error) {
-      console.error('Error creating CCPA preferences:', error);
       throw error;
+    }
+  };
+   const openAuthScreen = () => {
+    const authWindow = window.open(
+      `${base_url}/api/auth/authorize?state=webflow_designer`,
+      "_blank",
+      "width=600,height=600"
+    );
+
+    const onAuth = async () => {
+      await exchangeAndVerifyIdToken();
+    };
+    const checkWindow = setInterval(() => {
+      if (authWindow?.closed) {
+        clearInterval(checkWindow);
+        onAuth();
+      }
+    }, 1000);
+  };
+    
+  const  fetchAnalyticsBlockingsScriptsV2 = async () => {
+    try {
+      const token = getSessionTokenFromLocalStorage();
+      if (!token) {
+        openAuthScreen();
+        return;
+      }
+
+      const siteIdinfo = await webflow.getSiteInfo();
+      setSiteInfo(siteIdinfo);
+
+      const hostingScript = await customCodeApi.registerV2BannerCustomCode(token);
+
+      if (hostingScript) {
+        try {
+          const scriptId = hostingScript.result.id;
+          const version = hostingScript.result.version;
+
+          const params: CodeApplication = {
+            targetType: 'site',
+            targetId: siteIdinfo.siteId,
+            scriptId: scriptId,
+            location: 'header',
+            version: version
+          };
+          
+          const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
+
+        }
+        catch (error) {
+          throw error;
+        }
+      }
+    }
+    catch (error) {
+      // Component error handling
     }
   };
 
   const createCompleteBannerStructureWithExistingFunctions = async (config: BannerConfig) => {
     try {
       setIsCreating(true);
-      console.log('Starting complete banner creation with config:', config);
 
       // Get selected element
       const selectedElement = await webflow.getSelectedElement();
@@ -734,7 +783,6 @@ export const useBannerCreation = () => {
       const animationAttribute = config.animation && config.animation !== 'none' ? config.animation : '';
 
       // Remove existing banners using correct IDs from your structure
-      console.log('Removing existing banners...');
       const existingBanners = await webflow.getAllElements();
       for (const element of existingBanners) {
         try {
@@ -744,7 +792,6 @@ export const useBannerCreation = () => {
             if (domId && (domId === 'consent-banner' || domId === 'initial-consent-banner' || 
                          domId === 'main-banner' || domId === 'main-consent-banner' || 
                          domId === 'toggle-consent-btn')) {
-              console.log('Removing existing banner with DOM ID:', domId);
               if (typeof element.remove === 'function') {
                 await element.remove();
               }
@@ -756,48 +803,38 @@ export const useBannerCreation = () => {
             if (customId && (customId === 'consent-banner' || customId === 'initial-consent-banner' || 
                            customId === 'main-banner' || customId === 'main-consent-banner' || 
                            customId === 'toggle-consent-btn')) {
-              console.log('Removing existing banner with custom ID:', customId);
               if (typeof element.remove === 'function') {
                 await element.remove();
               }
             }
           }
         } catch (cleanupError) {
-          console.warn('Error checking element for cleanup:', cleanupError);
           // Continue with next element instead of failing completely
         }
       }
 
       // Create simple banners first
-      console.log('🎯 Creating simple GDPR banner...');
       await createSimpleGDPRBanner(selectedElement, config, animationAttribute);
-      console.log('✅ GDPR banner created successfully');
-      console.log('🎯 Creating GDPR preference modal...');
       await createGDPRPreferencesWithExistingFunction(selectedElement, config);
-      console.log('✅ GDPR preferences created successfully');
 
 
-      console.log('🎯 Creating simple CCPA banner...');
       await createSimpleCCPABanner(selectedElement, config, animationAttribute);
-      console.log('✅ CCPA banner created successfully');
 
       // Create preference modals
     
       
-      console.log('🎯 Creating CCPA preference modal...');
       await createCCPAPreferencesWithExistingFunction(selectedElement, config);
-      console.log('✅ CCPA preferences created successfully');
-
-      console.log('Complete banner structure created successfully');
+      await fetchAnalyticsBlockingsScriptsV2();
+    
+      
       setIsCreating(false);
       
     } catch (error) {
-      console.error('Error in createCompleteBannerStructureWithExistingFunctions:', error);
       setIsCreating(false);
       throw error;
     }
-  };
 
+  }
   return {
     createCompleteBannerStructureWithExistingFunctions,
     isCreating,
@@ -810,3 +847,4 @@ export const useBannerCreation = () => {
 };
 
 export default useBannerCreation;
+
