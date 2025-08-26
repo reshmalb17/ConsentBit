@@ -12,6 +12,12 @@ import { useAuth } from "./hooks/userAuth";
 import { use } from "i18next";
 import { serialize } from "v8";
 import { getCurrentSiteId, listCurrentSiteData, clearCurrentSiteData, clearAllData, clearAuthData, clearAuthIfNotAuthorized, checkMigrationStatus, forceMigration, usePersistentState, debugAuthStatus, forceClearAuthData } from "./hooks/usePersistentState";
+import { customCodeApi } from "./services/api";
+import { CodeApplication } from "./types/types";
+import { getSessionTokenFromLocalStorage } from './util/Session';
+import pkg from '../package.json';
+
+const appVersion = pkg.version;
 
 
 
@@ -23,6 +29,7 @@ const App: React.FC = () => {
   const [skipWelcomeScreen, setSkipWelcomeScreen] = usePersistentState("skipWelcomeScreen", false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isAppInitializing, setIsAppInitializing] = useState(true);
   const [customizationInitialTab, setCustomizationInitialTab] = useState("Settings");
   
   
@@ -42,6 +49,11 @@ const App: React.FC = () => {
 
 
   const { user, sessionToken, exchangeAndVerifyIdToken, openAuthScreen, isAuthenticatedForCurrentSite } = useAuth();
+  
+  // Debug authentication state changes
+  useEffect(() => {
+    // Auth state monitoring
+  }, [user, sessionToken, isAuthenticated]);
 
   // Check if banners were previously added and navigate to CustomizationTab (only on initial load)
   useEffect(() => {
@@ -228,6 +240,78 @@ const App: React.FC = () => {
     checkSiteAuthentication();
   }, [user?.email, sessionToken, user?.siteId]);
 
+  // Version-based script registration - run once when user is authenticated
+  useEffect(() => {
+    const registerVersionBasedScripts = async () => {
+      // Only register scripts if user is authenticated and has session token
+      if (!isAuthenticated || !sessionToken || !user?.email) {
+        return;
+      }
+
+      const token = getSessionTokenFromLocalStorage();
+      if (!token) {
+        return;
+      }
+
+      try {
+        // Get site info for script application
+        const siteInfo = await webflow.getSiteInfo();
+
+        if (appVersion === '1.0.0') {
+          const result = await customCodeApi.registerAnalyticsBlockingScript(token);
+          
+          // Apply the registered script
+          if (result && result.result) {
+            const params: CodeApplication = {
+              targetType: 'site',
+              targetId: siteInfo.siteId,
+              scriptId: result.result.id,
+              location: 'header',
+              version: result.result.version
+            };
+            await customCodeApi.applyScript(params, token);
+          }
+        } else if (appVersion === '2.0.0' || appVersion === '2.0.1') {
+          const result = await customCodeApi.registerV2BannerCustomCode(token);
+          
+          // Apply the registered script
+          if (result && result.result) {
+            const params: CodeApplication = {
+              targetType: 'site',
+              targetId: siteInfo.siteId,
+              scriptId: result.result.id,
+              location: 'header',
+              version: result.result.version
+            };
+            await customCodeApi.applyV2Script(params, token);
+          }
+        }
+      } catch (error) {
+        // Silent error handling - script registration will be retried on next auth
+      }
+    };
+
+    // Delay script registration to ensure authentication is fully settled
+    const timer = setTimeout(() => {
+      registerVersionBasedScripts();
+    }, 2000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isAuthenticated, sessionToken, user?.email]); // Trigger when auth state changes
+
+  // App initialization delay to prevent welcome screen flash
+  useEffect(() => {
+    const initializeApp = async () => {
+      // Give time for authentication, localStorage reads, and state to settle
+      await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 second delay
+      setIsAppInitializing(false);
+    };
+
+    initializeApp();
+  }, []); // Run only once on app mount
+
 
 
 
@@ -250,11 +334,16 @@ const App: React.FC = () => {
     debugAuthStatus();
   };
 
+
+
   return (
    <div>
    
 
-      {skipWelcomeScreen ? (
+      {isAppInitializing ? (
+        // Show nothing during initialization to prevent flash
+        <div></div>
+      ) : skipWelcomeScreen ? (
         <CustomizationTab onAuth={handleBackToWelcome} isAuthenticated={isAuthenticated} initialActiveTab={customizationInitialTab} />
       ) : componentStates.isWelcomeScreen ? (
         <WelcomeScreen 

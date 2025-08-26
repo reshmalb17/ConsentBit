@@ -1,6 +1,6 @@
 {
   "name": "consentbit",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "scripts": {
     "dev": "concurrently \"webflow extension serve\" \"npm run watch-webpack\"",
     "build": "npm run build-webpack && webflow extension bundle",

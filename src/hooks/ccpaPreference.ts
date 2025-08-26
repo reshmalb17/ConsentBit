@@ -66,7 +66,7 @@ type BreakpointAndPseudo = {
     pseudoClass: string;
 };
 
-const createCookieccpaPreferences = async (language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", disableScroll: boolean, _closebutton: boolean = false, skipCommonDiv: boolean = false, Font: string
+const createCookieccpaPreferences = async (language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", disableScroll: boolean, _closebutton: boolean = false, skipCommonDiv: boolean = false, Font: string, borderRadius: number
 ) => {
     
     
@@ -154,7 +154,7 @@ const createCookieccpaPreferences = async (language: string = "English", color: 
             "top": "50%",
             "left": "50%",
             "transform": "translate(-50%, -50%)",
-            "border-radius": "12px",
+            "border-radius": `${borderRadius}px`,
             "display": "none",
             "flex-direction": "column",
             "overflow-y": "scroll",

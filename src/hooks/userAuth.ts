@@ -70,7 +70,7 @@ export function useAuth() {
         }
 
         // Return valid auth state
-        return {
+        const authState = {
           user: {
             firstName: decodedToken.user?.firstName || userData.firstName || "",
             email: decodedToken.user?.email || userData.email || "",
@@ -78,6 +78,7 @@ export function useAuth() {
           },
           sessionToken: userData.sessionToken,
         };
+        return authState;
       } catch (error) {
         // Clear invalid data
         localStorage.removeItem("consentbit-userinfo");
@@ -116,7 +117,8 @@ export function useAuth() {
         throw new Error("No session token received");
       }
 
-      return data;
+      // Return both auth data and site info
+      return { ...data, siteInfo };
     },
     onSuccess: (data) => {
       try {
@@ -133,6 +135,11 @@ export function useAuth() {
                  // Update localStorage
          localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
         localStorage.removeItem("explicitly_logged_out");
+
+        // Store site information after authentication
+        if (data.siteInfo) {
+          localStorage.setItem('siteInfo', JSON.stringify(data.siteInfo));
+        }
 
         // Directly update the query data instead of invalidating
         queryClient.setQueryData<AuthState>(["auth"], {
@@ -196,6 +203,11 @@ export function useAuth() {
              localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
       localStorage.removeItem("explicitly_logged_out");
 
+      // Store site information after authentication
+      if (siteInfo) {
+        localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+      }
+
       // Update React Query cache
       queryClient.setQueryData<AuthState>(["auth"], {
         user: {
@@ -237,6 +249,7 @@ export function useAuth() {
       return;
     }
 
+
     const onAuth = async () => {
       try {
         await exchangeAndVerifyIdToken();
@@ -258,6 +271,7 @@ export function useAuth() {
   // Function to check if user is authenticated for current site
   const isAuthenticatedForCurrentSite = async (): Promise<boolean> => {
     try {
+     
       // Check if user has basic authentication
       if (!authState?.user?.email || !authState?.sessionToken) {
         return false;
@@ -265,12 +279,19 @@ export function useAuth() {
 
       // Get current site info from Webflow
       const currentSiteInfo = await webflow.getSiteInfo();
+      
       if (!currentSiteInfo?.siteId) {
         return false;
       }
 
       // Check if user is authenticated for this specific site
-      return authState.user.siteId === currentSiteInfo.siteId;
+      const storedSiteId = authState.user.siteId;
+      const currentSiteId = currentSiteInfo.siteId;
+      const isMatch = storedSiteId === currentSiteId;
+      
+    
+      
+      return isMatch;
     } catch (error) {
       return false;
     }

@@ -87,7 +87,8 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
             disableScroll: bannerToggleStates.toggleStates.disableScroll,
             closebutton: bannerToggleStates.toggleStates.closebutton,
           },
-          Font: bannerStyles.Font
+          Font: bannerStyles.Font,
+          borderRadius:bannerStyles.borderRadius
         };
 
         // Create banners based on user selection
@@ -102,6 +103,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
 
         popups.setShowPopup(true);
         // After successful banner creation, call handleConfirmPublish to show SuccessPublish component
+         
         handleConfirmPublish();
       } else {
 

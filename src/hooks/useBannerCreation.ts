@@ -3,6 +3,14 @@ import { useAppState } from './useAppState';
 import webflow from '../types/webflowtypes';
 import createCookiePreferences from './gdprPreference';
 import createCookieccpaPreferences from './ccpaPreference';
+import { getSessionTokenFromLocalStorage } from '../util/Session'; 
+import { customCodeApi } from '../services/api';
+import { CodeApplication } from 'src/types/types';
+import { useAuth } from '../hooks/userAuth';
+import { usePersistentState } from './usePersistentState';
+import { aw } from 'framer-motion/dist/types.d-6pKw1mTI';
+  const base_url = "https://cb-server.web-8fb.workers.dev"
+
 
 export interface BannerConfig {
   language: string;
@@ -21,6 +29,7 @@ export interface BannerConfig {
     closebutton?: boolean;
   };
   Font?: string;
+borderRadius: number | string;
 }
 type BreakpointAndPseudo = {
   breakpoint: string;
@@ -31,6 +40,9 @@ export const useBannerCreation = () => {
   const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showSuccessPublish, setShowSuccessPublish] = useState(false);
+  const { user, exchangeAndVerifyIdToken } = useAuth();
+  const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
+
   
   const {
     bannerBooleans,
@@ -655,7 +667,7 @@ export const useBannerCreation = () => {
         config.btnColor,          // btnColor
         config.headColor,         // headColor
         config.paraColor,         // paraColor 
-        config.secondcolor,       // secondcolor
+        config.secondcolor, 
         typeof config.buttonRadius === 'number' ? config.buttonRadius : parseInt(config.buttonRadius as string), // buttonRadius
         config.animation,         // animation
         config.toggleStates?.customToggle || false, // customToggle
@@ -663,7 +675,10 @@ export const useBannerCreation = () => {
         config.secondbuttontext,  // secondbuttontext
         false,                    // skipCommonDiv (false to create toggle button)
         config.toggleStates?.disableScroll || false, // disableScroll
-        config.toggleStates?.closebutton || false    // closebutton
+        config.toggleStates?.closebutton || false  ,  // closebutton
+       typeof config.buttonRadius === 'number' 
+       ? config.buttonRadius 
+       : parseInt(config.buttonRadius as string),
       );
       
     } catch (error) {
@@ -689,11 +704,69 @@ export const useBannerCreation = () => {
         config.toggleStates?.disableScroll || false, // disableScroll
         config.toggleStates?.closebutton || false,   // closebutton
         true,                     // skipCommonDiv (true to avoid duplicate toggle button)
-        config.Font    // Font
-      );
-      
+        config.Font ,
+           typeof config.buttonRadius === 'number' 
+       ? config.buttonRadius 
+       : parseInt(config.buttonRadius as string),
+      );    
     } catch (error) {
       throw error;
+    }
+  };
+   const openAuthScreen = () => {
+    const authWindow = window.open(
+      `${base_url}/api/auth/authorize?state=webflow_designer`,
+      "_blank",
+      "width=600,height=600"
+    );
+
+    const onAuth = async () => {
+      await exchangeAndVerifyIdToken();
+    };
+    const checkWindow = setInterval(() => {
+      if (authWindow?.closed) {
+        clearInterval(checkWindow);
+        onAuth();
+      }
+    }, 1000);
+  };
+    
+  const  fetchAnalyticsBlockingsScriptsV2 = async () => {
+    try {
+      const token = getSessionTokenFromLocalStorage();
+      if (!token) {
+        openAuthScreen();
+        return;
+      }
+
+      const siteIdinfo = await webflow.getSiteInfo();
+      setSiteInfo(siteIdinfo);
+
+      const hostingScript = await customCodeApi.registerV2BannerCustomCode(token);
+
+      if (hostingScript) {
+        try {
+          const scriptId = hostingScript.result.id;
+          const version = hostingScript.result.version;
+
+          const params: CodeApplication = {
+            targetType: 'site',
+            targetId: siteIdinfo.siteId,
+            scriptId: scriptId,
+            location: 'header',
+            version: version
+          };
+          
+          const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
+
+        }
+        catch (error) {
+          throw error;
+        }
+      }
+    }
+    catch (error) {
+      // Component error handling
     }
   };
 
@@ -752,15 +825,17 @@ export const useBannerCreation = () => {
     
       
       await createCCPAPreferencesWithExistingFunction(selectedElement, config);
-
+      await fetchAnalyticsBlockingsScriptsV2();
+    
+      
       setIsCreating(false);
       
     } catch (error) {
       setIsCreating(false);
       throw error;
     }
-  };
 
+  }
   return {
     createCompleteBannerStructureWithExistingFunctions,
     isCreating,
@@ -773,3 +848,4 @@ export const useBannerCreation = () => {
 };
 
 export default useBannerCreation;
+

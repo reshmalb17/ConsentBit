@@ -106,8 +106,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [accessToken, setAccessToken] = usePersistentState<string>("accessToken", '');
   const [pages, setPages] = usePersistentState("pages", []);
   const [fetchScripts, setFetchScripts] = usePersistentState("fetchScripts", false);
-  const [borderRadius, setBorderRadius] = usePersistentState<number>("borderRadius", 16);
-  const [buttonRadius, setButtonRadius] = usePersistentState<number>("buttonRadius", 2);
+  const [borderRadius, setBorderRadius] = usePersistentState<number>("borderRadius", 4);
+  const [buttonRadius, setButtonRadius] = usePersistentState<number>("buttonRadius", 3);
   const [isLoading, setIsLoading] = usePersistentState("isLoading", false);
   const [userlocaldata, setUserlocaldata] = useState<UserData | null>(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -319,7 +319,18 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   });
 
   useEffect(() => {
-    localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+    // Only save cookie preferences if user is authenticated
+    const userInfo = localStorage.getItem('consentbit-userinfo');
+    if (userInfo) {
+      try {
+        const parsed = JSON.parse(userInfo);
+        if (parsed?.sessionToken && parsed?.email) {
+          localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+        }
+      } catch (error) {
+        // Invalid auth data, don't save
+      }
+    }
   }, [cookiePreferences]);
 
   const toggleCategory = (category) => {
@@ -476,7 +487,6 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
       if (hostingScript) {
         try {
-
           const scriptId = hostingScript.result.id;
           const version = hostingScript.result.version;
 
@@ -487,16 +497,15 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             location: 'header',
             version: version
           };
+          
           const applyScriptResponse = await customCodeApi.applyScript(params, token);
 
         }
         catch (error) {
-          throw error; // or handle it differently based on your needs
+          throw error;
         }
       }
     }
-
-
     catch (error) {
       // Component Error
     }
@@ -543,7 +552,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       }
 
       await createCookiePreferences(
-        selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton
+        selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton, borderRadius
       );
     } catch (error) {
       // Error creating cookie preferences
@@ -554,7 +563,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   //CCPA preferences banner
   const handleCreatePreferencesccpa = async () => {
     try {
-      await createCookieccpaPreferences(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font);
+      await createCookieccpaPreferences(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font, borderRadius);
     } catch (error) {
       // Error creating cookie preferences
     }
@@ -959,10 +968,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
         handleCreatePreferencesccpa()
+        
+        // Script registration for CCPA banners
         if (appVersion === '1.0.0') {
           fetchAnalyticsBlockingsScripts();
-        } else if (appVersion === '2.0.0') {
-          fetchAnalyticsBlockingsScriptsV2(); // Make sure this function is defined
+        } else if (appVersion === '2.0.0'|| appVersion === '2.0.1') {
+          fetchAnalyticsBlockingsScriptsV2();
         }
         setTimeout(() => {
           setShowPopup(false);
@@ -998,7 +1009,6 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
       if (hostingScript) {
         try {
-
           const scriptId = hostingScript.result.id;
           const version = hostingScript.result.version;
 
@@ -1009,19 +1019,18 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             location: 'header',
             version: version
           };
+          
           const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
 
         }
-                 catch (error) {
-           throw error; // or handle it differently based on your needs
-         }
-       }
-     }
-
-
-     catch (error) {
-       // Component error handling
-     }
+        catch (error) {
+          throw error;
+        }
+      }
+    }
+    catch (error) {
+      // Component error handling
+    }
   }
 
 
@@ -1460,10 +1469,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
         handleCreatePreferences(skipCommonDiv);
+        
+        // Script registration for GDPR banners
         if (appVersion === '1.0.0') {
           fetchAnalyticsBlockingsScripts();
-        } else if (appVersion === '2.0.0') {
-          fetchAnalyticsBlockingsScriptsV2(); // Make sure this function is defined
+        } else if (appVersion === '2.0.0'|| appVersion === '2.0.1') {
+          fetchAnalyticsBlockingsScriptsV2();
         }
         setTimeout(() => {
           setShowPopup(false);
@@ -1750,7 +1761,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
   // Removed early return to prevent hooks order issues
   const checkAndRegisterV2ConsentScript = async () => {
-    if (appVersion !== "2.0.0") return;
+    if (appVersion !== "2.0.0" && appVersion !== "2.0.1") return;
 
     try {
       const token = getSessionTokenFromLocalStorage();
@@ -2352,7 +2363,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                                  <div className="export-csv">
                     <div className="flex">
                       {/* Export CSV Buttons - Only show one based on version */}
-                      {(appVersion === '1.0.0' || appVersion !== '2.0.0') && (
+                      {(appVersion === '1.0.0' || (appVersion !== '2.0.0' && appVersion !== '2.0.1')) && (
                         <button
                           className="exportbutton"
                           onClick={handleExportCSV}
@@ -2361,7 +2372,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                           {isExporting ? 'Exporting...' : 'Export CSV'}
                         </button>
                       )}
-                                             {appVersion === '2.0.0' && (
+                                             {appVersion === '2.0.0'||appVersion ==='2.0.1'&& (
                          <button
                            className="exportbutton"
                            onClick={() => {
