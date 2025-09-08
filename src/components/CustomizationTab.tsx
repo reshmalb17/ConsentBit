@@ -469,7 +469,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             if (response.language !== undefined) setLanguage(response.language);
             if (response.buttonText !== undefined) setButtonText(response.buttonText);
             if (response.isBannerAdded !== undefined) setIsBannerAdded(response.isBannerAdded);
-            if (response.color !== undefined) setColor(response.color);
+            if (response.color !== undefined && response.color !== "#000000") setColor(response.color);
 
           } else {
             openAuthScreen();
@@ -716,7 +716,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       const animationAttribute = animationAttributeMap[animation] || "";
 
       const divPropertyMap: Record<string, string> = {
-        "background-color": color,
+        "background-color": bgColor,
         "position": "fixed",
         "z-index": "99999",
         "padding-top": "20px",
@@ -1161,7 +1161,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       const animationAttribute = animationAttributeMap[animation] || "";
 
       const divPropertyMap: Record<string, string> = {
-        "background-color": color,
+        "background-color": bgColor,
         "position": "fixed",
         "z-index": "99999",
         "padding-top": "20px",

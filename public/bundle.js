@@ -45599,7 +45599,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                             setButtonText(response.buttonText);
                         if (response.isBannerAdded !== undefined)
                             setIsBannerAdded(response.isBannerAdded);
-                        if (response.color !== undefined)
+                        if (response.color !== undefined && response.color !== "#000000")
                             setColor(response.color);
                     }
                     else {
@@ -45790,7 +45790,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             };
             const animationAttribute = animationAttributeMap[animation] || "";
             const divPropertyMap = {
-                "background-color": color,
+                "background-color": bgColor,
                 "position": "fixed",
                 "z-index": "99999",
                 "padding-top": "20px",
@@ -46166,7 +46166,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             };
             const animationAttribute = animationAttributeMap[animation] || "";
             const divPropertyMap = {
-                "background-color": color,
+                "background-color": bgColor,
                 "position": "fixed",
                 "z-index": "99999",
                 "padding-top": "20px",
@@ -51803,11 +51803,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   useAuth: () => (/* binding */ useAuth)
 /* harmony export */ });
-/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
-/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/useQuery.js");
-/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/useMutation.js");
+/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
+/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/useQuery.js");
+/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/useMutation.js");
 /* harmony import */ var jwt_decode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! jwt-decode */ "./node_modules/jwt-decode/build/esm/index.js");
 /* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -51817,6 +51818,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -51847,7 +51849,7 @@ const base_url = "https://cb-server.web-8fb.workers.dev";
  * - logout: Clear authentication state
  */
 function useAuth() {
-    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_2__.useQueryClient)();
+    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_3__.useQueryClient)();
     const isExchangingToken = { current: false };
     // Function to attempt automatic token refresh on app load
     const attemptAutoRefresh = () => __awaiter(this, void 0, void 0, function* () {
@@ -51858,16 +51860,13 @@ function useAuth() {
                 return false;
             }
             // Check if there's existing auth data that might be expired or invalid
-            const storedUser = localStorage.getItem("consentbit-userinfo");
-            if (storedUser) {
+            const authData = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthData)();
+            if (authData && authData.sessionToken) {
                 try {
-                    const userData = JSON.parse(storedUser);
-                    if (userData.sessionToken) {
-                        const decodedToken = (0,jwt_decode__WEBPACK_IMPORTED_MODULE_0__.jwtDecode)(userData.sessionToken);
-                        // If token is not expired, don't need to refresh
-                        if (decodedToken.exp * 1000 > Date.now()) {
-                            return true; // Already have valid token
-                        }
+                    const decodedToken = (0,jwt_decode__WEBPACK_IMPORTED_MODULE_0__.jwtDecode)(authData.sessionToken);
+                    // If token is not expired, don't need to refresh
+                    if (decodedToken.exp * 1000 > Date.now()) {
+                        return true; // Already have valid token
                     }
                 }
                 catch (error) {
@@ -51882,42 +51881,43 @@ function useAuth() {
         }
     });
     // Query for managing auth state and token validation
-    const { data: authState, isLoading: isAuthLoading } = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_3__.useQuery)({
+    const { data: authState, isLoading: isAuthLoading } = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_4__.useQuery)({
         queryKey: ["auth"],
         queryFn: () => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
-            const storedUser = localStorage.getItem("consentbit-userinfo");
+            // Migrate existing auth data to sessionStorage on first load
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.migrateAuthDataToSessionStorage)();
+            const authData = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthData)();
             const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
             // Return initial state if no stored user or logged out
-            if (!storedUser || wasExplicitlyLoggedOut) {
+            if (!authData || wasExplicitlyLoggedOut) {
                 return { user: { firstName: "", email: "" }, sessionToken: "" };
             }
             try {
-                const userData = JSON.parse(storedUser);
-                if (!userData.sessionToken) {
+                if (!authData.sessionToken) {
                     return { user: { firstName: "", email: "" }, sessionToken: "" };
                 }
                 // Decode and validate token
-                const decodedToken = (0,jwt_decode__WEBPACK_IMPORTED_MODULE_0__.jwtDecode)(userData.sessionToken);
+                const decodedToken = (0,jwt_decode__WEBPACK_IMPORTED_MODULE_0__.jwtDecode)(authData.sessionToken);
                 if (decodedToken.exp * 1000 <= Date.now()) {
                     // Token expired - clear storage
-                    localStorage.removeItem("consentbit-userinfo");
+                    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.clearAuthData)();
                     return { user: { firstName: "", email: "" }, sessionToken: "" };
                 }
                 // Return valid auth state
                 const authState = {
                     user: {
-                        firstName: ((_a = decodedToken.user) === null || _a === void 0 ? void 0 : _a.firstName) || userData.firstName || "",
-                        email: ((_b = decodedToken.user) === null || _b === void 0 ? void 0 : _b.email) || userData.email || "",
-                        siteId: userData.siteId, // Include siteId from stored data
+                        firstName: ((_a = decodedToken.user) === null || _a === void 0 ? void 0 : _a.firstName) || authData.firstName || "",
+                        email: ((_b = decodedToken.user) === null || _b === void 0 ? void 0 : _b.email) || authData.email || "",
+                        siteId: authData.siteId, // Include siteId from stored data
                     },
-                    sessionToken: userData.sessionToken,
+                    sessionToken: authData.sessionToken,
                 };
                 return authState;
             }
             catch (error) {
                 // Clear invalid data
-                localStorage.removeItem("consentbit-userinfo");
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.clearAuthData)();
                 return { user: { firstName: "", email: "" }, sessionToken: "" };
             }
         }),
@@ -51928,7 +51928,7 @@ function useAuth() {
         gcTime: 1000 * 60 * 60, // Cache for 1 hour
     });
     // Mutation for exchanging ID token for session token
-    const tokenMutation = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_4__.useMutation)({
+    const tokenMutation = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_5__.useMutation)({
         mutationFn: (idToken) => __awaiter(this, void 0, void 0, function* () {
             // Get site info from Webflow
             const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_1__["default"].getSiteInfo();
@@ -51960,12 +51960,12 @@ function useAuth() {
                     siteId: data.siteId, // Store the siteId from server response
                     exp: decodedToken.exp,
                 };
-                // Update localStorage
-                localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                // Update sessionStorage for auth data
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthData)(userData);
                 localStorage.removeItem("explicitly_logged_out");
                 // Store site information after authentication
                 if (data.siteInfo) {
-                    localStorage.setItem('siteInfo', JSON.stringify(data.siteInfo));
+                    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setSiteInfo)(data.siteInfo);
                 }
                 // Directly update the query data instead of invalidating
                 queryClient.setQueryData(["auth"], {
@@ -52016,11 +52016,11 @@ function useAuth() {
                 siteId: siteInfo.siteId,
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
             };
-            localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthData)(userData);
             localStorage.removeItem("explicitly_logged_out");
             // Store site information after authentication
             if (siteInfo) {
-                localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setSiteInfo)(siteInfo);
             }
             // Update React Query cache
             queryClient.setQueryData(["auth"], {
@@ -52085,11 +52085,11 @@ function useAuth() {
                 siteId: data.siteId || siteInfo.siteId, // Use backend's siteId or fallback to requested siteId
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
             };
-            localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthData)(userData);
             localStorage.removeItem("explicitly_logged_out");
             // Store site information after authentication
             if (siteInfo) {
-                localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setSiteInfo)(siteInfo);
             }
             // Update React Query cache
             queryClient.setQueryData(["auth"], {
@@ -52748,6 +52748,232 @@ function getSessionTokenFromLocalStorage() {
         localStorage.removeItem("consentbit-userinfo");
         return null;
     }
+}
+
+
+/***/ }),
+
+/***/ "./src/util/authStorage.ts":
+/*!*********************************!*\
+  !*** ./src/util/authStorage.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   clearAllData: () => (/* binding */ clearAllData),
+/* harmony export */   clearAppData: () => (/* binding */ clearAppData),
+/* harmony export */   clearAuthData: () => (/* binding */ clearAuthData),
+/* harmony export */   debugStorageState: () => (/* binding */ debugStorageState),
+/* harmony export */   getAuthData: () => (/* binding */ getAuthData),
+/* harmony export */   getAuthStorageItem: () => (/* binding */ getAuthStorageItem),
+/* harmony export */   getSiteInfo: () => (/* binding */ getSiteInfo),
+/* harmony export */   isAuthenticated: () => (/* binding */ isAuthenticated),
+/* harmony export */   migrateAuthDataToSessionStorage: () => (/* binding */ migrateAuthDataToSessionStorage),
+/* harmony export */   removeAuthStorageItem: () => (/* binding */ removeAuthStorageItem),
+/* harmony export */   setAuthData: () => (/* binding */ setAuthData),
+/* harmony export */   setAuthStorageItem: () => (/* binding */ setAuthStorageItem),
+/* harmony export */   setSiteInfo: () => (/* binding */ setSiteInfo)
+/* harmony export */ });
+/**
+ * Authentication Storage Utility
+ * Uses sessionStorage for authentication data (cleared when tab closes)
+ * Uses localStorage for other persistent app data
+ */
+// Authentication keys that should use sessionStorage
+const AUTH_KEYS = [
+    'consentbit-userinfo',
+    'siteInfo',
+    'explicitly_logged_out'
+];
+/**
+ * Check if a key is an authentication key
+ */
+function isAuthKey(key) {
+    return AUTH_KEYS.includes(key) || key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user');
+}
+/**
+ * Get storage instance based on key type
+ */
+function getStorage(key) {
+    return isAuthKey(key) ? sessionStorage : localStorage;
+}
+/**
+ * Set item in appropriate storage
+ */
+function setAuthStorageItem(key, value) {
+    if (typeof window === 'undefined')
+        return;
+    const storage = getStorage(key);
+    storage.setItem(key, value);
+    console.log(`🔐 Stored ${isAuthKey(key) ? 'auth' : 'app'} data in ${isAuthKey(key) ? 'sessionStorage' : 'localStorage'}:`, key);
+}
+/**
+ * Get item from appropriate storage
+ */
+function getAuthStorageItem(key) {
+    if (typeof window === 'undefined')
+        return null;
+    const storage = getStorage(key);
+    return storage.getItem(key);
+}
+/**
+ * Remove item from appropriate storage
+ */
+function removeAuthStorageItem(key) {
+    if (typeof window === 'undefined')
+        return;
+    const storage = getStorage(key);
+    storage.removeItem(key);
+    console.log(`🗑️ Removed ${isAuthKey(key) ? 'auth' : 'app'} data from ${isAuthKey(key) ? 'sessionStorage' : 'localStorage'}:`, key);
+}
+/**
+ * Clear all authentication data (sessionStorage)
+ */
+function clearAuthData() {
+    if (typeof window === 'undefined')
+        return;
+    const keysToRemove = [];
+    // Clear from sessionStorage
+    for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && isAuthKey(key)) {
+            sessionStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    }
+    // Also clear from localStorage (for migration purposes)
+    AUTH_KEYS.forEach(key => {
+        if (localStorage.getItem(key) !== null) {
+            localStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    });
+    console.log('🧹 Cleared authentication data:', keysToRemove);
+}
+/**
+ * Clear all app data (localStorage) but preserve auth data
+ */
+function clearAppData() {
+    if (typeof window === 'undefined')
+        return;
+    const keysToRemove = [];
+    // Get all localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !isAuthKey(key)) {
+            localStorage.removeItem(key);
+            keysToRemove.push(key);
+        }
+    }
+    console.log('🧹 Cleared app data:', keysToRemove);
+}
+/**
+ * Clear all data (both localStorage and sessionStorage)
+ */
+function clearAllData() {
+    if (typeof window === 'undefined')
+        return;
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log('🧹 Cleared all data from both localStorage and sessionStorage');
+}
+/**
+ * Get authentication data from sessionStorage
+ */
+function getAuthData() {
+    const authData = getAuthStorageItem('consentbit-userinfo');
+    if (!authData)
+        return null;
+    try {
+        return JSON.parse(authData);
+    }
+    catch (error) {
+        console.error('Error parsing auth data:', error);
+        return null;
+    }
+}
+/**
+ * Set authentication data in sessionStorage
+ */
+function setAuthData(authData) {
+    setAuthStorageItem('consentbit-userinfo', JSON.stringify(authData));
+}
+/**
+ * Get site info from sessionStorage
+ */
+function getSiteInfo() {
+    const siteInfo = getAuthStorageItem('siteInfo');
+    if (!siteInfo)
+        return null;
+    try {
+        return JSON.parse(siteInfo);
+    }
+    catch (error) {
+        console.error('Error parsing site info:', error);
+        return null;
+    }
+}
+/**
+ * Set site info in sessionStorage
+ */
+function setSiteInfo(siteInfo) {
+    setAuthStorageItem('siteInfo', JSON.stringify(siteInfo));
+}
+/**
+ * Check if user is authenticated
+ */
+function isAuthenticated() {
+    const authData = getAuthData();
+    if (!authData)
+        return false;
+    // Check if token is expired
+    const now = Math.floor(Date.now() / 1000);
+    return authData.exp > now;
+}
+/**
+ * Migration function to move existing auth data from localStorage to sessionStorage
+ */
+function migrateAuthDataToSessionStorage() {
+    if (typeof window === 'undefined')
+        return;
+    console.log('🔄 Migrating authentication data from localStorage to sessionStorage...');
+    AUTH_KEYS.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            sessionStorage.setItem(key, value);
+            localStorage.removeItem(key);
+            console.log(`✅ Migrated ${key} to sessionStorage`);
+        }
+    });
+    // Also migrate any site-specific auth keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
+            const value = localStorage.getItem(key);
+            if (value) {
+                sessionStorage.setItem(key, value);
+                localStorage.removeItem(key);
+                console.log(`✅ Migrated ${key} to sessionStorage`);
+            }
+        }
+    }
+    console.log('✅ Migration completed');
+}
+/**
+ * Debug function to show current storage state
+ */
+function debugStorageState() {
+    if (typeof window === 'undefined')
+        return;
+    console.log('🔍 Current Storage State:');
+    console.log('📦 localStorage keys:', Object.keys(localStorage));
+    console.log('🔐 sessionStorage keys:', Object.keys(sessionStorage));
+    const authData = getAuthData();
+    const siteInfo = getSiteInfo();
+    console.log('👤 Auth data:', authData);
+    console.log('🏢 Site info:', siteInfo);
+    console.log('✅ Is authenticated:', isAuthenticated());
 }
 
 
