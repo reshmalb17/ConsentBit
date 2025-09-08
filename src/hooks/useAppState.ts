@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePersistentState } from './usePersistentState';
+import { getAuthStorageItem, removeAuthStorageItem } from '../util/authStorage';
 
 // Types
 
@@ -26,17 +27,19 @@ type UserData = {
   siteId: string;
 };
 
-// Helper function to get session token from localStorage
+// Helper function to get session token from sessionStorage
 function getSessionTokenFromLocalStorage(): string | null {
   if (typeof window !== 'undefined') {
-    const userinfo = localStorage.getItem("consentbit-userinfo");
+    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+    const userinfo = getAuthStorageItem("consentbit-userinfo");
     if (!userinfo) return null;
     try {
       const tokenss = JSON.parse(userinfo);
       return tokenss?.sessionToken || null;
     } catch {
       // Invalid JSON, clear it
-      localStorage.removeItem("consentbit-userinfo");
+      // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+      removeAuthStorageItem("consentbit-userinfo");
       return null;
     }
   }
@@ -130,7 +133,8 @@ export const useAppState = () => {
   const [isCustomizationTab, setIsCustomizationTab] = usePersistentState("isCustomizationTab", false);
 
   // Local storage data
-  const userinfo = localStorage.getItem("consentbit-userinfo");
+  // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+  const userinfo = getAuthStorageItem("consentbit-userinfo");
   const tokenss = JSON.parse(userinfo || '{}');
   //Aniamation states 
   const [animation, setAnimation] = usePersistentState('animation', "fade");

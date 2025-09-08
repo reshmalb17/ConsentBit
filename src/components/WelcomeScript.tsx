@@ -9,6 +9,7 @@ import { customCodeApi } from "../services/api";
 import { ScriptCategory } from "../types/types";
 import PulseAnimation from "./PulseAnimation";
 import {usePersistentState} from "../hooks/usePersistentState";
+import { getAuthStorageItem, setAuthStorageItem, removeAuthStorageItem } from "../util/authStorage";
 import webflow from "../types/webflowtypes";
 const infologo = new URL("../assets/info-logo.svg", import.meta.url).href;
 const thumbnail = new URL("../assets/Cover.jpg", import.meta.url).href;
@@ -51,7 +52,8 @@ useEffect(() => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null);
     const categories = ["Essential", "Personalization", "Analytics", "Marketing"];
-    const userinfo = localStorage.getItem("consentbit-userinfo");
+    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+    const userinfo = getAuthStorageItem("consentbit-userinfo");
     const [showPopup, setShowPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showAuthPopup, setShowAuthPopup] = usePersistentState("script_showAuthPopup", false);
@@ -71,11 +73,12 @@ useEffect(() => {
         return script.src || script.fullTag?.replace(/\s*data-category\s*=\s*"[^"]*"/i, '') || null;
     }, []);
 
-    // Function to clear any stale script data from localStorage
+    // Function to clear any stale script data from sessionStorage
     const clearStaleScriptData = useCallback(() => {
-        // Clear script data from localStorage to prevent showing old data
-        localStorage.removeItem('scriptContext_scripts');
-        // Also clear any other script-related localStorage keys
+        // Clear script data from sessionStorage to prevent showing old data
+        // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+        removeAuthStorageItem('scriptContext_scripts');
+        // Also clear any other script-related sessionStorage keys
         const keysToRemove = [
             'scriptContext_scripts',
             'script_isSaving',
@@ -85,7 +88,8 @@ useEffect(() => {
             'script_showAuthPopup',
             'script_copiedScriptIndex'
         ];
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        // COMMENTED OUT: keysToRemove.forEach(key => localStorage.removeItem(key));
+        keysToRemove.forEach(key => removeAuthStorageItem(key));
     }, []);
 
 
@@ -120,7 +124,8 @@ useEffect(() => {
             if (userData.siteId !== currentSiteId) {
                 const oldSiteId = userData.siteId;
                 userData.siteId = currentSiteId;
-                localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                setAuthStorageItem("consentbit-userinfo", JSON.stringify(userData));
                 console.log('🔄 Updated stored site ID from', oldSiteId, 'to', currentSiteId);
                 console.log('🎯 This should fix the backend authentication issue');
             } else {

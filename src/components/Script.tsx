@@ -5,6 +5,7 @@ import { customCodeApi } from "../services/api";
 import { useScriptContext } from "../context/ScriptContext";
 import PulseAnimation from './PulseAnimation';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { getAuthStorageItem, setAuthStorageItem, removeAuthStorageItem } from '../util/authStorage';
 import webflow from '../types/webflowtypes';
 
 const questionmark = new URL("../assets/blue question.svg", import.meta.url).href;
@@ -71,7 +72,8 @@ const Script: React.FC<{
                     
                     // Clear scripts immediately
                     setScripts([]);
-                    localStorage.removeItem('scriptContext_scripts');
+                    // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+                    removeAuthStorageItem('scriptContext_scripts');
                     
                     // Update site info
                     setSiteInfo(currentSiteInfo);
@@ -101,7 +103,8 @@ const Script: React.FC<{
             console.log('🔄 Regenerating session token for current site...');
             
             // Clear old token first to force regeneration
-            localStorage.removeItem("consentbit-userinfo");
+            // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+            removeAuthStorageItem("consentbit-userinfo");
             console.log('🗑️ Cleared old session token');
             
             // Get new ID token from Webflow
@@ -167,7 +170,8 @@ const Script: React.FC<{
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
             };
 
-            localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+            // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+            setAuthStorageItem("consentbit-userinfo", JSON.stringify(userData));
             console.log('✅ Session token regenerated successfully for site:', siteInfo.siteId);
             console.log('🔍 New token payload should contain siteId:', siteInfo.siteId);
             
@@ -180,22 +184,50 @@ const Script: React.FC<{
 
 
 
-    const fetchScriptData = useCallback(async () => {
+    const fetchScriptData = useCallback(async (forceRefresh = false) => {
         setIsLoading(true);
-        // Clear existing scripts before fetching new ones to prevent cross-site contamination
-        setScripts([]);
-        
-        // Also clear from localStorage to ensure complete cleanup
-        localStorage.removeItem('scriptContext_scripts');
         
         try {
-            const userinfo = localStorage.getItem("consentbit-userinfo");
+            // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+            const userinfo = getAuthStorageItem("consentbit-userinfo");
             const userInfo = JSON.parse(userinfo || "{}");
             const tokens = userInfo?.sessionToken;
             
             if (!tokens) {
                 setIsLoading(false);
                 return;
+            }
+            
+            // Check if scripts are already cached in sessionStorage for this site (only if not forcing refresh)
+            if (!forceRefresh) {
+                const cachedScripts = getAuthStorageItem('scriptContext_scripts');
+                if (cachedScripts) {
+                    try {
+                        const parsedScripts = JSON.parse(cachedScripts);
+                        if (Array.isArray(parsedScripts) && parsedScripts.length > 0) {
+                            console.log('✅ Using cached scripts from sessionStorage');
+                            setScripts(parsedScripts);
+                            setIsLoading(false);
+                            return; // Use cached data, no API call needed
+                        }
+                    } catch (error) {
+                        console.log('⚠️ Failed to parse cached scripts, fetching fresh data');
+                    }
+                }
+            } else {
+                console.log('🔄 Force refresh requested - bypassing cache');
+            }
+            
+            // Clear existing scripts before fetching new ones to prevent cross-site contamination
+            setScripts([]);
+            
+            // Also clear from sessionStorage to ensure complete cleanup
+            // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+            removeAuthStorageItem('scriptContext_scripts');
+            
+            // If forcing refresh, also clear any cached scripts
+            if (forceRefresh) {
+                console.log('🧹 Clearing cached scripts for fresh scan');
             }
 
             // Get current site info to verify we're getting scripts for the right site
@@ -230,8 +262,10 @@ const Script: React.FC<{
                 console.log('⚠️ Session token may be for wrong site - regenerating...');
                 
                 // Clear old token data completely
-                localStorage.removeItem("consentbit-userinfo");
-                localStorage.removeItem("scriptContext_scripts");
+                // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+                removeAuthStorageItem("consentbit-userinfo");
+                // COMMENTED OUT: localStorage.removeItem("scriptContext_scripts");
+                removeAuthStorageItem("scriptContext_scripts");
                 
                 // Regenerate session token for the new site
                 const newToken = await regenerateSessionToken();
@@ -343,22 +377,24 @@ const Script: React.FC<{
                 if (newToken) {
                     console.log('✅ Token regenerated, now fetching scripts...');
                     // Trigger a new script fetch
-                    fetchScriptData();
+                    fetchScriptData(true); // Force refresh after token regeneration
                 }
             };
             
             (window as any).forceTokenRegeneration = async () => {
                 console.log('🚀 Force regenerating token...');
                 // Clear everything first
-                localStorage.removeItem("consentbit-userinfo");
-                localStorage.removeItem("scriptContext_scripts");
+                // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+                removeAuthStorageItem("consentbit-userinfo");
+                // COMMENTED OUT: localStorage.removeItem("scriptContext_scripts");
+                removeAuthStorageItem("scriptContext_scripts");
                 
                 // Wait a bit then regenerate
                 setTimeout(async () => {
                     const newToken = await regenerateSessionToken();
                     if (newToken) {
                         console.log('✅ Force regeneration complete, fetching scripts...');
-                        fetchScriptData();
+                        fetchScriptData(true); // Force refresh after token regeneration
                     }
                 }, 1000);
             };
@@ -387,7 +423,8 @@ const Script: React.FC<{
             (window as any).printServerResponse = async () => {
                 console.log('🔄 Manually fetching server response...');
                 try {
-                    const userinfo = localStorage.getItem("consentbit-userinfo");
+                    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+                    const userinfo = getAuthStorageItem("consentbit-userinfo");
                     const userInfo = JSON.parse(userinfo || "{}");
                     const tokens = userInfo?.sessionToken;
                     
@@ -641,8 +678,19 @@ const Script: React.FC<{
                     // For new scripts, use the categories parsed from data-category attribute
                     return newScript;
                 });
+                
+                const finalScripts = mergedScripts.filter(script => script.identifier !== null);
+                
+                // Cache the scripts in sessionStorage for future use
+                try {
+                    setAuthStorageItem('scriptContext_scripts', JSON.stringify(finalScripts));
+                    console.log('💾 Cached scripts to sessionStorage:', finalScripts.length, 'scripts');
+                } catch (error) {
+                    console.log('⚠️ Failed to cache scripts:', error);
+                }
+                
                 setIsLoading(false);
-                return mergedScripts.filter(script => script.identifier !== null);
+                return finalScripts;
             });
         } catch (error) {
             setSaveStatus({
@@ -657,7 +705,7 @@ const Script: React.FC<{
 
     useEffect(() => {
         if (fetchScripts) {
-            fetchScriptData();
+            fetchScriptData(true); // Force refresh when triggered by rescan button
             setFetchScripts(false);
         }
     }, [fetchScripts, fetchScriptData, setFetchScripts]);
@@ -666,7 +714,8 @@ const Script: React.FC<{
         setIsSaving(true);
         setSaveStatus(null);
         try {
-            const userinfo = localStorage.getItem("consentbit-userinfo");
+            // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+            const userinfo = getAuthStorageItem("consentbit-userinfo");
             const tokens = JSON.parse(userinfo || "{}")?.sessionToken;
             if (!tokens) {
                 return;

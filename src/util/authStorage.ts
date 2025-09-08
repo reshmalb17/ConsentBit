@@ -14,30 +14,38 @@ export interface AuthData {
 
 export interface SiteInfo {
   siteId: string;
-  name: string;
+  name?: string;
+  siteName?: string;
   shortName: string;
+  url?: string;
   // Add other site info properties as needed
 }
 
-// Authentication keys that should use sessionStorage
-const AUTH_KEYS = [
+// ALL keys now use sessionStorage (commented out localStorage usage)
+const ALL_KEYS = [
   'consentbit-userinfo',
   'siteInfo',
-  'explicitly_logged_out'
+  'explicitly_logged_out',
+  'cookiePreferences',
+  'selectedOptions',
+  'scriptContext_scripts',
+  'cookieBannerAdded',
+  'bannerAdded',
+  'wf_hybrid_user'
 ];
 
 /**
- * Check if a key is an authentication key
+ * Check if a key should use sessionStorage (now all keys do)
  */
-function isAuthKey(key: string): boolean {
-  return AUTH_KEYS.includes(key) || key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user');
+function isSessionStorageKey(key: string): boolean {
+  return true; // All keys now use sessionStorage
 }
 
 /**
- * Get storage instance based on key type
+ * Get storage instance - now always sessionStorage
  */
 function getStorage(key: string): Storage {
-  return isAuthKey(key) ? sessionStorage : localStorage;
+  return sessionStorage; // Always use sessionStorage now
 }
 
 /**
@@ -49,7 +57,7 @@ export function setAuthStorageItem(key: string, value: string): void {
   const storage = getStorage(key);
   storage.setItem(key, value);
   
-  console.log(`🔐 Stored ${isAuthKey(key) ? 'auth' : 'app'} data in ${isAuthKey(key) ? 'sessionStorage' : 'localStorage'}:`, key);
+  console.log(`🔐 Stored data in sessionStorage:`, key);
 }
 
 /**
@@ -71,11 +79,11 @@ export function removeAuthStorageItem(key: string): void {
   const storage = getStorage(key);
   storage.removeItem(key);
   
-  console.log(`🗑️ Removed ${isAuthKey(key) ? 'auth' : 'app'} data from ${isAuthKey(key) ? 'sessionStorage' : 'localStorage'}:`, key);
+  console.log(`🗑️ Removed data from sessionStorage:`, key);
 }
 
 /**
- * Clear all authentication data (sessionStorage)
+ * Clear all data (sessionStorage only now)
  */
 export function clearAuthData(): void {
   if (typeof window === 'undefined') return;
@@ -85,53 +93,55 @@ export function clearAuthData(): void {
   // Clear from sessionStorage
   for (let i = 0; i < sessionStorage.length; i++) {
     const key = sessionStorage.key(i);
-    if (key && isAuthKey(key)) {
+    if (key) {
       sessionStorage.removeItem(key);
       keysToRemove.push(key);
     }
   }
   
-  // Also clear from localStorage (for migration purposes)
-  AUTH_KEYS.forEach(key => {
-    if (localStorage.getItem(key) !== null) {
-      localStorage.removeItem(key);
-      keysToRemove.push(key);
-    }
-  });
+  // COMMENTED OUT: Also clear from localStorage (for migration purposes)
+  // AUTH_KEYS.forEach(key => {
+  //   if (localStorage.getItem(key) !== null) {
+  //     localStorage.removeItem(key);
+  //     keysToRemove.push(key);
+  //   }
+  // });
   
-  console.log('🧹 Cleared authentication data:', keysToRemove);
+  console.log('🧹 Cleared all data from sessionStorage:', keysToRemove);
 }
 
 /**
- * Clear all app data (localStorage) but preserve auth data
+ * COMMENTED OUT: Clear all app data (localStorage) but preserve auth data
+ * Now everything is in sessionStorage
  */
 export function clearAppData(): void {
   if (typeof window === 'undefined') return;
   
-  const keysToRemove: string[] = [];
+  // COMMENTED OUT: localStorage usage
+  // const keysToRemove: string[] = [];
   
-  // Get all localStorage keys
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && !isAuthKey(key)) {
-      localStorage.removeItem(key);
-      keysToRemove.push(key);
-    }
-  }
+  // // Get all localStorage keys
+  // for (let i = 0; i < localStorage.length; i++) {
+  //   const key = localStorage.key(i);
+  //   if (key && !isAuthKey(key)) {
+  //     localStorage.removeItem(key);
+  //     keysToRemove.push(key);
+  //   }
+  // }
   
-  console.log('🧹 Cleared app data:', keysToRemove);
+  console.log('🧹 clearAppData: All data now in sessionStorage, no localStorage to clear');
 }
 
 /**
- * Clear all data (both localStorage and sessionStorage)
+ * Clear all data (sessionStorage only now)
  */
 export function clearAllData(): void {
   if (typeof window === 'undefined') return;
   
-  localStorage.clear();
+  // COMMENTED OUT: localStorage.clear();
   sessionStorage.clear();
   
-  console.log('🧹 Cleared all data from both localStorage and sessionStorage');
+  console.log('🧹 Cleared all data from sessionStorage');
 }
 
 /**
@@ -191,36 +201,40 @@ export function isAuthenticated(): boolean {
 }
 
 /**
- * Migration function to move existing auth data from localStorage to sessionStorage
+ * Migration function to move existing data from localStorage to sessionStorage
  */
 export function migrateAuthDataToSessionStorage(): void {
   if (typeof window === 'undefined') return;
   
-  console.log('🔄 Migrating authentication data from localStorage to sessionStorage...');
+  console.log('🔄 [DEBUG] Migration function called');
+  const migrationStartTime = performance.now();
   
-  AUTH_KEYS.forEach(key => {
+  // Check if migration has already been completed in this session
+  const migrationCompleted = sessionStorage.getItem('migration_completed');
+  if (migrationCompleted) {
+    console.log('🔄 [DEBUG] Migration already completed, skipping');
+    return; // Migration already done, skip expensive operations
+  }
+  
+  console.log('🔄 [DEBUG] Migrating essential data from localStorage to sessionStorage...');
+  
+  // Only migrate essential keys to avoid expensive operations
+  const essentialKeys = ['consentbit-userinfo', 'siteInfo', 'explicitly_logged_out'];
+  let migratedCount = 0;
+  
+  essentialKeys.forEach(key => {
     const value = localStorage.getItem(key);
     if (value) {
       sessionStorage.setItem(key, value);
       localStorage.removeItem(key);
-      console.log(`✅ Migrated ${key} to sessionStorage`);
+      migratedCount++;
+      console.log(`✅ [DEBUG] Migrated ${key} to sessionStorage`);
     }
   });
   
-  // Also migrate any site-specific auth keys
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
-      const value = localStorage.getItem(key);
-      if (value) {
-        sessionStorage.setItem(key, value);
-        localStorage.removeItem(key);
-        console.log(`✅ Migrated ${key} to sessionStorage`);
-      }
-    }
-  }
-  
-  console.log('✅ Migration completed');
+  // Mark migration as completed for this session
+  sessionStorage.setItem('migration_completed', 'true');
+  console.log(`✅ [DEBUG] Migration completed - migrated ${migratedCount} essential keys to sessionStorage in ${performance.now() - migrationStartTime}ms`);
 }
 
 /**
@@ -230,7 +244,7 @@ export function debugStorageState(): void {
   if (typeof window === 'undefined') return;
   
   console.log('🔍 Current Storage State:');
-  console.log('📦 localStorage keys:', Object.keys(localStorage));
+  // COMMENTED OUT: console.log('📦 localStorage keys:', Object.keys(localStorage));
   console.log('🔐 sessionStorage keys:', Object.keys(sessionStorage));
   
   const authData = getAuthData();

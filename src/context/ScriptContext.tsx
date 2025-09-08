@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect } from "react";
 import { ScriptType } from "../types/types"; // adjust the path
 import { usePersistentState } from "../hooks/usePersistentState";
+import { removeAuthStorageItem } from "../util/authStorage";
 
 type ExtendedScriptType = ScriptType & { isSaved?: boolean };
 
@@ -20,14 +21,16 @@ export const ScriptProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Clear scripts on component mount to prevent cross-site contamination
   useEffect(() => {
     setScripts([]);
-    // Also clear from localStorage directly to ensure complete cleanup
-    localStorage.removeItem('scriptContext_scripts');
+    // Also clear from sessionStorage directly to ensure complete cleanup
+    // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+    removeAuthStorageItem('scriptContext_scripts');
   }, [setScripts]);
 
   const clearScripts = () => {
     setScripts([]);
-    // Also clear from localStorage directly
-    localStorage.removeItem('scriptContext_scripts');
+    // Also clear from sessionStorage directly
+    // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+    removeAuthStorageItem('scriptContext_scripts');
   };
 
   return (

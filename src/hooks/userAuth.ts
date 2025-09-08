@@ -2,7 +2,7 @@ import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { jwtDecode } from "jwt-decode";
 import { User, DecodedToken } from "../types/types";
 import webflow from "../types/webflowtypes";
-import { setAuthData, setSiteInfo, getAuthData, getSiteInfo, isAuthenticated, migrateAuthDataToSessionStorage, clearAuthData } from "../util/authStorage";
+import { setAuthData, setSiteInfo, getAuthData, getSiteInfo, isAuthenticated, migrateAuthDataToSessionStorage, clearAuthData, setAuthStorageItem, removeAuthStorageItem, getAuthStorageItem } from "../util/authStorage";
 
 const base_url = "https://cb-server.web-8fb.workers.dev";
 
@@ -43,9 +43,13 @@ export function useAuth() {
   // Function to attempt automatic token refresh on app load
   const attemptAutoRefresh = async (): Promise<boolean> => {
     try {
+      console.log('🔐 [DEBUG] attemptAutoRefresh started');
+      
       // Check if user was explicitly logged out
-      const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+      // COMMENTED OUT: const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+      const wasExplicitlyLoggedOut = getAuthStorageItem("explicitly_logged_out");
       if (wasExplicitlyLoggedOut) {
+        console.log('🔐 [DEBUG] User was explicitly logged out, skipping auth');
         return false;
       }
 
@@ -56,16 +60,31 @@ export function useAuth() {
           const decodedToken = jwtDecode(authData.sessionToken) as DecodedToken;
           // If token is not expired, don't need to refresh
           if (decodedToken.exp * 1000 > Date.now()) {
+            console.log('🔐 [DEBUG] Valid token found, no refresh needed');
             return true; // Already have valid token
           }
+          console.log('🔐 [DEBUG] Token expired, attempting refresh');
         } catch (error) {
+          console.log('🔐 [DEBUG] Invalid token data, attempting refresh');
           // Invalid token data, continue with refresh attempt
         }
       }
 
-      // Attempt silent auth to refresh token
-      return await attemptSilentAuth();
+      // Attempt silent auth to refresh token with timeout
+      console.log('🔐 [DEBUG] Attempting silent auth...');
+      const silentAuthPromise = attemptSilentAuth();
+      const timeoutPromise = new Promise<boolean>((resolve) => {
+        setTimeout(() => {
+          console.log('🔐 [DEBUG] Silent auth timeout');
+          resolve(false);
+        }, 3000); // 3 second timeout for silent auth
+      });
+      
+      const result = await Promise.race([silentAuthPromise, timeoutPromise]);
+      console.log('🔐 [DEBUG] Silent auth result:', result);
+      return result;
     } catch (error) {
+      console.log('🔐 [DEBUG] attemptAutoRefresh error:', error);
       return false;
     }
   };
@@ -74,16 +93,18 @@ export function useAuth() {
   const { data: authState, isLoading: isAuthLoading } = useQuery<AuthState>({
     queryKey: ["auth"],
     queryFn: async () => {
-      // Migrate existing auth data to sessionStorage on first load
+      const authStartTime = performance.now();
+      // Run lightweight migration for existing users (only essential keys, once per session)
       migrateAuthDataToSessionStorage();
       
       const authData = getAuthData();
-      const wasExplicitlyLoggedOut = localStorage.getItem(
-        "explicitly_logged_out"
-      );
+      // COMMENTED OUT: const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+      const wasExplicitlyLoggedOut = getAuthStorageItem("explicitly_logged_out");
 
       // Return initial state if no stored user or logged out
       if (!authData || wasExplicitlyLoggedOut) {
+        console.log('🔐 [DEBUG] No auth data or explicitly logged out, returning empty state');
+        console.log('🔐 [DEBUG] useAuth queryFn completed in:', performance.now() - authStartTime, 'ms');
         return { user: { firstName: "", email: "" }, sessionToken: "" };
       }
 
@@ -166,7 +187,8 @@ export function useAuth() {
 
                  // Update sessionStorage for auth data
          setAuthData(userData);
-        localStorage.removeItem("explicitly_logged_out");
+        // COMMENTED OUT: localStorage.removeItem("explicitly_logged_out");
+        removeAuthStorageItem("explicitly_logged_out");
 
         // Store site information after authentication
         if (data.siteInfo) {
@@ -229,7 +251,8 @@ export function useAuth() {
       };
 
       setAuthData(userData);
-      localStorage.removeItem("explicitly_logged_out");
+      // COMMENTED OUT: localStorage.removeItem("explicitly_logged_out");
+      removeAuthStorageItem("explicitly_logged_out");
 
       // Store site information after authentication
       if (siteInfo) {
@@ -310,7 +333,8 @@ export function useAuth() {
       };
 
              setAuthData(userData);
-      localStorage.removeItem("explicitly_logged_out");
+      // COMMENTED OUT: localStorage.removeItem("explicitly_logged_out");
+      removeAuthStorageItem("explicitly_logged_out");
 
       // Store site information after authentication
       if (siteInfo) {
@@ -330,7 +354,8 @@ export function useAuth() {
       return data;
 
     } catch (error) {
-      localStorage.removeItem("consentbit-userinfo");
+      // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+      clearAuthData();
       throw error;
     }
   };
@@ -338,8 +363,10 @@ export function useAuth() {
   // Function to handle user logout
   const logout = () => {
     // Set logout flag and clear storage
-    localStorage.setItem("explicitly_logged_out", "true");
-    localStorage.removeItem("consentbit-userinfo");
+    // COMMENTED OUT: localStorage.setItem("explicitly_logged_out", "true");
+    // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+    setAuthStorageItem("explicitly_logged_out", "true");
+    clearAuthData();
     queryClient.setQueryData(["auth"], {
       user: { firstName: "", email: "" },
       sessionToken: "",
@@ -372,8 +399,10 @@ export function useAuth() {
         await exchangeAndVerifyIdToken();
       } catch (error) {
         // Clear any partial auth state
-        localStorage.removeItem("consentbit-userinfo");
-        localStorage.setItem("explicitly_logged_out", "true");
+        // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+        // COMMENTED OUT: localStorage.setItem("explicitly_logged_out", "true");
+        clearAuthData();
+        setAuthStorageItem("explicitly_logged_out", "true");
       }
     };
 

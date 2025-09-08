@@ -18,6 +18,7 @@ const copyScript = new URL("../assets/copy script.svg", import.meta.url).href;
 
 import { customCodeApi } from "../services/api";
 import { useAuth } from "../hooks/userAuth";
+import { getAuthStorageItem, setAuthStorageItem, removeAuthStorageItem } from "../util/authStorage";
 import webflow, { WebflowAPI } from '../types/webflowtypes';
 import { CodeApplication } from "../types/types";
 import createCookiePreferences from "../hooks/gdprPreference";
@@ -76,12 +77,44 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [primaryButtonText, setPrimaryButtonText] = usePersistentState("primaryButtonText", "#FFFFFF");
   const [activeTab, setActiveTab] = usePersistentState("activeTab", initialActiveTab);
   
+  // Track if we've already set activeTab from API to prevent conflicts
+  const [hasSetActiveTabFromApi, setHasSetActiveTabFromApi] = useState(false);
+  
+  // Debug activeTab changes and validate tab
+  useEffect(() => {
+    console.log('🔄 activeTab state changed to:', activeTab);
+    
+    // Validate that activeTab is one of the valid tabs
+    const validTabs = ["Settings", "Customization", "Script"];
+    if (!validTabs.includes(activeTab)) {
+      console.log('⚠️ Invalid activeTab detected:', activeTab, 'falling back to Settings');
+      setActiveTab("Settings");
+    }
+  }, [activeTab]);
+  
+  // Wrapper function to set activeTab and track that it was set by user interaction
+  const handleSetActiveTab = (newTab: string) => {
+    console.log('🔄 User clicked tab, setting activeTab to:', newTab);
+    setActiveTab(newTab);
+    setHasSetActiveTabFromApi(true); // Mark that user has interacted with tabs
+  };
+  
   // Override activeTab with initialActiveTab prop when provided (only on mount)
   useEffect(() => {
-    if (initialActiveTab && initialActiveTab !== activeTab) {
+    if (initialActiveTab && initialActiveTab !== activeTab && !hasSetActiveTabFromApi) {
+      console.log('🔄 Setting activeTab from initialActiveTab prop:', initialActiveTab);
       setActiveTab(initialActiveTab);
     }
-  }, [initialActiveTab]); // Remove activeTab and setActiveTab from dependencies
+  }, [initialActiveTab, activeTab, hasSetActiveTabFromApi]);
+  
+  // Debug component mount and initial values
+  useEffect(() => {
+    console.log('🚀 CustomizationTab mounted with:', {
+      initialActiveTab,
+      currentActiveTab: activeTab,
+      hasSetActiveTabFromApi
+    });
+  }, []); // Only run on mount
   const [expires, setExpires] = usePersistentState("expires", "");
   const [size, setSize] = usePersistentState("size", "12");
   const [isActive, setIsActive] = usePersistentState("isActive", false);
@@ -127,8 +160,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [cookieExpiration, setCookieExpiration] = usePersistentState("cookieExpiration", "120");
   const [showTooltip, setShowTooltip] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
-  const userinfo = localStorage.getItem("consentbit-userinfo");
-  const tokenss = JSON.parse(userinfo);
+  // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+  const userinfo = getAuthStorageItem("consentbit-userinfo");
+  const tokenss = userinfo ? JSON.parse(userinfo) : null;
   const [sessionTokenFromLocalStorage, setSessionToken] = useState(getSessionTokenFromLocalStorage());
   const [showChoosePlan, setShowChoosePlan] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -298,8 +332,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
   const [cookiePreferences, setCookiePreferences] = useState(() => {
-    // Get stored preferences from localStorage or use default values
-    const savedPreferences = localStorage.getItem("cookiePreferences");
+    // Get stored preferences from sessionStorage or use default values
+    // COMMENTED OUT: const savedPreferences = localStorage.getItem("cookiePreferences");
+    const savedPreferences = getAuthStorageItem("cookiePreferences");
     return savedPreferences
       ? JSON.parse(savedPreferences)
       : {
@@ -311,12 +346,14 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
   useEffect(() => {
     // Only save cookie preferences if user is authenticated
-    const userInfo = localStorage.getItem('consentbit-userinfo');
+    // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+    const userInfo = getAuthStorageItem('consentbit-userinfo');
     if (userInfo) {
       try {
         const parsed = JSON.parse(userInfo);
         if (parsed?.sessionToken && parsed?.email) {
-          localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+          // COMMENTED OUT: localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+          setAuthStorageItem("cookiePreferences", JSON.stringify(cookiePreferences));
         }
       } catch (error) {
         // Invalid auth data, don't save
@@ -331,8 +368,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         [category]: !prev[category],
       };
 
-      // Save new state to localStorage
-      localStorage.setItem("cookiePreferences", JSON.stringify(updatedPreferences));
+      // Save new state to sessionStorage
+      // COMMENTED OUT: localStorage.setItem("cookiePreferences", JSON.stringify(updatedPreferences));
+      setAuthStorageItem("cookiePreferences", JSON.stringify(updatedPreferences));
 
       return updatedPreferences;
     });
@@ -346,13 +384,15 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         ? prev.filter((item) => item !== option) // Remove if already selected
         : [...prev, option]; // Add if not selected
 
-      localStorage.setItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
+      // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
+      setAuthStorageItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
       return updatedOptions;
     });
   };
 
   useEffect(() => {
-    localStorage.setItem("selectedOptions", JSON.stringify(selectedOptions));
+    // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(selectedOptions));
+    setAuthStorageItem("selectedOptions", JSON.stringify(selectedOptions));
   }, [selectedOptions]);
 
 
@@ -373,7 +413,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     const fetchPages = async () => {
       try {
 
-        const localstoragedata = localStorage.getItem("consentbit-userinfo");
+        // COMMENTED OUT: const localstoragedata = localStorage.getItem("consentbit-userinfo");
+        const localstoragedata = getAuthStorageItem("consentbit-userinfo");
         if (localstoragedata) {
           try {
             const parsed = JSON.parse(localstoragedata);
@@ -447,7 +488,27 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             // Set all the values with proper checks
             if (response.cookieExpiration !== undefined) setCookieExpiration(response.cookieExpiration);
             if (response.bgColor !== undefined) setBgColor(response.bgColor);
-            if (response.activeTab !== undefined) setActiveTab(response.activeTab);
+                if (response.activeTab !== undefined) {
+                  console.log('🔄 API wants to set activeTab to:', response.activeTab, 'current activeTab:', activeTab);
+                  
+                  // Map API tab names to component tab names
+                  let mappedTab = response.activeTab;
+                  if (response.activeTab === "general") {
+                    mappedTab = "Settings";
+                    console.log('🔄 Mapping API "general" tab to "Settings"');
+                  }
+                  
+                  // Don't override activeTab if user is currently in Script tab (to prevent API from switching away from Script tab during rescan)
+                  if (activeTab === "Script") {
+                    console.log('🔄 Skipping activeTab update from API - user is actively using Script tab');
+                  } else if (!hasSetActiveTabFromApi || mappedTab !== activeTab) {
+                    console.log('🔄 Setting activeTab from API response:', mappedTab);
+                    setActiveTab(mappedTab);
+                    setHasSetActiveTabFromApi(true);
+                  } else {
+                    console.log('🔄 Skipping activeTab update from API - already set or same value');
+                  }
+                }
                          // Removed activeMode setting - no longer needed
             if (response.selectedtext !== undefined) settextSelected(response.selectedtext);
             if (response.fetchScripts !== undefined) setFetchScripts(response.fetchScripts);
@@ -617,7 +678,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     setShowPopup(false); // close the first popup
     setShowLoadingPopup(true); // show loading popup
     setIsLoading(true);
-    // const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+    // COMMENTED OUT: const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+    // const isBannerAlreadyAdded = getAuthStorageItem("cookieBannerAdded") === "true";
     try {
 
       const allElements = await webflow.getAllElements();
@@ -1067,7 +1129,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     setShowPopup(false);
     setShowLoadingPopup(true);
     setIsLoading(true);
-    // const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+    // COMMENTED OUT: const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+    // const isBannerAlreadyAdded = getAuthStorageItem("cookieBannerAdded") === "true";
     try {
 
       const allElements = await webflow.getAllElements();
@@ -1539,7 +1602,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   //banner details
   const saveBannerDetails = async () => {
     try {
-      const userinfo = localStorage.getItem("consentbit-userinfo");
+      // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+      const userinfo = getAuthStorageItem("consentbit-userinfo");
       if (!userinfo) {
         return;
       }
@@ -1771,6 +1835,15 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
           openAuthScreen();
           return;
         }
+        
+        // Check if subscription status is already cached in sessionStorage
+        const cachedSubscription = sessionStorage.getItem('subscription_status');
+        if (cachedSubscription) {
+          const hasSubscription = JSON.parse(cachedSubscription);
+          setIsSubscribed(Boolean(hasSubscription));
+          return; // Use cached data, no API call needed
+        }
+        
         const result = await checkSubscription(accessToken);
 
         // Check if any domain has isSubscribed === true
@@ -1778,7 +1851,10 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
           (status: { isSubscribed: boolean }) => status.isSubscribed === true
         );
 
-                 setIsSubscribed(Boolean(hasSubscription));
+        setIsSubscribed(Boolean(hasSubscription));
+        
+        // Cache subscription status in sessionStorage
+        sessionStorage.setItem('subscription_status', JSON.stringify(hasSubscription));
        } catch (error) {
          // Error handling
        }
@@ -1796,6 +1872,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       if (!token) {
         openAuthScreen();
         return;
+      }
+      
+      // Check if V2 consent script was already registered in this session
+      const v2ScriptRegistered = sessionStorage.getItem(`v2_consent_script_registered_${appVersion}`);
+      if (v2ScriptRegistered) {
+        return; // Script already registered, skip API call
       }
 
       // Ensure siteInfo is available
@@ -1830,6 +1912,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             version: version
           };
           const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
+          
+          // Mark V2 consent script as registered for this version in this session
+          sessionStorage.setItem(`v2_consent_script_registered_${appVersion}`, 'true');
 
                  }
          catch (error) {
@@ -2016,7 +2101,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
              <div className="tab-button-wrapper">
                <button
                  className={`tab-button ${activeTab === "Settings" ? "active" : ""}`}
-                 onClick={() => setActiveTab("Settings")}
+                 onClick={() => handleSetActiveTab("Settings")}
                >
                  Settings
                </button>
@@ -2024,7 +2109,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
              <div className="tab-button-wrapper">
                <button
                  className={`tab-button ${activeTab === "Customization" ? "active" : ""}`}
-                 onClick={() => setActiveTab("Customization")}
+                 onClick={() => handleSetActiveTab("Customization")}
                >
                  Customization
                </button>
@@ -2032,7 +2117,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
              <div className="tab-button-wrapper">
                <button
                  className={`tab-button ${activeTab === "Script" ? "active" : ""}`}
-                 onClick={() => setActiveTab("Script")}
+                 onClick={() => handleSetActiveTab("Script")}
                >
                  Script
                </button>
@@ -2053,31 +2138,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
               <div style={{ position: "relative", display: "inline-block" }}>
                 <button
                   className="publish-button"
-                  onClick={async () => {
-                    const isUserValid = await isAuthenticatedForCurrentSite();
-                    try {
-                      const selectedElement = await webflow.getSelectedElement() as { type?: string };
-
-                      const isInvalidElement = !selectedElement || selectedElement.type === "Body";
-
-                      if (isUserValid && !isInvalidElement) {
-                        setShowTooltip(false);
-                        setShowPopup(true);
-                      } else {
-                        setShowPopup(false);
-                        if (!isUserValid) {
-                          setShowTooltip(false);
-                          setShowAuthPopup(true);
-                        } else if (isInvalidElement) {
-                          setShowTooltip(true);
-                        }
-                      }
-                                         } catch (error) {
-                       setShowTooltip(false);
-                     }
+                  onClick={() => {
+                    // Navigate to Script tab when clicking Scan Project button
+                    handleSetActiveTab("Script");
                   }}
                 >
-                  {isBannerAdded ? "Publish your changes" : "Create Component"}
+                  Scan Project
                 </button>
 
               </div>
@@ -2214,6 +2280,10 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       <div className="container">
         {/* Settings Panel */}
         <div className="settings-panel">
+          {(() => {
+            console.log('🎯 [DEBUG] Rendering tab content for activeTab:', activeTab);
+            return null;
+          })()}
                      {activeTab === "Settings" && (
             <div className="general">
               <div className="width-cust">

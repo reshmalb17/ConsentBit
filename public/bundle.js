@@ -43406,14 +43406,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/CustomizationTab */ "./src/components/CustomizationTab.tsx");
 /* harmony import */ var _components_ConfirmPublish__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/ConfirmPublish */ "./src/components/ConfirmPublish.tsx");
 /* harmony import */ var _components_SuccessPublish__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./components/SuccessPublish */ "./src/components/SuccessPublish.tsx");
-/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
+/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
 /* harmony import */ var _hooks_useAppState__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./hooks/useAppState */ "./src/hooks/useAppState.ts");
 /* harmony import */ var _hooks_userAuth__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./hooks/userAuth */ "./src/hooks/userAuth.ts");
 /* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
 /* harmony import */ var _services_api__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./services/api */ "./src/services/api.ts");
 /* harmony import */ var _util_Session__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./util/Session */ "./src/util/Session.ts");
-/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./types/webflowtypes */ "./src/types/webflowtypes.ts");
-/* harmony import */ var _package_json__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../package.json */ "./package.json");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./util/authStorage */ "./src/util/authStorage.ts");
+/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./types/webflowtypes */ "./src/types/webflowtypes.ts");
+/* harmony import */ var _package_json__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../package.json */ "./package.json");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -43439,90 +43440,213 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-const appVersion = _package_json__WEBPACK_IMPORTED_MODULE_14__.version;
+
+const appVersion = _package_json__WEBPACK_IMPORTED_MODULE_15__.version;
 const App = () => {
-    // Clear ALL data including authentication on every reload - run immediately
-    react__WEBPACK_IMPORTED_MODULE_0___default().useEffect(() => {
-        // Clear everything immediately on mount - complete fresh start
-        (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.clearAllDataIncludingAuth)();
-        // Also set up a more aggressive clearing to catch any late localStorage writes
-        const clearAgain = () => {
-            const currentKeys = Object.keys(localStorage);
-            if (currentKeys.length > 0) {
-                (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.clearAllDataIncludingAuth)();
-            }
-        };
-        // Check again after a short delay to catch any late writes
-        const timeoutId = setTimeout(clearAgain, 100);
-        return () => clearTimeout(timeoutId);
-    }, []);
-    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_15__.useQueryClient)();
+    // COMMENTED OUT: Clear ALL data including authentication on every reload
+    // This was causing unnecessary re-authentication on every reload
+    // React.useEffect(() => {
+    //   // Clear everything immediately on mount - complete fresh start
+    //   clearAllDataIncludingAuth();
+    //   
+    //   // Also set up a more aggressive clearing to catch any late sessionStorage writes
+    //   const clearAgain = () => {
+    //     // COMMENTED OUT: const currentKeys = Object.keys(localStorage);
+    //     const currentKeys = Object.keys(sessionStorage);
+    //     if (currentKeys.length > 0) {
+    //       clearAllDataIncludingAuth();
+    //     }
+    //   };
+    //   
+    //   // Check again after a short delay to catch any late writes
+    //   const timeoutId = setTimeout(clearAgain, 100);
+    //   
+    //   return () => clearTimeout(timeoutId);
+    // }, []);
+    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_16__.useQueryClient)();
     const [skipWelcomeScreen, setSkipWelcomeScreen] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("skipWelcomeScreen", false);
     const [isAuthenticated, setIsAuthenticated] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [isInitialized, setIsInitialized] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [isAppInitializing, setIsAppInitializing] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
     const [isCheckingAuth, setIsCheckingAuth] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
     const [customizationInitialTab, setCustomizationInitialTab] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("Settings");
+    // Global timing tracking for authorization flow
+    const [globalAuthStartTime, setGlobalAuthStartTime] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     const { bannerStyles, bannerUI, bannerConfig, bannerBooleans, popups, tooltips, siteData, buttons, bannerAnimation, localStorage: localStorageData, componentStates, } = (0,_hooks_useAppState__WEBPACK_IMPORTED_MODULE_8__.useAppState)();
+    // Track when scan button becomes available
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        const currentTime = performance.now();
+        // Check if scan button should be available (authenticated && !isCheckingAuth && !isBannerAdded)
+        if (isAuthenticated && !isCheckingAuth && !bannerBooleans.isBannerAdded && globalAuthStartTime) {
+            const totalTime = currentTime - globalAuthStartTime;
+            console.log('⏱️ [TIMING] Scan Project button available in App.tsx - Total time:', totalTime.toFixed(2), 'ms');
+            console.log('⏱️ [TIMING] State check - isAuthenticated:', isAuthenticated, 'isCheckingAuth:', isCheckingAuth, 'isBannerAdded:', bannerBooleans.isBannerAdded);
+        }
+    }, [isAuthenticated, isCheckingAuth, bannerBooleans.isBannerAdded, globalAuthStartTime]);
     const { user, sessionToken, exchangeAndVerifyIdToken, openAuthScreen, isAuthenticatedForCurrentSite, attemptAutoRefresh } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_9__.useAuth)();
     const [isFetchWelcomeScripts, setIsFetchWelcomeScripts] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [currentSiteId, setCurrentSiteId] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     // App initialization with clean welcome screen flow
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const initializeApp = () => __awaiter(void 0, void 0, void 0, function* () {
+            console.log('🚀 [DEBUG] App initialization started');
+            const startTime = performance.now();
             // Start with welcome screen and loading state
+            console.log('🚀 [DEBUG] Setting initial states...');
             componentStates.resetComponentStates();
             componentStates.setIsWelcomeScreen(true);
             setIsAppInitializing(false);
             setIsCheckingAuth(true);
+            console.log('🚀 [DEBUG] Initial states set - isCheckingAuth: true');
+            // Check if user data already exists in sessionStorage - if so, skip auth check
+            console.log('🚀 [DEBUG] Checking for existing user data in sessionStorage...');
+            const existingUserData = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.getAuthStorageItem)("consentbit-userinfo");
+            console.log('🚀 [DEBUG] Existing user data:', existingUserData ? 'Found' : 'Not found');
+            if (existingUserData && existingUserData !== "null" && existingUserData !== "undefined") {
+                console.log('✅ [DEBUG] User data found in sessionStorage, skipping auth check');
+                const authStartTime = performance.now();
+                setIsAuthenticated(true);
+                console.log('🚀 [DEBUG] Set isAuthenticated to true, time:', performance.now() - authStartTime, 'ms');
+                console.log('🚀 [DEBUG] Authentication state set to TRUE from sessionStorage');
+                // Track timing for cached authentication
+                if (globalAuthStartTime) {
+                    const totalTime = performance.now() - globalAuthStartTime;
+                    console.log('⏱️ [TIMING] Total time from auth start to cached auth complete:', totalTime.toFixed(2), 'ms');
+                }
+                // Always check banner status from API to get accurate status
+                console.log('🚀 [DEBUG] Checking banner status from API...');
+                const bannerStartTime = performance.now();
+                const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_12__.getSessionTokenFromLocalStorage)();
+                if (token) {
+                    try {
+                        console.log('🚀 [DEBUG] Making API call to getBannerStyles...');
+                        const apiStartTime = performance.now();
+                        // Add timeout to prevent hanging API calls
+                        const apiPromise = _services_api__WEBPACK_IMPORTED_MODULE_11__.customCodeApi.getBannerStyles(token);
+                        const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
+                        });
+                        const response = yield Promise.race([apiPromise, timeoutPromise]);
+                        console.log('🚀 [DEBUG] API call completed in:', performance.now() - apiStartTime, 'ms');
+                        // Set banner status based on API response
+                        if (response && response.appData && response.appData.isBannerAdded === true) {
+                            // Banner was previously added - show welcome screen with "Customize" button
+                            console.log('🚀 [DEBUG] Banner was previously added (from API)');
+                            setSkipWelcomeScreen(false);
+                            bannerBooleans.setIsBannerAdded(true);
+                        }
+                        else {
+                            // Response is null, empty, or bannerAdded is not true - show welcome screen with "Scan Project" button
+                            console.log('🚀 [DEBUG] Banner not added yet (from API)');
+                            setSkipWelcomeScreen(false);
+                            bannerBooleans.setIsBannerAdded(false);
+                        }
+                    }
+                    catch (error) {
+                        // API call failed or timed out - show welcome screen with default state
+                        console.log('🚀 [DEBUG] API call failed or timed out:', error);
+                        if (error instanceof Error && error.message.includes('timeout')) {
+                            console.log('🚀 [DEBUG] API call timed out after 10 seconds, proceeding with default state');
+                        }
+                        setSkipWelcomeScreen(false);
+                        bannerBooleans.setIsBannerAdded(false);
+                    }
+                }
+                else {
+                    // No token available - show welcome screen with default state
+                    console.log('🚀 [DEBUG] No token available, using default banner status');
+                    setSkipWelcomeScreen(false);
+                    bannerBooleans.setIsBannerAdded(false);
+                }
+                console.log('🚀 [DEBUG] Banner check completed in:', performance.now() - bannerStartTime, 'ms');
+                // Set checking auth to false only after all initialization is complete
+                console.log('🚀 [DEBUG] Setting isCheckingAuth to false...');
+                const finalStartTime = performance.now();
+                setIsCheckingAuth(false);
+                console.log('🚀 [DEBUG] isCheckingAuth set to false, time:', performance.now() - finalStartTime, 'ms');
+                console.log('🚀 [DEBUG] Total initialization time:', performance.now() - startTime, 'ms');
+                return; // Exit early since we have user data
+            }
             try {
-                // Try fresh background authentication (silent)
-                const refreshSuccess = yield attemptAutoRefresh();
+                console.log('🚀 [DEBUG] No cached user data, attempting authentication...');
+                const authStartTime = performance.now();
+                // Try fresh background authentication (silent) with timeout
+                const authPromise = attemptAutoRefresh();
+                const timeoutPromise = new Promise((resolve) => {
+                    setTimeout(() => {
+                        console.log('🚀 [DEBUG] Authentication timeout after 5 seconds');
+                        resolve(false);
+                    }, 5000); // 5 second timeout
+                });
+                const refreshSuccess = yield Promise.race([authPromise, timeoutPromise]);
+                console.log('🚀 [DEBUG] Authentication completed in:', performance.now() - authStartTime, 'ms, success:', refreshSuccess);
                 if (refreshSuccess) {
+                    console.log('🚀 [DEBUG] Authentication successful, setting states...');
                     setIsAuthenticated(true);
-                    // If authenticated, fetch app-data to check bannerAdded status
+                    // Track timing for fresh authentication
+                    if (globalAuthStartTime) {
+                        const totalTime = performance.now() - globalAuthStartTime;
+                        console.log('⏱️ [TIMING] Total time from auth start to fresh auth complete:', totalTime.toFixed(2), 'ms');
+                    }
+                    // Always check API for current banner status (don't rely on cached data)
                     const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_12__.getSessionTokenFromLocalStorage)();
                     if (token) {
                         try {
-                            const response = yield _services_api__WEBPACK_IMPORTED_MODULE_11__.customCodeApi.getBannerStyles(token);
-                            // Set banner status but always show welcome screen with appropriate button
+                            console.log('🚀 [DEBUG] Making API call to getBannerStyles...');
+                            const apiStartTime = performance.now();
+                            // Add timeout to prevent hanging API calls
+                            const apiPromise = _services_api__WEBPACK_IMPORTED_MODULE_11__.customCodeApi.getBannerStyles(token);
+                            const timeoutPromise = new Promise((_, reject) => {
+                                setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
+                            });
+                            const response = yield Promise.race([apiPromise, timeoutPromise]);
+                            console.log('🚀 [DEBUG] API call completed in:', performance.now() - apiStartTime, 'ms');
+                            // Set banner status based on API response (not cached data)
                             if (response && response.appData && response.appData.isBannerAdded === true) {
                                 // Banner was previously added - show welcome screen with "Customize" button
+                                console.log('🚀 [DEBUG] Banner was previously added (from API)');
                                 setSkipWelcomeScreen(false);
                                 bannerBooleans.setIsBannerAdded(true);
                             }
                             else {
                                 // Response is null, empty, or bannerAdded is not true - show welcome screen with "Scan Project" button
+                                console.log('🚀 [DEBUG] Banner not added yet (from API)');
                                 setSkipWelcomeScreen(false);
                                 bannerBooleans.setIsBannerAdded(false);
                             }
                         }
                         catch (error) {
                             // API call failed - show welcome screen
+                            console.log('🚀 [DEBUG] API call failed:', error);
                             setSkipWelcomeScreen(false);
                             bannerBooleans.setIsBannerAdded(false);
                         }
                     }
                     else {
                         // No token available - show welcome screen
+                        console.log('🚀 [DEBUG] No token available');
                         setSkipWelcomeScreen(false);
                         bannerBooleans.setIsBannerAdded(false);
                     }
                 }
                 else {
                     // Auth failed - show welcome screen
+                    console.log('🚀 [DEBUG] Authentication failed or timed out');
                     setSkipWelcomeScreen(false);
                     bannerBooleans.setIsBannerAdded(false);
                 }
             }
             catch (error) {
                 // Silent error handling - show welcome screen
+                console.log('🚀 [DEBUG] Authentication error:', error);
                 setSkipWelcomeScreen(false);
                 bannerBooleans.setIsBannerAdded(false);
             }
             finally {
                 // Auth check complete
+                console.log('🚀 [DEBUG] Setting isCheckingAuth to false...');
                 setIsCheckingAuth(false);
+                console.log('🚀 [DEBUG] Total initialization time:', performance.now() - startTime, 'ms');
             }
         });
         initializeApp();
@@ -43607,6 +43731,9 @@ const App = () => {
     };
     // Welcome screen handlers
     const handleWelcomeAuthorize = () => {
+        const authStartTime = performance.now();
+        setGlobalAuthStartTime(authStartTime);
+        console.log('⏱️ [TIMING] Global authorization started at:', authStartTime.toFixed(2), 'ms');
         openAuthScreen();
         // The authentication state will be updated when the user completes authorization
         // through the useEffect that depends on user?.email and sessionToken
@@ -43633,35 +43760,48 @@ const App = () => {
         // bannerBooleans.setFetchScripts(true); // This was causing re-fetching and loading screen
     };
     // Removed - this is now handled in the main initialization useEffect
-    // Separate useEffect to update authentication state when auth changes
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        const checkSiteAuthentication = () => __awaiter(void 0, void 0, void 0, function* () {
-            try {
-                const isUserAuthenticated = yield isAuthenticatedForCurrentSite();
-                setIsAuthenticated(isUserAuthenticated);
-            }
-            catch (error) {
-                setIsAuthenticated(false);
-            }
-        });
-        checkSiteAuthentication();
-    }, [user === null || user === void 0 ? void 0 : user.email, sessionToken, user === null || user === void 0 ? void 0 : user.siteId]);
+    // REMOVED: This useEffect was causing conflicts with fast sessionStorage-based auth
+    // The authentication state is now properly managed in the main initialization useEffect
     // Site change detection - clear scripts when site changes
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const detectSiteChange = () => __awaiter(void 0, void 0, void 0, function* () {
             try {
-                const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_13__["default"].getSiteInfo();
-                const newSiteId = siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.siteId;
+                // Check if we already have site info cached to avoid unnecessary API call
+                const cachedSiteInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.getAuthStorageItem)("siteInfo");
+                let siteInfo;
+                let newSiteId;
+                if (cachedSiteInfo) {
+                    try {
+                        siteInfo = JSON.parse(cachedSiteInfo);
+                        newSiteId = siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.siteId;
+                        console.log('✅ Using cached site info, skipping Webflow API call');
+                    }
+                    catch (error) {
+                        // Fallback to API call if cached data is invalid
+                        siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_14__["default"].getSiteInfo();
+                        newSiteId = siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.siteId;
+                    }
+                }
+                else {
+                    siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_14__["default"].getSiteInfo();
+                    newSiteId = siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.siteId;
+                    // Cache the site info for future use
+                    if (siteInfo) {
+                        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.setAuthStorageItem)("siteInfo", JSON.stringify(siteInfo));
+                    }
+                }
                 if (newSiteId && newSiteId !== currentSiteId) {
                     // Site has changed, clear scripts to prevent cross-site contamination
                     if (currentSiteId !== null) {
                         // Only clear if we had a previous site (not initial load)
-                        localStorage.removeItem('scriptContext_scripts');
+                        // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+                        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.removeAuthStorageItem)('scriptContext_scripts');
                         // Regenerate session token for the new site
                         try {
                             console.log('🔄 Site changed, regenerating session token for new site:', newSiteId);
                             // Clear old token first to force complete regeneration
-                            localStorage.removeItem("consentbit-userinfo");
+                            // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+                            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.removeAuthStorageItem)("consentbit-userinfo");
                             console.log('🗑️ Cleared old session token to force regeneration');
                             const newTokenData = yield exchangeAndVerifyIdToken();
                             if (newTokenData) {
@@ -43675,12 +43815,14 @@ const App = () => {
                         catch (error) {
                             console.error('❌ Error regenerating session token:', error);
                             // Fallback: just update the site ID in stored data
-                            const userinfo = localStorage.getItem("consentbit-userinfo");
+                            // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+                            const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.getAuthStorageItem)("consentbit-userinfo");
                             if (userinfo) {
                                 try {
                                     const userData = JSON.parse(userinfo);
                                     userData.siteId = newSiteId;
-                                    localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                                    // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                                    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.setAuthStorageItem)("consentbit-userinfo", JSON.stringify(userData));
                                     console.log('⚠️ Fallback: Updated stored site ID to:', newSiteId);
                                 }
                                 catch (error) {
@@ -43709,9 +43851,14 @@ const App = () => {
             if (!token) {
                 return;
             }
+            // Check if scripts were already registered in this session to avoid unnecessary API calls
+            const scriptsRegistered = sessionStorage.getItem(`scripts_registered_${appVersion}`);
+            if (scriptsRegistered) {
+                return; // Scripts already registered for this version in this session
+            }
             try {
                 // Get site info for script application
-                const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_13__["default"].getSiteInfo();
+                const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_14__["default"].getSiteInfo();
                 if (appVersion === '1.0.0') {
                     const result = yield _services_api__WEBPACK_IMPORTED_MODULE_11__.customCodeApi.registerAnalyticsBlockingScript(token);
                     // Apply the registered script
@@ -43740,6 +43887,8 @@ const App = () => {
                         yield _services_api__WEBPACK_IMPORTED_MODULE_11__.customCodeApi.applyV2Script(params, token);
                     }
                 }
+                // Mark scripts as registered for this version in this session
+                sessionStorage.setItem(`scripts_registered_${appVersion}`, 'true');
             }
             catch (error) {
                 // Silent error handling - script registration will be retried on next auth
@@ -43765,7 +43914,16 @@ const App = () => {
         (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.debugAuthStatus)();
     };
     // Data is automatically cleared on every reload (see useEffect above)
-    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, skipWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated, initialActiveTab: customizationInitialTab })) : componentStates.isWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: isAuthenticated, handleWelcomeScreen: handleWelcomeScreen, isCheckingAuth: isCheckingAuth, isBannerAdded: bannerBooleans.isBannerAdded, onCustomize: handleCustomize })) : componentStates.isWelcomeScipt ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScript__WEBPACK_IMPORTED_MODULE_4__["default"], { isWFetchWelcomeScripts: isFetchWelcomeScripts, handleWelcomeScipt: handleWelcomeScipt, onGoBack: handleWelcomeScriptGoBack })) : componentStates.isSetUpStep ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SetupStep__WEBPACK_IMPORTED_MODULE_3__["default"], { onGoBack: handleSetupGoBack, handleSetUpStep: handleSetUpStep })) : componentStates.isConfirmPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ConfirmPublish__WEBPACK_IMPORTED_MODULE_6__["default"], { onGoBack: handleConfirmPublishGoBack, handleCustomize: handleCustomize, handleConfirmPublish: handleConfirmPublish })) : componentStates.isSuccessPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SuccessPublish__WEBPACK_IMPORTED_MODULE_7__["default"], { onGoBack: handleSuccessPublishGoBack, handleCustomize: handleCustomize })) : componentStates.isCustomizationTab ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated, initialActiveTab: customizationInitialTab })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: isAuthenticated, handleWelcomeScreen: handleWelcomeScreen, isCheckingAuth: isCheckingAuth, isBannerAdded: bannerBooleans.isBannerAdded, onCustomize: handleCustomize }))));
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, skipWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated, initialActiveTab: customizationInitialTab })) : componentStates.isWelcomeScreen ? ((() => {
+        console.log('🚀 [DEBUG] Rendering WelcomeScreen with props:', {
+            isAuthenticated,
+            isCheckingAuth,
+            isBannerAdded: bannerBooleans.isBannerAdded,
+            skipWelcomeScreen,
+            isWelcomeScreen: componentStates.isWelcomeScreen
+        });
+        return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: isAuthenticated, handleWelcomeScreen: handleWelcomeScreen, isCheckingAuth: isCheckingAuth, isBannerAdded: bannerBooleans.isBannerAdded, onCustomize: handleCustomize }));
+    })()) : componentStates.isWelcomeScipt ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScript__WEBPACK_IMPORTED_MODULE_4__["default"], { isWFetchWelcomeScripts: isFetchWelcomeScripts, handleWelcomeScipt: handleWelcomeScipt, onGoBack: handleWelcomeScriptGoBack })) : componentStates.isSetUpStep ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SetupStep__WEBPACK_IMPORTED_MODULE_3__["default"], { onGoBack: handleSetupGoBack, handleSetUpStep: handleSetUpStep })) : componentStates.isConfirmPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ConfirmPublish__WEBPACK_IMPORTED_MODULE_6__["default"], { onGoBack: handleConfirmPublishGoBack, handleCustomize: handleCustomize, handleConfirmPublish: handleConfirmPublish })) : componentStates.isSuccessPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SuccessPublish__WEBPACK_IMPORTED_MODULE_7__["default"], { onGoBack: handleSuccessPublishGoBack, handleCustomize: handleCustomize })) : componentStates.isCustomizationTab ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated, initialActiveTab: customizationInitialTab })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: isAuthenticated, handleWelcomeScreen: handleWelcomeScreen, isCheckingAuth: isCheckingAuth, isBannerAdded: bannerBooleans.isBannerAdded, onCustomize: handleCustomize }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
@@ -45172,18 +45330,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Script__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./Script */ "./src/components/Script.tsx");
 /* harmony import */ var _services_api__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../services/api */ "./src/services/api.ts");
 /* harmony import */ var _hooks_userAuth__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../hooks/userAuth */ "./src/hooks/userAuth.ts");
-/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
-/* harmony import */ var _hooks_gdprPreference__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../hooks/gdprPreference */ "./src/hooks/gdprPreference.ts");
-/* harmony import */ var _hooks_ccpaPreference__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../hooks/ccpaPreference */ "./src/hooks/ccpaPreference.ts");
-/* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
-/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
-/* harmony import */ var _PulseAnimation__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./PulseAnimation */ "./src/components/PulseAnimation.tsx");
-/* harmony import */ var _NeedHelp__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./NeedHelp */ "./src/components/NeedHelp.tsx");
-/* harmony import */ var _ChoosePlan__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./ChoosePlan */ "./src/components/ChoosePlan.tsx");
-/* harmony import */ var _CSVExportAdvanced__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./CSVExportAdvanced */ "./src/components/CSVExportAdvanced.tsx");
-/* harmony import */ var _package_json__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../package.json */ "./package.json");
-/* harmony import */ var _util_Session__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../util/Session */ "./src/util/Session.ts");
-/* harmony import */ var _donotshare__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./donotshare */ "./src/components/donotshare.tsx");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
+/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
+/* harmony import */ var _hooks_gdprPreference__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../hooks/gdprPreference */ "./src/hooks/gdprPreference.ts");
+/* harmony import */ var _hooks_ccpaPreference__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../hooks/ccpaPreference */ "./src/hooks/ccpaPreference.ts");
+/* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
+/* harmony import */ var _tanstack_react_query__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @tanstack/react-query */ "./node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js");
+/* harmony import */ var _PulseAnimation__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./PulseAnimation */ "./src/components/PulseAnimation.tsx");
+/* harmony import */ var _NeedHelp__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./NeedHelp */ "./src/components/NeedHelp.tsx");
+/* harmony import */ var _ChoosePlan__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./ChoosePlan */ "./src/components/ChoosePlan.tsx");
+/* harmony import */ var _CSVExportAdvanced__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./CSVExportAdvanced */ "./src/components/CSVExportAdvanced.tsx");
+/* harmony import */ var _package_json__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../package.json */ "./package.json");
+/* harmony import */ var _util_Session__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../util/Session */ "./src/util/Session.ts");
+/* harmony import */ var _donotshare__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./donotshare */ "./src/components/donotshare.tsx");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -45220,41 +45379,69 @@ const copyScript = new URL(/* asset import */ __webpack_require__(/*! ../assets/
 
 
 
+
 // Add at the top, after other imports
 
-const appVersion = _package_json__WEBPACK_IMPORTED_MODULE_14__.version;
+const appVersion = _package_json__WEBPACK_IMPORTED_MODULE_15__.version;
 
 
 const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
     var _a, _b, _c, _d, _e;
-    const [color, setColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("color", "#ffffff");
-    const [bgColor, setBgColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("bgColor", "#ffffff");
-    const [btnColor, setBtnColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("btnColor", "#C9C9C9");
-    const [paraColor, setParaColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("paraColor", "#4C4A66");
-    const [secondcolor, setSecondcolor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("secondcolor", "#000000");
-    const [bgColors, setBgColors] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("bgColors", "#798EFF");
-    const [headColor, setHeadColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("headColor", "#000000");
-    const [secondbuttontext, setsecondbuttontext] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("secondbuttontext", "#000000");
-    const [primaryButtonText, setPrimaryButtonText] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("primaryButtonText", "#FFFFFF");
-    const [activeTab, setActiveTab] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("activeTab", initialActiveTab);
+    const [color, setColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("color", "#ffffff");
+    const [bgColor, setBgColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("bgColor", "#ffffff");
+    const [btnColor, setBtnColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("btnColor", "#C9C9C9");
+    const [paraColor, setParaColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("paraColor", "#4C4A66");
+    const [secondcolor, setSecondcolor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("secondcolor", "#000000");
+    const [bgColors, setBgColors] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("bgColors", "#798EFF");
+    const [headColor, setHeadColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("headColor", "#000000");
+    const [secondbuttontext, setsecondbuttontext] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("secondbuttontext", "#000000");
+    const [primaryButtonText, setPrimaryButtonText] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("primaryButtonText", "#FFFFFF");
+    const [activeTab, setActiveTab] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("activeTab", initialActiveTab);
+    // Track if we've already set activeTab from API to prevent conflicts
+    const [hasSetActiveTabFromApi, setHasSetActiveTabFromApi] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    // Debug activeTab changes and validate tab
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        console.log('🔄 activeTab state changed to:', activeTab);
+        // Validate that activeTab is one of the valid tabs
+        const validTabs = ["Settings", "Customization", "Script"];
+        if (!validTabs.includes(activeTab)) {
+            console.log('⚠️ Invalid activeTab detected:', activeTab, 'falling back to Settings');
+            setActiveTab("Settings");
+        }
+    }, [activeTab]);
+    // Wrapper function to set activeTab and track that it was set by user interaction
+    const handleSetActiveTab = (newTab) => {
+        console.log('🔄 User clicked tab, setting activeTab to:', newTab);
+        setActiveTab(newTab);
+        setHasSetActiveTabFromApi(true); // Mark that user has interacted with tabs
+    };
     // Override activeTab with initialActiveTab prop when provided (only on mount)
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        if (initialActiveTab && initialActiveTab !== activeTab) {
+        if (initialActiveTab && initialActiveTab !== activeTab && !hasSetActiveTabFromApi) {
+            console.log('🔄 Setting activeTab from initialActiveTab prop:', initialActiveTab);
             setActiveTab(initialActiveTab);
         }
-    }, [initialActiveTab]); // Remove activeTab and setActiveTab from dependencies
-    const [expires, setExpires] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("expires", "");
-    const [size, setSize] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("size", "12");
-    const [isActive, setIsActive] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("isActive", false);
-    const [Font, SetFont] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("Font", "Montserrat");
-    const [selectedtext, settextSelected] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("selectedtext", "left");
-    const [style, setStyle] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("style", "align");
+    }, [initialActiveTab, activeTab, hasSetActiveTabFromApi]);
+    // Debug component mount and initial values
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        console.log('🚀 CustomizationTab mounted with:', {
+            initialActiveTab,
+            currentActiveTab: activeTab,
+            hasSetActiveTabFromApi
+        });
+    }, []); // Only run on mount
+    const [expires, setExpires] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("expires", "");
+    const [size, setSize] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("size", "12");
+    const [isActive, setIsActive] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("isActive", false);
+    const [Font, SetFont] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("Font", "Montserrat");
+    const [selectedtext, settextSelected] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("selectedtext", "left");
+    const [style, setStyle] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("style", "align");
     // Removed activeMode - all features are now available by default
-    const [selected, setSelected] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("selected", "right");
-    const [selectedOption, setSelectedOption] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("selectedOption", "U.S. State Laws");
-    const [weight, setWeight] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("weight", "semibold");
+    const [selected, setSelected] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("selected", "right");
+    const [selectedOption, setSelectedOption] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("selectedOption", "U.S. State Laws");
+    const [weight, setWeight] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("weight", "semibold");
     const [showPopup, setShowPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [selectedOptions, setSelectedOptions] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("selectedOptions", ["GDPR", "U.S. State Laws"]);
+    const [selectedOptions, setSelectedOptions] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("selectedOptions", ["GDPR", "U.S. State Laws"]);
     // Ensure default state is properly set on component mount
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // Force set default values if not already set
@@ -45262,13 +45449,13 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             setSelectedOptions(["GDPR", "U.S. State Laws"]);
         }
     }, [selectedOptions, setSelectedOptions]);
-    const [siteInfo, setSiteInfo] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("siteInfo", null);
-    const [accessToken, setAccessToken] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("accessToken", '');
-    const [pages, setPages] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("pages", []);
-    const [fetchScripts, setFetchScripts] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("fetchScripts", false);
-    const [borderRadius, setBorderRadius] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("borderRadius", 4);
-    const [buttonRadius, setButtonRadius] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("buttonRadius", 3);
-    const [isLoading, setIsLoading] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("isLoading", false);
+    const [siteInfo, setSiteInfo] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("siteInfo", null);
+    const [accessToken, setAccessToken] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("accessToken", '');
+    const [pages, setPages] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("pages", []);
+    const [fetchScripts, setFetchScripts] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("fetchScripts", false);
+    const [borderRadius, setBorderRadius] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("borderRadius", 4);
+    const [buttonRadius, setButtonRadius] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("buttonRadius", 3);
+    const [isLoading, setIsLoading] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("isLoading", false);
     const [userlocaldata, setUserlocaldata] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     const [showSuccessPopup, setShowSuccessPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // Reset loading states when component mounts to prevent stuck loading animations
@@ -45279,18 +45466,19 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         setIsCSVButtonLoading(false);
     }, []);
     const [showAuthPopup, setShowAuthPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [buttonText, setButtonText] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("buttonText", "Scan Project");
+    const [buttonText, setButtonText] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("buttonText", "Scan Project");
     const [showLoadingPopup, setShowLoadingPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [isExporting, setIsExporting] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [cookieExpiration, setCookieExpiration] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("cookieExpiration", "120");
+    const [cookieExpiration, setCookieExpiration] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("cookieExpiration", "120");
     const [showTooltip, setShowTooltip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [fadeOut, setFadeOut] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const userinfo = localStorage.getItem("consentbit-userinfo");
-    const tokenss = JSON.parse(userinfo);
-    const [sessionTokenFromLocalStorage, setSessionToken] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)((0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)());
+    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+    const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
+    const tokenss = userinfo ? JSON.parse(userinfo) : null;
+    const [sessionTokenFromLocalStorage, setSessionToken] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)((0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)());
     const [showChoosePlan, setShowChoosePlan] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [isSubscribed, setIsSubscribed] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [isBannerAdded, setIsBannerAdded] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)("isBannerAdded", false);
+    const [isBannerAdded, setIsBannerAdded] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("isBannerAdded", false);
     const [isCSVButtonLoading, setIsCSVButtonLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [showCSVExportAdvanced, setShowCSVExportAdvanced] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const base_url = "https://cb-server.web-8fb.workers.dev";
@@ -45302,7 +45490,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         // Open help modal or redirect to help page
         window.open('https://www.consentbit.com/help-document', '_blank');
     };
-    const [toggleStates, setToggleStates] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)('toggleStates', {
+    const [toggleStates, setToggleStates] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)('toggleStates', {
         customToggle: false,
         resetInteractions: false,
         disableScroll: false,
@@ -45317,9 +45505,9 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         easing: "Ease",
         language: "English",
     };
-    const [animation, setAnimation] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)('animation', defaultState.animation);
-    const [easing, setEasing] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)('easing', defaultState.easing);
-    const [language, setLanguage] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_9__.usePersistentState)('language', defaultState.language);
+    const [animation, setAnimation] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)('animation', defaultState.animation);
+    const [easing, setEasing] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)('easing', defaultState.easing);
+    const [language, setLanguage] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)('language', defaultState.language);
     const handleToggle = (toggleName) => {
         setToggleStates((prev) => {
             const newState = Object.assign(Object.assign({}, prev), { [toggleName]: !prev[toggleName] });
@@ -45435,8 +45623,9 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         }
     };
     const [cookiePreferences, setCookiePreferences] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
-        // Get stored preferences from localStorage or use default values
-        const savedPreferences = localStorage.getItem("cookiePreferences");
+        // Get stored preferences from sessionStorage or use default values
+        // COMMENTED OUT: const savedPreferences = localStorage.getItem("cookiePreferences");
+        const savedPreferences = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("cookiePreferences");
         return savedPreferences
             ? JSON.parse(savedPreferences)
             : {
@@ -45447,12 +45636,14 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     });
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // Only save cookie preferences if user is authenticated
-        const userInfo = localStorage.getItem('consentbit-userinfo');
+        // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+        const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)('consentbit-userinfo');
         if (userInfo) {
             try {
                 const parsed = JSON.parse(userInfo);
                 if ((parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) && (parsed === null || parsed === void 0 ? void 0 : parsed.email)) {
-                    localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+                    // COMMENTED OUT: localStorage.setItem("cookiePreferences", JSON.stringify(cookiePreferences));
+                    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("cookiePreferences", JSON.stringify(cookiePreferences));
                 }
             }
             catch (error) {
@@ -45463,8 +45654,9 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     const toggleCategory = (category) => {
         setCookiePreferences((prev) => {
             const updatedPreferences = Object.assign(Object.assign({}, prev), { [category]: !prev[category] });
-            // Save new state to localStorage
-            localStorage.setItem("cookiePreferences", JSON.stringify(updatedPreferences));
+            // Save new state to sessionStorage
+            // COMMENTED OUT: localStorage.setItem("cookiePreferences", JSON.stringify(updatedPreferences));
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("cookiePreferences", JSON.stringify(updatedPreferences));
             return updatedPreferences;
         });
     };
@@ -45473,12 +45665,14 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             const updatedOptions = prev.includes(option)
                 ? prev.filter((item) => item !== option) // Remove if already selected
                 : [...prev, option]; // Add if not selected
-            localStorage.setItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
+            // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
             return updatedOptions;
         });
     };
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        localStorage.setItem("selectedOptions", JSON.stringify(selectedOptions));
+        // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(selectedOptions));
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("selectedOptions", JSON.stringify(selectedOptions));
     }, [selectedOptions]);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         setIsActive(false);
@@ -45492,7 +45686,8 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const fetchPages = () => __awaiter(void 0, void 0, void 0, function* () {
             try {
-                const localstoragedata = localStorage.getItem("consentbit-userinfo");
+                // COMMENTED OUT: const localstoragedata = localStorage.getItem("consentbit-userinfo");
+                const localstoragedata = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
                 if (localstoragedata) {
                     try {
                         const parsed = JSON.parse(localstoragedata);
@@ -45502,7 +45697,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         // Error parsing localStorage
                     }
                 }
-                const pagesAndFolders = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getAllPagesAndFolders();
+                const pagesAndFolders = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getAllPagesAndFolders();
                 if (Array.isArray(pagesAndFolders) && pagesAndFolders.length > 0) {
                     // Filter only "Page" types
                     const pages = pagesAndFolders.filter(i => i.type === "Page");
@@ -45521,11 +45716,11 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             }
         });
         fetchPages();
-    }, [_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"]]);
+    }, [_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"]]);
     //banner details
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const fetchbannerdetails = () => __awaiter(void 0, void 0, void 0, function* () {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
             try {
                 if (token) {
                     const response = yield _services_api__WEBPACK_IMPORTED_MODULE_4__.customCodeApi.getBannerStyles(token);
@@ -45556,8 +45751,27 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                             setCookieExpiration(response.cookieExpiration);
                         if (response.bgColor !== undefined)
                             setBgColor(response.bgColor);
-                        if (response.activeTab !== undefined)
-                            setActiveTab(response.activeTab);
+                        if (response.activeTab !== undefined) {
+                            console.log('🔄 API wants to set activeTab to:', response.activeTab, 'current activeTab:', activeTab);
+                            // Map API tab names to component tab names
+                            let mappedTab = response.activeTab;
+                            if (response.activeTab === "general") {
+                                mappedTab = "Settings";
+                                console.log('🔄 Mapping API "general" tab to "Settings"');
+                            }
+                            // Don't override activeTab if user is currently in Script tab (to prevent API from switching away from Script tab during rescan)
+                            if (activeTab === "Script") {
+                                console.log('🔄 Skipping activeTab update from API - user is actively using Script tab');
+                            }
+                            else if (!hasSetActiveTabFromApi || mappedTab !== activeTab) {
+                                console.log('🔄 Setting activeTab from API response:', mappedTab);
+                                setActiveTab(mappedTab);
+                                setHasSetActiveTabFromApi(true);
+                            }
+                            else {
+                                console.log('🔄 Skipping activeTab update from API - already set or same value');
+                            }
+                        }
                         // Removed activeMode setting - no longer needed
                         if (response.selectedtext !== undefined)
                             settextSelected(response.selectedtext);
@@ -45620,7 +45834,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     window.printBannerSettings = () => __awaiter(void 0, void 0, void 0, function* () {
         console.log('🔄 Manually fetching banner settings...');
         try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
             if (!token) {
                 console.error('❌ No session token found');
                 return;
@@ -45643,12 +45857,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     //main function for adding custom code to the head
     const fetchAnalyticsBlockingsScripts = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
             if (!token) {
                 openAuthScreen();
                 return;
             }
-            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
             setSiteInfo(siteIdinfo);
             const hostingScript = yield _services_api__WEBPACK_IMPORTED_MODULE_4__.customCodeApi.registerAnalyticsBlockingScript(token);
             if (hostingScript) {
@@ -45677,7 +45891,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite, openAuthScreen: openAuthScreenHook } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_5__.useAuth)();
     // Use the authorization function from useAuth hook (includes automatic silent auth)
     const openAuthScreen = openAuthScreenHook;
-    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_17__.useQueryClient)();
+    const queryClient = (0,_tanstack_react_query__WEBPACK_IMPORTED_MODULE_18__.useQueryClient)();
     //GDPR preferences banner
     const handleCreatePreferences = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (skipCommonDiv = false) {
         try {
@@ -45687,7 +45901,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             if (!selectedPreferences.includes("essential")) {
                 selectedPreferences.push("essential");
             }
-            yield (0,_hooks_gdprPreference__WEBPACK_IMPORTED_MODULE_7__["default"])(selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton, borderRadius, Font);
+            yield (0,_hooks_gdprPreference__WEBPACK_IMPORTED_MODULE_8__["default"])(selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton, borderRadius, Font);
         }
         catch (error) {
             // Error creating cookie preferences
@@ -45696,7 +45910,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     //CCPA preferences banner
     const handleCreatePreferencesccpa = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            yield (0,_hooks_ccpaPreference__WEBPACK_IMPORTED_MODULE_8__["default"])(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font, borderRadius);
+            yield (0,_hooks_ccpaPreference__WEBPACK_IMPORTED_MODULE_9__["default"])(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font, borderRadius);
         }
         catch (error) {
             // Error creating cookie preferences
@@ -45720,9 +45934,10 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         setShowPopup(false); // close the first popup
         setShowLoadingPopup(true); // show loading popup
         setIsLoading(true);
-        // const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+        // COMMENTED OUT: const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+        // const isBannerAlreadyAdded = getAuthStorageItem("cookieBannerAdded") === "true";
         try {
-            const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getAllElements();
+            const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getAllElements();
             const idsToCheck = ["initial-consent-banner", "main-consent-banner", "toggle-consent-btn"];
             // Run domId checks in parallel
             const domIdPromises = allElements.map((el) => __awaiter(void 0, void 0, void 0, function* () {
@@ -45747,17 +45962,17 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                     yield el.remove();
                 }
                 catch (err) {
-                    _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "Failed to remove a banner." });
+                    _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "Failed to remove a banner." });
                 }
             })));
-            const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSelectedElement();
+            const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSelectedElement();
             if (!selectedElement) {
-                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "No element selected in the Designer." });
+                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "No element selected in the Designer." });
                 return;
             }
-            const newDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+            const newDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
             if (!newDiv) {
-                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "Failed to create div." });
+                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "Failed to create div." });
                 return;
             }
             if (newDiv.setDomId) {
@@ -45774,10 +45989,10 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 closebutton: `close-consentbit`,
             };
             const styles = yield Promise.all(Object.values(styleNames).map((name) => __awaiter(void 0, void 0, void 0, function* () {
-                return (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getStyleByName(name)) || (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].createStyle(name));
+                return (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getStyleByName(name)) || (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].createStyle(name));
             })));
             const [divStyle, paragraphStyle, buttonContainerStyle, headingStyle, Linktext, innerDivStyle, secondBackgroundStyle, closebutton] = styles;
-            const collection = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getDefaultVariableCollection();
+            const collection = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getDefaultVariableCollection();
             const webflowBlue = yield (collection === null || collection === void 0 ? void 0 : collection.createColorVariable("Webflow Blue", "rgba(255, 255, 255, 1)"));
             const webflowBlueValue = (webflowBlue === null || webflowBlue === void 0 ? void 0 : webflowBlue.value) || "rgba(255, 255, 255, 1)";
             const animationAttributeMap = {
@@ -45962,17 +46177,17 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 yield newDiv.setCustomAttribute("data-animation", animationAttribute);
                 yield newDiv.setCustomAttribute("data-cookie-banner", toggleStates.disableScroll ? "true" : "false");
             }
-            const innerdiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+            const innerdiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
             yield innerdiv.setStyles([innerDivStyle]);
             try {
                 let SecondDiv;
                 if (style === "alignstyle") {
-                    SecondDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+                    SecondDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
                     if (SecondDiv.setStyles) {
                         yield SecondDiv.setStyles([secondBackgroundStyle]);
                     }
                 }
-                const tempHeading = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Heading);
+                const tempHeading = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Heading);
                 if (!tempHeading) {
                     throw new Error("Failed to create heading");
                 }
@@ -45988,7 +46203,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 // Conditionally add close button only if toggleStates.closebutton is true
                 let Closebuttons = null;
                 if (toggleStates.closebutton) {
-                    Closebuttons = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Paragraph);
+                    Closebuttons = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Paragraph);
                     if (!Closebuttons) {
                         throw new Error("Failed to create paragraph");
                     }
@@ -45998,7 +46213,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         yield Closebuttons.setCustomAttribute("consentbit", "close");
                     }
                 }
-                const tempParagraph = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Paragraph);
+                const tempParagraph = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Paragraph);
                 if (!tempParagraph) {
                     throw new Error("Failed to create paragraph");
                 }
@@ -46008,12 +46223,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 if (tempParagraph.setTextContent) {
                     yield tempParagraph.setTextContent(translations[language].ccpa.description);
                 }
-                const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+                const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
                 if (!buttonContainer) {
                     throw new Error("Failed to create button container");
                 }
                 yield buttonContainer.setStyles([buttonContainerStyle]);
-                const prefrenceButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.LinkBlock);
+                const prefrenceButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.LinkBlock);
                 if (!prefrenceButton) {
                     throw new Error("Failed to create decline button");
                 }
@@ -46052,21 +46267,21 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 saveBannerDetails();
             }
             catch (error) {
-                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "An error occurred while creating the cookie banner." });
+                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "An error occurred while creating the cookie banner." });
             }
         }
         catch (error) {
-            _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "Unexpected error occurred." });
+            _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "Unexpected error occurred." });
         }
     });
     const fetchAnalyticsBlockingsScriptsV2 = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
             if (!token) {
                 openAuthScreen();
                 return;
             }
-            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
             setSiteInfo(siteIdinfo);
             const hostingScript = yield _services_api__WEBPACK_IMPORTED_MODULE_4__.customCodeApi.registerV2BannerCustomCode(token);
             if (hostingScript) {
@@ -46096,9 +46311,10 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         setShowPopup(false);
         setShowLoadingPopup(true);
         setIsLoading(true);
-        // const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+        // COMMENTED OUT: const isBannerAlreadyAdded = localStorage.getItem("cookieBannerAdded") === "true";
+        // const isBannerAlreadyAdded = getAuthStorageItem("cookieBannerAdded") === "true";
         try {
-            const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getAllElements();
+            const allElements = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getAllElements();
             const idsToCheck = ["consent-banner", "main-banner", "toggle-consent-btn"];
             // Run domId checks in parallel
             const domIdPromises = allElements.map((el) => __awaiter(void 0, void 0, void 0, function* () {
@@ -46123,18 +46339,18 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                     yield el.remove();
                 }
                 catch (err) {
-                    _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "Failed to remove a banner." });
+                    _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "Failed to remove a banner." });
                 }
             })));
-            const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSelectedElement();
+            const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSelectedElement();
             if (!selectedElement) {
-                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "No element selected in the Designer." });
+                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "No element selected in the Designer." });
                 setIsLoading(false); // Reset loading state
                 return;
             }
-            const newDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+            const newDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
             if (!newDiv) {
-                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "Failed to create div." });
+                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "Failed to create div." });
                 return;
             }
             if (newDiv.setDomId) {
@@ -46153,7 +46369,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 closebutton: 'close-consent'
             };
             const styles = yield Promise.all(Object.values(styleNames).map((name) => __awaiter(void 0, void 0, void 0, function* () {
-                return (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getStyleByName(name)) || (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].createStyle(name));
+                return (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getStyleByName(name)) || (yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].createStyle(name));
             })));
             const [divStyle, paragraphStyle, buttonContainerStyle, prefrenceButtonStyle, declineButtonStyle, buttonStyle, headingStyle, innerDivStyle, secondBackgroundStyle, closebutton] = styles;
             const animationAttributeMap = {
@@ -46368,14 +46584,14 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             try {
                 let SecondDiv;
                 if (style === "alignstyle") {
-                    SecondDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+                    SecondDiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
                     if (SecondDiv.setStyles) {
                         yield SecondDiv.setStyles([secondBackgroundStyle]);
                     }
                 }
-                const innerdiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+                const innerdiv = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
                 yield innerdiv.setStyles([innerDivStyle]);
-                const tempHeading = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Heading);
+                const tempHeading = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Heading);
                 if (!tempHeading) {
                     throw new Error("Failed to create heading");
                 }
@@ -46391,7 +46607,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 // Conditionally add close button only if toggleStates.closebutton is true
                 let Closebuttons = null;
                 if (toggleStates.closebutton) {
-                    Closebuttons = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Paragraph);
+                    Closebuttons = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Paragraph);
                     if (!Closebuttons) {
                         throw new Error("Failed to create paragraph");
                     }
@@ -46401,7 +46617,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         yield Closebuttons.setCustomAttribute("consentbit", "close");
                     }
                 }
-                const tempParagraph = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Paragraph);
+                const tempParagraph = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Paragraph);
                 if (!tempParagraph) {
                     throw new Error("Failed to create paragraph");
                 }
@@ -46411,12 +46627,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 if (tempParagraph.setTextContent) {
                     yield tempParagraph.setTextContent(translations[language].description);
                 }
-                const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.DivBlock);
+                const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
                 if (!buttonContainer) {
                     throw new Error("Failed to create button container");
                 }
                 yield buttonContainer.setStyles([buttonContainerStyle]);
-                const prefrenceButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Button);
+                const prefrenceButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Button);
                 if (!prefrenceButton) {
                     throw new Error("Failed to create decline button");
                 }
@@ -46425,7 +46641,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 if (prefrenceButton.setDomId) {
                     yield prefrenceButton.setDomId("preferences-btn"); // Type assertion
                 }
-                const acceptButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Button);
+                const acceptButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Button);
                 if (!acceptButton) {
                     throw new Error("Failed to create accept button");
                 }
@@ -46434,7 +46650,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 if (acceptButton.setDomId) {
                     yield acceptButton.setDomId("accept-btn"); // Type assertion
                 }
-                const declineButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].elementPresets.Button);
+                const declineButton = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.Button);
                 if (!declineButton) {
                     throw new Error("Failed to create decline button");
                 }
@@ -46476,11 +46692,11 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 saveBannerDetails();
             }
             catch (error) {
-                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "An error occurred while creating the cookie banner." });
+                _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "An error occurred while creating the cookie banner." });
             }
         }
         catch (error) {
-            _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].notify({ type: "error", message: "Unexpected error occurred." });
+            _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].notify({ type: "error", message: "Unexpected error occurred." });
             setIsLoading(false);
         }
     });
@@ -46495,13 +46711,14 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     //banner details
     const saveBannerDetails = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const userinfo = localStorage.getItem("consentbit-userinfo");
+            // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+            const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
             if (!userinfo) {
                 return;
             }
             const tokenss = JSON.parse(userinfo);
             const tokewern = tokenss.sessionToken;
-            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+            const siteIdinfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
             setSiteInfo(siteIdinfo);
             if (!tokewern) {
                 return;
@@ -46544,7 +46761,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     const handleExportCSV = () => __awaiter(void 0, void 0, void 0, function* () {
         setIsExporting(true);
         try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
             if (!token) {
                 setIsExporting(false);
                 openAuthScreen();
@@ -46608,7 +46825,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     const handleExportCSVAdvanced = () => __awaiter(void 0, void 0, void 0, function* () {
         setIsExporting(true);
         try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
             if (!token) {
                 setIsExporting(false);
                 openAuthScreen();
@@ -46690,7 +46907,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         });
     }
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        const accessToken = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+        const accessToken = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
         const fetchSubscription = () => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
             try {
@@ -46698,10 +46915,19 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                     openAuthScreen();
                     return;
                 }
+                // Check if subscription status is already cached in sessionStorage
+                const cachedSubscription = sessionStorage.getItem('subscription_status');
+                if (cachedSubscription) {
+                    const hasSubscription = JSON.parse(cachedSubscription);
+                    setIsSubscribed(Boolean(hasSubscription));
+                    return; // Use cached data, no API call needed
+                }
                 const result = yield checkSubscription(accessToken);
                 // Check if any domain has isSubscribed === true
                 const hasSubscription = (_a = result.subscriptionStatuses) === null || _a === void 0 ? void 0 : _a.some((status) => status.isSubscribed === true);
                 setIsSubscribed(Boolean(hasSubscription));
+                // Cache subscription status in sessionStorage
+                sessionStorage.setItem('subscription_status', JSON.stringify(hasSubscription));
             }
             catch (error) {
                 // Error handling
@@ -46714,15 +46940,20 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         if (appVersion !== "2.0.0" && appVersion !== "2.0.1")
             return;
         try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_15__.getSessionTokenFromLocalStorage)();
+            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
             if (!token) {
                 openAuthScreen();
                 return;
             }
+            // Check if V2 consent script was already registered in this session
+            const v2ScriptRegistered = sessionStorage.getItem(`v2_consent_script_registered_${appVersion}`);
+            if (v2ScriptRegistered) {
+                return; // Script already registered, skip API call
+            }
             // Ensure siteInfo is available
             let currentSiteInfo = siteInfo;
             if (!currentSiteInfo) {
-                currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+                currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
                 setSiteInfo(currentSiteInfo);
             }
             if (!(currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId)) {
@@ -46744,6 +46975,8 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         version: version
                     };
                     const applyScriptResponse = yield _services_api__WEBPACK_IMPORTED_MODULE_4__.customCodeApi.applyV2Script(params, token);
+                    // Mark V2 consent script as registered for this version in this session
+                    sessionStorage.setItem(`v2_consent_script_registered_${appVersion}`, 'true');
                 }
                 catch (error) {
                     // Error handling
@@ -46833,7 +47066,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "app" },
         (isExporting || isCSVButtonLoading) && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "pulse-overlays" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-loading-content" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PulseAnimation__WEBPACK_IMPORTED_MODULE_10__["default"], null),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PulseAnimation__WEBPACK_IMPORTED_MODULE_11__["default"], null),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "popup-message" }, "Exporting CSV data...")))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "navbar" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
@@ -46841,15 +47074,15 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                     "Hello",
                     (user === null || user === void 0 ? void 0 : user.firstName) ? `, ${user.firstName}` : '',
                     "!")),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_NeedHelp__WEBPACK_IMPORTED_MODULE_11__["default"], null)),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_NeedHelp__WEBPACK_IMPORTED_MODULE_12__["default"], null)),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "configuration" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tabs" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tab-button-wrapper" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `tab-button ${activeTab === "Settings" ? "active" : ""}`, onClick: () => setActiveTab("Settings") }, "Settings")),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `tab-button ${activeTab === "Settings" ? "active" : ""}`, onClick: () => handleSetActiveTab("Settings") }, "Settings")),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tab-button-wrapper" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `tab-button ${activeTab === "Customization" ? "active" : ""}`, onClick: () => setActiveTab("Customization") }, "Customization")),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `tab-button ${activeTab === "Customization" ? "active" : ""}`, onClick: () => handleSetActiveTab("Customization") }, "Customization")),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tab-button-wrapper" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `tab-button ${activeTab === "Script" ? "active" : ""}`, onClick: () => setActiveTab("Script") }, "Script"))),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `tab-button ${activeTab === "Script" ? "active" : ""}`, onClick: () => handleSetActiveTab("Script") }, "Script"))),
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "component-width" },
                 !isSubscribed ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "subscribe" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { className: "link", href: "#", onClick: (e) => {
@@ -46866,30 +47099,10 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         " ")),
                 activeTab !== "Script" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { position: "relative", display: "inline-block" } },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-button", onClick: () => __awaiter(void 0, void 0, void 0, function* () {
-                                const isUserValid = yield isAuthenticatedForCurrentSite();
-                                try {
-                                    const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSelectedElement();
-                                    const isInvalidElement = !selectedElement || selectedElement.type === "Body";
-                                    if (isUserValid && !isInvalidElement) {
-                                        setShowTooltip(false);
-                                        setShowPopup(true);
-                                    }
-                                    else {
-                                        setShowPopup(false);
-                                        if (!isUserValid) {
-                                            setShowTooltip(false);
-                                            setShowAuthPopup(true);
-                                        }
-                                        else if (isInvalidElement) {
-                                            setShowTooltip(true);
-                                        }
-                                    }
-                                }
-                                catch (error) {
-                                    setShowTooltip(false);
-                                }
-                            }) }, isBannerAdded ? "Publish your changes" : "Create Component")))),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-button", onClick: () => {
+                                // Navigate to Script tab when clicking Scan Project button
+                                handleSetActiveTab("Script");
+                            } }, "Scan Project")))),
                 activeTab === "Script" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-buttons", onClick: () => __awaiter(void 0, void 0, void 0, function* () {
                             const isUserValid = yield isAuthenticatedForCurrentSite();
@@ -46932,7 +47145,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "cancel-btn", onClick: () => setShowPopup(false) }, "Cancel"))))),
         showLoadingPopup && isLoading && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-loading-content" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PulseAnimation__WEBPACK_IMPORTED_MODULE_10__["default"], null),
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PulseAnimation__WEBPACK_IMPORTED_MODULE_11__["default"], null),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "popup-message" }, "Almost there\u2026 your cookie banner is in the oven. Nothing's breaking, just baking!")))),
         showSuccessPopup && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-overlay" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "success-popup" },
@@ -46940,6 +47153,10 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { onClick: () => setShowSuccessPopup(false) }, "Close")))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "container" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-panel" },
+                (() => {
+                    console.log('🎯 [DEBUG] Rendering tab content for activeTab:', activeTab);
+                    return null;
+                })(),
                 activeTab === "Settings" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "general" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "width-cust" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-group" },
@@ -47074,12 +47291,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null))))),
                 activeTab === "Customization" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Customization__WEBPACK_IMPORTED_MODULE_2__["default"], { animation: animation, setAnimation: setAnimation, easing: easing, setEasing: setEasing, language: language, setLanguage: setLanguage, weight: weight, SetWeight: setWeight, size: size, SetSize: setSize, selected: selected, setSelected: setSelected, Font: Font, SetFont: SetFont, selectedtext: selectedtext, settextSelected: settextSelected, style: style, setStyle: setStyle, borderRadius: borderRadius, setBorderRadius: setBorderRadius, buttonRadius: buttonRadius, setButtonRadius: setButtonRadius, color: color, setColor: setColor, bgColor: bgColor, setBgColor: setBgColor, btnColor: btnColor, setBtnColor: setBtnColor, headColor: headColor, setHeadColor: setHeadColor, paraColor: paraColor, setParaColor: setParaColor, secondcolor: secondcolor, setSecondcolor: setSecondcolor, bgColors: bgColors, setBgColors: setBgColors, secondbuttontext: secondbuttontext, setsecondbuttontext: setsecondbuttontext, primaryButtonText: primaryButtonText, setPrimaryButtonText: setPrimaryButtonText, closebutton: toggleStates.closebutton })),
                 activeTab === "Script" && react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Script__WEBPACK_IMPORTED_MODULE_3__["default"], { fetchScripts: fetchScripts, setFetchScripts: setFetchScripts }))),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_donotshare__WEBPACK_IMPORTED_MODULE_16__["default"], { onClose: () => { }, toggleStates: toggleStates, handleToggle: handleToggle }),
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CSVExportAdvanced__WEBPACK_IMPORTED_MODULE_13__["default"], { isVisible: showCSVExportAdvanced, onClose: () => setShowCSVExportAdvanced(false), sessionToken: sessionTokenFromLocalStorage, siteInfo: siteInfo, onReset: () => {
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_donotshare__WEBPACK_IMPORTED_MODULE_17__["default"], { onClose: () => { }, toggleStates: toggleStates, handleToggle: handleToggle }),
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CSVExportAdvanced__WEBPACK_IMPORTED_MODULE_14__["default"], { isVisible: showCSVExportAdvanced, onClose: () => setShowCSVExportAdvanced(false), sessionToken: sessionTokenFromLocalStorage, siteInfo: siteInfo, onReset: () => {
                 // Reset any related state in the main App component if needed
                 setIsCSVButtonLoading(false);
             } }),
-        showChoosePlan && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ChoosePlan__WEBPACK_IMPORTED_MODULE_12__["default"], { onClose: () => setShowChoosePlan(false) }))));
+        showChoosePlan && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ChoosePlan__WEBPACK_IMPORTED_MODULE_13__["default"], { onClose: () => setShowChoosePlan(false) }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (CustomizationTab);
 
@@ -47212,7 +47429,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _context_ScriptContext__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../context/ScriptContext */ "./src/context/ScriptContext.tsx");
 /* harmony import */ var _PulseAnimation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./PulseAnimation */ "./src/components/PulseAnimation.tsx");
 /* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
-/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
+/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -47222,6 +47440,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -47262,7 +47481,7 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const fetchSiteInfo = () => __awaiter(void 0, void 0, void 0, function* () {
             try {
-                const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+                const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
                 setSiteInfo(siteInfo);
             }
             catch (error) {
@@ -47276,14 +47495,15 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const detectSiteChange = () => __awaiter(void 0, void 0, void 0, function* () {
             try {
-                const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+                const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
                 const newSiteId = currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId;
                 if (newSiteId && (siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.siteId) && newSiteId !== siteInfo.siteId) {
                     console.log('🔄 Site changed in Script component:', siteInfo.siteId, '->', newSiteId);
                     console.log('🧹 Clearing scripts to prevent cross-site contamination');
                     // Clear scripts immediately
                     setScripts([]);
-                    localStorage.removeItem('scriptContext_scripts');
+                    // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+                    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)('scriptContext_scripts');
                     // Update site info
                     setSiteInfo(currentSiteInfo);
                 }
@@ -47308,15 +47528,16 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
         try {
             console.log('🔄 Regenerating session token for current site...');
             // Clear old token first to force regeneration
-            localStorage.removeItem("consentbit-userinfo");
+            // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("consentbit-userinfo");
             console.log('🗑️ Cleared old session token');
             // Get new ID token from Webflow
-            const idToken = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getIdToken();
+            const idToken = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getIdToken();
             if (!idToken) {
                 throw new Error('Failed to get ID token from Webflow');
             }
             // Get current site info
-            const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+            const siteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
             if (!siteInfo || !siteInfo.siteId) {
                 throw new Error('Failed to get site info from Webflow');
             }
@@ -47362,7 +47583,8 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 siteId: data.siteId || siteInfo.siteId, // Use backend's siteId or fallback to requested siteId
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
             };
-            localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+            // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("consentbit-userinfo", JSON.stringify(userData));
             console.log('✅ Session token regenerated successfully for site:', siteInfo.siteId);
             console.log('🔍 New token payload should contain siteId:', siteInfo.siteId);
             return data.sessionToken;
@@ -47372,23 +47594,50 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
             return null;
         }
     }), []);
-    const fetchScriptData = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => __awaiter(void 0, void 0, void 0, function* () {
+    const fetchScriptData = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((...args_1) => __awaiter(void 0, [...args_1], void 0, function* (forceRefresh = false) {
         var _a, _b;
         setIsLoading(true);
-        // Clear existing scripts before fetching new ones to prevent cross-site contamination
-        setScripts([]);
-        // Also clear from localStorage to ensure complete cleanup
-        localStorage.removeItem('scriptContext_scripts');
         try {
-            const userinfo = localStorage.getItem("consentbit-userinfo");
+            // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+            const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
             const userInfo = JSON.parse(userinfo || "{}");
             const tokens = userInfo === null || userInfo === void 0 ? void 0 : userInfo.sessionToken;
             if (!tokens) {
                 setIsLoading(false);
                 return;
             }
+            // Check if scripts are already cached in sessionStorage for this site (only if not forcing refresh)
+            if (!forceRefresh) {
+                const cachedScripts = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)('scriptContext_scripts');
+                if (cachedScripts) {
+                    try {
+                        const parsedScripts = JSON.parse(cachedScripts);
+                        if (Array.isArray(parsedScripts) && parsedScripts.length > 0) {
+                            console.log('✅ Using cached scripts from sessionStorage');
+                            setScripts(parsedScripts);
+                            setIsLoading(false);
+                            return; // Use cached data, no API call needed
+                        }
+                    }
+                    catch (error) {
+                        console.log('⚠️ Failed to parse cached scripts, fetching fresh data');
+                    }
+                }
+            }
+            else {
+                console.log('🔄 Force refresh requested - bypassing cache');
+            }
+            // Clear existing scripts before fetching new ones to prevent cross-site contamination
+            setScripts([]);
+            // Also clear from sessionStorage to ensure complete cleanup
+            // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)('scriptContext_scripts');
+            // If forcing refresh, also clear any cached scripts
+            if (forceRefresh) {
+                console.log('🧹 Clearing cached scripts for fresh scan');
+            }
             // Get current site info to verify we're getting scripts for the right site
-            const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+            const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
             const currentSiteId = currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId;
             if (!currentSiteId) {
                 setIsLoading(false);
@@ -47415,8 +47664,10 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 console.log('🔄 Site ID mismatch detected:', oldSiteId, 'vs', currentSiteId, 'or token siteId mismatch');
                 console.log('⚠️ Session token may be for wrong site - regenerating...');
                 // Clear old token data completely
-                localStorage.removeItem("consentbit-userinfo");
-                localStorage.removeItem("scriptContext_scripts");
+                // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("consentbit-userinfo");
+                // COMMENTED OUT: localStorage.removeItem("scriptContext_scripts");
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("scriptContext_scripts");
                 // Regenerate session token for the new site
                 const newToken = yield regenerateSessionToken();
                 if (newToken) {
@@ -47515,20 +47766,22 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 if (newToken) {
                     console.log('✅ Token regenerated, now fetching scripts...');
                     // Trigger a new script fetch
-                    fetchScriptData();
+                    fetchScriptData(true); // Force refresh after token regeneration
                 }
             });
             window.forceTokenRegeneration = () => __awaiter(void 0, void 0, void 0, function* () {
                 console.log('🚀 Force regenerating token...');
                 // Clear everything first
-                localStorage.removeItem("consentbit-userinfo");
-                localStorage.removeItem("scriptContext_scripts");
+                // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("consentbit-userinfo");
+                // COMMENTED OUT: localStorage.removeItem("scriptContext_scripts");
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("scriptContext_scripts");
                 // Wait a bit then regenerate
                 setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
                     const newToken = yield regenerateSessionToken();
                     if (newToken) {
                         console.log('✅ Force regeneration complete, fetching scripts...');
-                        fetchScriptData();
+                        fetchScriptData(true); // Force refresh after token regeneration
                     }
                 }), 1000);
             });
@@ -47551,14 +47804,15 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 var _a;
                 console.log('🔄 Manually fetching server response...');
                 try {
-                    const userinfo = localStorage.getItem("consentbit-userinfo");
+                    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+                    const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
                     const userInfo = JSON.parse(userinfo || "{}");
                     const tokens = userInfo === null || userInfo === void 0 ? void 0 : userInfo.sessionToken;
                     if (!tokens) {
                         console.error('❌ No session token found');
                         return;
                     }
-                    const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+                    const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
                     const currentSiteId = currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId;
                     console.log('🎯 Fetching for site ID:', currentSiteId);
                     console.log('🔑 Using token:', tokens.substring(0, 50) + '...');
@@ -47752,8 +48006,17 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                     // For new scripts, use the categories parsed from data-category attribute
                     return newScript;
                 });
+                const finalScripts = mergedScripts.filter(script => script.identifier !== null);
+                // Cache the scripts in sessionStorage for future use
+                try {
+                    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)('scriptContext_scripts', JSON.stringify(finalScripts));
+                    console.log('💾 Cached scripts to sessionStorage:', finalScripts.length, 'scripts');
+                }
+                catch (error) {
+                    console.log('⚠️ Failed to cache scripts:', error);
+                }
                 setIsLoading(false);
-                return mergedScripts.filter(script => script.identifier !== null);
+                return finalScripts;
             });
         }
         catch (error) {
@@ -47766,7 +48029,7 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
     }), [setScripts, getScriptIdentifier, siteInfo]);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         if (fetchScripts) {
-            fetchScriptData();
+            fetchScriptData(true); // Force refresh when triggered by rescan button
             setFetchScripts(false);
         }
     }, [fetchScripts, fetchScriptData, setFetchScripts]);
@@ -47775,7 +48038,8 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
         setIsSaving(true);
         setSaveStatus(null);
         try {
-            const userinfo = localStorage.getItem("consentbit-userinfo");
+            // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+            const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
             const tokens = (_a = JSON.parse(userinfo || "{}")) === null || _a === void 0 ? void 0 : _a.sessionToken;
             if (!tokens) {
                 return;
@@ -48240,7 +48504,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _style_styless_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../style/styless.css */ "./src/style/styless.css");
-/* harmony import */ var _NeedHelp__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./NeedHelp */ "./src/components/NeedHelp.tsx");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
+/* harmony import */ var _NeedHelp__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./NeedHelp */ "./src/components/NeedHelp.tsx");
+
 
 
 
@@ -48254,33 +48520,52 @@ const uparrow = new URL(/* asset import */ __webpack_require__(/*! ../assets/up 
 const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeScreen, isCheckingAuth: externalIsCheckingAuth, isBannerAdded, onCustomize }) => {
     const [hasUserData, setHasUserData] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [isAuthorizing, setIsAuthorizing] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    const [showButtons, setShowButtons] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    // Timing tracking for authorization flow
+    const [authStartTime, setAuthStartTime] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    const [scanButtonShowTime, setScanButtonShowTime] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    console.log('🎨 [DEBUG] WelcomeScreen render - externalIsCheckingAuth:', externalIsCheckingAuth, 'authenticated:', authenticated, 'isBannerAdded:', isBannerAdded);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        console.log('🎨 [DEBUG] WelcomeScreen useEffect - checking user data...');
         // Check for user authentication data and update hasUserData
-        const userinfo = localStorage.getItem("consentbit-userinfo");
+        // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+        const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("consentbit-userinfo");
         const hasData = userinfo && userinfo !== "null" && userinfo !== "undefined";
+        console.log('🎨 [DEBUG] WelcomeScreen - userinfo found:', hasData, 'authenticated prop:', authenticated);
         setHasUserData(authenticated || !!hasData);
+        console.log('🎨 [DEBUG] WelcomeScreen - setHasUserData to:', authenticated || !!hasData);
     }, [authenticated]);
-    // Handle auth check completion - show buttons immediately
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        if (!externalIsCheckingAuth) {
-            // External auth check completed, show buttons immediately
-            setShowButtons(true);
-        }
-        else {
-            // Reset when auth check starts
-            setShowButtons(false);
-        }
-    }, [externalIsCheckingAuth]);
     // Separate useEffect to handle authentication changes
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        console.log('🎨 [DEBUG] WelcomeScreen auth change effect - authenticated:', authenticated);
         if (authenticated) {
+            console.log('🎨 [DEBUG] WelcomeScreen - setting hasUserData to true');
             setHasUserData(true);
             setIsAuthorizing(false);
+            // Track when authentication completes
+            if (authStartTime) {
+                const authDuration = performance.now() - authStartTime;
+                console.log('⏱️ [TIMING] Authentication completed in:', authDuration.toFixed(2), 'ms');
+            }
         }
-    }, [authenticated]);
+    }, [authenticated, authStartTime]);
+    // Track when scan button becomes visible
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        const currentTime = performance.now();
+        // Check if scan button should be visible (hasUserData && !externalIsCheckingAuth && !isBannerAdded)
+        if (hasUserData && !externalIsCheckingAuth && !isBannerAdded && !scanButtonShowTime) {
+            setScanButtonShowTime(currentTime);
+            console.log('⏱️ [TIMING] Scan Project button became visible at:', currentTime.toFixed(2), 'ms');
+            if (authStartTime) {
+                const totalTime = currentTime - authStartTime;
+                console.log('⏱️ [TIMING] Total time from auth start to scan button visible:', totalTime.toFixed(2), 'ms');
+            }
+        }
+    }, [hasUserData, externalIsCheckingAuth, isBannerAdded, authStartTime, scanButtonShowTime]);
     const handleAuthorizeClick = () => {
+        const startTime = performance.now();
+        setAuthStartTime(startTime);
         setIsAuthorizing(true);
+        console.log('⏱️ [TIMING] Authorization started at:', startTime.toFixed(2), 'ms');
         onAuthorize();
     };
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-screen" },
@@ -48289,18 +48574,36 @@ const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeSc
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: rightLines, alt: "", className: "welcome-bg-lines-right" }),
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-header" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { display: "flex", justifyContent: "flex-end" } },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_NeedHelp__WEBPACK_IMPORTED_MODULE_2__["default"], null))),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_NeedHelp__WEBPACK_IMPORTED_MODULE_3__["default"], null))),
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-content" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", { className: "welcome-title" },
                     "Welcome to",
                     " ",
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "welcome-title-highlight" }, "Consentbit")),
-                (externalIsCheckingAuth || !showButtons) ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Checking your authentication status...")) : isAuthorizing ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Please complete the authorization process in the popup window...")) : hasUserData ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, isBannerAdded
-                    ? "Your banner has been successfully added! Customize your consent banner appearance and settings."
-                    : "Scan your Webflow site, review detected scripts, add them to the backend, and publish when you're ready.")) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "The authorization process appears to be incomplete. To continue with the next step, please ensure that all necessary authorization steps have been successfully carried out.")),
-                (externalIsCheckingAuth || !showButtons) ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn", disabled: true }, "Loading...")) : isAuthorizing ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn", disabled: true }, "Authorizing...")) : hasUserData ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
+                (() => {
+                    console.log('🎨 [DEBUG] WelcomeScreen render logic - externalIsCheckingAuth:', externalIsCheckingAuth, 'isAuthorizing:', isAuthorizing, 'hasUserData:', hasUserData, 'isBannerAdded:', isBannerAdded);
+                    if (externalIsCheckingAuth) {
+                        console.log('🎨 [DEBUG] Showing loading message');
+                        return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Checking your authentication status..."));
+                    }
+                    else if (isAuthorizing) {
+                        console.log('🎨 [DEBUG] Showing authorizing message');
+                        return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Please complete the authorization process in the popup window..."));
+                    }
+                    else if (hasUserData) {
+                        console.log('🎨 [DEBUG] Showing user data message, isBannerAdded:', isBannerAdded);
+                        return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, isBannerAdded
+                            ? "Your banner has been successfully added! Customize your consent banner appearance and settings."
+                            : "Scan your Webflow site, review detected scripts, add them to the backend, and publish when you're ready."));
+                    }
+                    else {
+                        console.log('🎨 [DEBUG] Showing incomplete auth message');
+                        return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "The authorization process appears to be incomplete. To continue with the next step, please ensure that all necessary authorization steps have been successfully carried out."));
+                    }
+                })(),
+                externalIsCheckingAuth ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn", disabled: true }, "Loading...")) : isAuthorizing ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn", disabled: true }, "Authorizing...")) : hasUserData ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn scan-project", onClick: isBannerAdded ? onCustomize : handleWelcomeScreen }, isBannerAdded ? "Customize" : "Scan Project"))) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "welcome-authorize-btn", onClick: handleAuthorizeClick }, "Authorize"))),
-            hasUserData && showButtons && !externalIsCheckingAuth && !isBannerAdded ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
+            hasUserData && !externalIsCheckingAuth && !isBannerAdded ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-info-cards" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-top" },
@@ -48349,7 +48652,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _services_api__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../services/api */ "./src/services/api.ts");
 /* harmony import */ var _PulseAnimation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./PulseAnimation */ "./src/components/PulseAnimation.tsx");
 /* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
-/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
+/* harmony import */ var _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../types/webflowtypes */ "./src/types/webflowtypes.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -48359,6 +48663,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -48398,7 +48703,8 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
     const [isSaving, setIsSaving] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [saveStatus, setSaveStatus] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     const categories = ["Essential", "Personalization", "Analytics", "Marketing"];
-    const userinfo = localStorage.getItem("consentbit-userinfo");
+    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+    const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
     const [showPopup, setShowPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [isLoading, setIsLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [showAuthPopup, setShowAuthPopup] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_5__.usePersistentState)("script_showAuthPopup", false);
@@ -48414,11 +48720,12 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
         var _a;
         return script.src || ((_a = script.fullTag) === null || _a === void 0 ? void 0 : _a.replace(/\s*data-category\s*=\s*"[^"]*"/i, '')) || null;
     }, []);
-    // Function to clear any stale script data from localStorage
+    // Function to clear any stale script data from sessionStorage
     const clearStaleScriptData = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
-        // Clear script data from localStorage to prevent showing old data
-        localStorage.removeItem('scriptContext_scripts');
-        // Also clear any other script-related localStorage keys
+        // Clear script data from sessionStorage to prevent showing old data
+        // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)('scriptContext_scripts');
+        // Also clear any other script-related sessionStorage keys
         const keysToRemove = [
             'scriptContext_scripts',
             'script_isSaving',
@@ -48428,7 +48735,8 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
             'script_showAuthPopup',
             'script_copiedScriptIndex'
         ];
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        // COMMENTED OUT: keysToRemove.forEach(key => localStorage.removeItem(key));
+        keysToRemove.forEach(key => (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)(key));
     }, []);
     const fetchScriptData = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
@@ -48445,7 +48753,7 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
                 return;
             }
             // Get current site info to verify we're getting scripts for the right site
-            const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_6__["default"].getSiteInfo();
+            const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
             const currentSiteId = currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId;
             if (!currentSiteId) {
                 setIsLoading(false);
@@ -48456,7 +48764,8 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
             if (userData.siteId !== currentSiteId) {
                 const oldSiteId = userData.siteId;
                 userData.siteId = currentSiteId;
-                localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("consentbit-userinfo", JSON.stringify(userData));
                 console.log('🔄 Updated stored site ID from', oldSiteId, 'to', currentSiteId);
                 console.log('🎯 This should fix the backend authentication issue');
             }
@@ -49196,6 +49505,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../hooks/usePersistentState */ "./src/hooks/usePersistentState.ts");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
+
 
 
 const ScriptContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)(undefined);
@@ -49205,13 +49516,15 @@ const ScriptProvider = ({ children }) => {
     // Clear scripts on component mount to prevent cross-site contamination
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         setScripts([]);
-        // Also clear from localStorage directly to ensure complete cleanup
-        localStorage.removeItem('scriptContext_scripts');
+        // Also clear from sessionStorage directly to ensure complete cleanup
+        // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.removeAuthStorageItem)('scriptContext_scripts');
     }, [setScripts]);
     const clearScripts = () => {
         setScripts([]);
-        // Also clear from localStorage directly
-        localStorage.removeItem('scriptContext_scripts');
+        // Also clear from sessionStorage directly
+        // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.removeAuthStorageItem)('scriptContext_scripts');
     };
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ScriptContext.Provider, { value: { scripts, setScripts, clearScripts } }, children));
 };
@@ -49696,8 +50009,9 @@ const createCookieccpaPreferences = (...args_1) => __awaiter(void 0, [...args_1]
                     yield mainDivBlock.setDomId("toggle-consent-btn");
                 }
             }
-            // Set bannerAdded to true in localStorage
-            localStorage.setItem('bannerAdded', 'true');
+            // Set bannerAdded to true in sessionStorage
+            // COMMENTED OUT: localStorage.setItem('bannerAdded', 'true');
+            sessionStorage.setItem('bannerAdded', 'true');
             // webflow.notify({ type: "Success", message: "ConsentBit banner added successfully!" });
         }
         catch (error) {
@@ -50205,8 +50519,9 @@ const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(
             }
             else {
             }
-            // Set bannerAdded to true in localStorage
-            localStorage.setItem('bannerAdded', 'true');
+            // Set bannerAdded to true in sessionStorage
+            // COMMENTED OUT: localStorage.setItem('bannerAdded', 'true');
+            sessionStorage.setItem('bannerAdded', 'true');
             // webflow.notify({ type: "Success", message: "ConsentBit banner added successfully!" }
         }
         catch (error) {
@@ -50237,12 +50552,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _usePersistentState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./usePersistentState */ "./src/hooks/usePersistentState.ts");
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
 
 
-// Helper function to get session token from localStorage
+
+// Helper function to get session token from sessionStorage
 function getSessionTokenFromLocalStorage() {
     if (typeof window !== 'undefined') {
-        const userinfo = localStorage.getItem("consentbit-userinfo");
+        // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+        const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("consentbit-userinfo");
         if (!userinfo)
             return null;
         try {
@@ -50251,7 +50569,8 @@ function getSessionTokenFromLocalStorage() {
         }
         catch (_a) {
             // Invalid JSON, clear it
-            localStorage.removeItem("consentbit-userinfo");
+            // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.removeAuthStorageItem)("consentbit-userinfo");
             return null;
         }
     }
@@ -50334,7 +50653,8 @@ const useAppState = () => {
     const [isSuccessPublish, setIsSuccessPublish] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isSuccessPublish", false);
     const [isCustomizationTab, setIsCustomizationTab] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)("isCustomizationTab", false);
     // Local storage data
-    const userinfo = localStorage.getItem("consentbit-userinfo");
+    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+    const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("consentbit-userinfo");
     const tokenss = JSON.parse(userinfo || '{}');
     //Aniamation states 
     const [animation, setAnimation] = (0,_usePersistentState__WEBPACK_IMPORTED_MODULE_1__.usePersistentState)('animation', "fade");
@@ -51231,24 +51551,31 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _util_authStorage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/authStorage */ "./src/util/authStorage.ts");
+
 
 // Function to migrate old data to new site-specific format
 function migrateOldData() {
     if (typeof window === 'undefined')
         return;
     const migrationKey = 'migration_done';
-    if (localStorage.getItem(migrationKey)) {
+    // COMMENTED OUT: if (localStorage.getItem(migrationKey)) {
+    if ((0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(migrationKey)) {
         return; // Migration already done
     }
     // Only migrate wf_hybrid_user to consentbit-userinfo
-    const oldWfHybridUser = localStorage.getItem('wf_hybrid_user');
+    // COMMENTED OUT: const oldWfHybridUser = localStorage.getItem('wf_hybrid_user');
+    const oldWfHybridUser = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('wf_hybrid_user');
     if (oldWfHybridUser !== null) {
         // Migrate wf_hybrid_user to consentbit-userinfo
-        localStorage.setItem('consentbit-userinfo', oldWfHybridUser);
-        localStorage.removeItem('wf_hybrid_user');
+        // COMMENTED OUT: localStorage.setItem('consentbit-userinfo', oldWfHybridUser);
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)('consentbit-userinfo', oldWfHybridUser);
+        // COMMENTED OUT: localStorage.removeItem('wf_hybrid_user');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)('wf_hybrid_user');
     }
     // Mark migration as complete
-    localStorage.setItem(migrationKey, 'true');
+    // COMMENTED OUT: localStorage.setItem(migrationKey, 'true');
+    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)(migrationKey, 'true');
 }
 // Function to get key (simple approach - no site-specific storage)
 function getSiteSpecificKey(key) {
@@ -51260,7 +51587,8 @@ function getCurrentSiteId() {
     if (typeof window === 'undefined')
         return 'default';
     // Check if user is authorized first
-    const userInfo = localStorage.getItem('consentbit-userinfo');
+    // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+    const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
     if (!userInfo) {
         // User not authorized - return default
         return 'default';
@@ -51278,7 +51606,8 @@ function getCurrentSiteId() {
         return 'default';
     }
     // User is authorized - now get site ID
-    const siteInfo = localStorage.getItem('siteInfo');
+    // COMMENTED OUT: const siteInfo = localStorage.getItem('siteInfo');
+    const siteInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('siteInfo');
     if (siteInfo) {
         try {
             const parsed = JSON.parse(siteInfo);
@@ -51322,8 +51651,10 @@ function clearCurrentSiteData(includeAuth = false) {
         'expires', 'buttonText', 'animation', 'easing', 'language', 'toggleStates'
     ];
     appKeys.forEach(key => {
-        if (localStorage.getItem(key) !== null) {
-            localStorage.removeItem(key);
+        // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+        if ((0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key) !== null) {
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
             keysToRemove.push(key);
         }
     });
@@ -51331,8 +51662,10 @@ function clearCurrentSiteData(includeAuth = false) {
     if (includeAuth) {
         const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo'];
         authKeys.forEach(key => {
-            if (localStorage.getItem(key) !== null) {
-                localStorage.removeItem(key);
+            // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+            if ((0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key) !== null) {
+                // COMMENTED OUT: localStorage.removeItem(key);
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
                 keysToRemove.push(key);
             }
         });
@@ -51358,16 +51691,20 @@ function clearAllData() {
         'expires', 'buttonText', 'animation', 'easing', 'language', 'toggleStates'
     ];
     appKeys.forEach(key => {
-        if (localStorage.getItem(key) !== null) {
-            localStorage.removeItem(key);
+        // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+        if ((0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key) !== null) {
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
             keysToRemove.push(key);
         }
     });
     // Clear authentication data
     const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo'];
     authKeys.forEach(key => {
-        if (localStorage.getItem(key) !== null) {
-            localStorage.removeItem(key);
+        // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+        if ((0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key) !== null) {
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
             keysToRemove.push(key);
         }
     });
@@ -51379,16 +51716,21 @@ function clearAuthData() {
     const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo', 'explicitly_logged_out'];
     const keysToRemove = [];
     authKeys.forEach(key => {
-        if (localStorage.getItem(key) !== null) {
-            localStorage.removeItem(key);
+        // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+        if ((0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key) !== null) {
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
             keysToRemove.push(key);
         }
     });
     // Also clear any site-specific auth keys
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+    // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+    for (let i = 0; i < sessionStorage.length; i++) {
+        // COMMENTED OUT: const key = localStorage.key(i);
+        const key = sessionStorage.key(i);
         if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
-            localStorage.removeItem(key);
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
             keysToRemove.push(key);
         }
     }
@@ -51399,9 +51741,11 @@ function clearAllDataOnReload() {
         return;
     try {
         // Set flag to indicate data should be cleared on next load
-        localStorage.setItem('__clear_on_reload__', 'true');
+        // COMMENTED OUT: localStorage.setItem('__clear_on_reload__', 'true');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)('__clear_on_reload__', 'true');
         // Clear everything immediately
-        localStorage.clear();
+        // COMMENTED OUT: localStorage.clear();
+        sessionStorage.clear();
         // Also clear any session storage if used
         if (typeof sessionStorage !== 'undefined') {
             sessionStorage.clear();
@@ -51416,10 +51760,12 @@ function handleClearOnReload() {
     if (typeof window === 'undefined')
         return false;
     try {
-        const shouldClear = localStorage.getItem('__clear_on_reload__');
+        // COMMENTED OUT: const shouldClear = localStorage.getItem('__clear_on_reload__');
+        const shouldClear = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('__clear_on_reload__');
         if (shouldClear === 'true') {
             // Clear everything
-            localStorage.clear();
+            // COMMENTED OUT: localStorage.clear();
+            sessionStorage.clear();
             // Also clear session storage
             if (typeof sessionStorage !== 'undefined') {
                 sessionStorage.clear();
@@ -51446,24 +51792,29 @@ function clearAllPersistentData() {
         // Save authentication data temporarily
         const preservedData = {};
         authKeysToPreserve.forEach(key => {
-            preservedData[key] = localStorage.getItem(key);
+            // COMMENTED OUT: preservedData[key] = localStorage.getItem(key);
+            preservedData[key] = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key);
         });
-        // Get all localStorage keys first
+        // Get all sessionStorage keys first
         const allKeys = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
+        // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+        for (let i = 0; i < sessionStorage.length; i++) {
+            // COMMENTED OUT: const key = localStorage.key(i);
+            const key = sessionStorage.key(i);
             if (key) {
                 allKeys.push(key);
             }
         }
         // Clear all keys
         allKeys.forEach(key => {
-            localStorage.removeItem(key);
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
         });
         // Restore authentication data
         authKeysToPreserve.forEach(key => {
             if (preservedData[key] !== null) {
-                localStorage.setItem(key, preservedData[key]);
+                // COMMENTED OUT: localStorage.setItem(key, preservedData[key]!);
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)(key, preservedData[key]);
             }
         });
         // Also clear sessionStorage
@@ -51490,7 +51841,8 @@ function clearAllDataIncludingAuth() {
             }
         }
         allKeys.forEach(key => {
-            localStorage.removeItem(key);
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
         });
         // Clear sessionStorage
         if (typeof sessionStorage !== 'undefined') {
@@ -51506,7 +51858,8 @@ function enableAutoClearOnReload() {
     if (typeof window === 'undefined')
         return;
     try {
-        localStorage.setItem('__auto_clear_enabled__', 'true');
+        // COMMENTED OUT: localStorage.setItem('__auto_clear_enabled__', 'true');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)('__auto_clear_enabled__', 'true');
     }
     catch (error) {
         // Silent error handling
@@ -51517,7 +51870,8 @@ function disableAutoClearOnReload() {
     if (typeof window === 'undefined')
         return;
     try {
-        localStorage.removeItem('__auto_clear_enabled__');
+        // COMMENTED OUT: localStorage.removeItem('__auto_clear_enabled__');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)('__auto_clear_enabled__');
     }
     catch (error) {
         // Silent error handling
@@ -51528,14 +51882,16 @@ function checkAndHandleAutoClear() {
     if (typeof window === 'undefined')
         return false;
     try {
-        const autoClearEnabled = localStorage.getItem('__auto_clear_enabled__');
+        // COMMENTED OUT: const autoClearEnabled = localStorage.getItem('__auto_clear_enabled__');
+        const autoClearEnabled = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('__auto_clear_enabled__');
         if (autoClearEnabled === 'true') {
             // Temporarily save the auto-clear flag
             const tempFlag = autoClearEnabled;
             // Clear all data
             clearAllPersistentData();
             // Restore the auto-clear flag so it persists
-            localStorage.setItem('__auto_clear_enabled__', tempFlag);
+            // COMMENTED OUT: localStorage.setItem('__auto_clear_enabled__', tempFlag);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)('__auto_clear_enabled__', tempFlag);
             return true;
         }
         return false;
@@ -51549,7 +51905,8 @@ function setSiteInfoAfterAuth(siteInfo) {
     if (typeof window === 'undefined')
         return;
     // Check if user is authorized
-    const userInfo = localStorage.getItem('consentbit-userinfo');
+    // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+    const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
     if (!userInfo) {
         return;
     }
@@ -51563,13 +51920,15 @@ function setSiteInfoAfterAuth(siteInfo) {
         return;
     }
     // User is authorized - set site info
-    localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+    // COMMENTED OUT: localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)('siteInfo', JSON.stringify(siteInfo));
 }
 // Utility function to check if user can set site info
 function canSetSiteInfo() {
     if (typeof window === 'undefined')
         return false;
-    const userInfo = localStorage.getItem('consentbit-userinfo');
+    // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+    const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
     if (!userInfo)
         return false;
     try {
@@ -51584,10 +51943,14 @@ function canSetSiteInfo() {
 function debugAuthStatus() {
     if (typeof window === 'undefined')
         return;
-    const userInfo = localStorage.getItem('consentbit-userinfo');
-    const wfHybridUser = localStorage.getItem('wf_hybrid_user');
-    const siteInfo = localStorage.getItem('siteInfo');
-    const explicitlyLoggedOut = localStorage.getItem('explicitly_logged_out');
+    // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+    const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
+    // COMMENTED OUT: const wfHybridUser = localStorage.getItem('wf_hybrid_user');
+    const wfHybridUser = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('wf_hybrid_user');
+    // COMMENTED OUT: const siteInfo = localStorage.getItem('siteInfo');
+    const siteInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('siteInfo');
+    // COMMENTED OUT: const explicitlyLoggedOut = localStorage.getItem('explicitly_logged_out');
+    const explicitlyLoggedOut = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('explicitly_logged_out');
     if (userInfo) {
         try {
             const parsed = JSON.parse(userInfo);
@@ -51611,22 +51974,28 @@ function forceClearAuthData() {
         return;
     // Clear all auth-related keys
     const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo', 'explicitly_logged_out'];
-    authKeys.forEach(key => localStorage.removeItem(key));
+    // COMMENTED OUT: authKeys.forEach(key => localStorage.removeItem(key));
+    authKeys.forEach(key => (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key));
     // Clear any site-specific auth keys
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+    // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+    for (let i = 0; i < sessionStorage.length; i++) {
+        // COMMENTED OUT: const key = localStorage.key(i);
+        const key = sessionStorage.key(i);
         if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
-            localStorage.removeItem(key);
+            // COMMENTED OUT: localStorage.removeItem(key);
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(key);
         }
     }
     // Set explicitly logged out flag to prevent restoration
-    localStorage.setItem('explicitly_logged_out', 'true');
+    // COMMENTED OUT: localStorage.setItem('explicitly_logged_out', 'true');
+    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)('explicitly_logged_out', 'true');
 }
 // Utility function to clear authentication data if user is not authorized
 function clearAuthIfNotAuthorized() {
     if (typeof window === 'undefined')
         return;
-    const userInfo = localStorage.getItem('consentbit-userinfo');
+    // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+    const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
     if (!userInfo) {
         return;
     }
@@ -51636,13 +52005,15 @@ function clearAuthIfNotAuthorized() {
         if (!(parsed === null || parsed === void 0 ? void 0 : parsed.sessionToken) || !(parsed === null || parsed === void 0 ? void 0 : parsed.email) || !(parsed === null || parsed === void 0 ? void 0 : parsed.siteId)) {
             clearAuthData();
             // Also clear site info if user is not authorized
-            localStorage.removeItem('siteInfo');
+            // COMMENTED OUT: localStorage.removeItem('siteInfo');
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)('siteInfo');
         }
     }
     catch (error) {
         clearAuthData();
         // Also clear site info if auth data is corrupted
-        localStorage.removeItem('siteInfo');
+        // COMMENTED OUT: localStorage.removeItem('siteInfo');
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)('siteInfo');
     }
 }
 // Utility function to list all data for current site
@@ -51651,15 +52022,19 @@ function listCurrentSiteData() {
         return {};
     const siteId = getCurrentSiteId();
     const siteData = {};
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+    // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+    for (let i = 0; i < sessionStorage.length; i++) {
+        // COMMENTED OUT: const key = localStorage.key(i);
+        const key = sessionStorage.key(i);
         if (key && key.startsWith(`${siteId}_`)) {
             try {
-                const value = localStorage.getItem(key);
+                // COMMENTED OUT: const value = localStorage.getItem(key);
+                const value = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key);
                 siteData[key] = value ? JSON.parse(value) : value;
             }
             catch (e) {
-                siteData[key] = localStorage.getItem(key);
+                // COMMENTED OUT: siteData[key] = localStorage.getItem(key);
+                siteData[key] = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(key);
             }
         }
     }
@@ -51670,10 +52045,13 @@ function checkMigrationStatus() {
     if (typeof window === 'undefined')
         return { migrated: false, oldKeysFound: 0, newKeysFound: 0 };
     const migrationKey = 'migration_done';
-    const migrated = localStorage.getItem(migrationKey) === 'true';
+    // COMMENTED OUT: const migrated = localStorage.getItem(migrationKey) === 'true';
+    const migrated = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(migrationKey) === 'true';
     // Only check for wf_hybrid_user migration
-    const oldKeysFound = localStorage.getItem('wf_hybrid_user') !== null ? 1 : 0;
-    const newKeysFound = localStorage.getItem('consentbit-userinfo') !== null ? 1 : 0;
+    // COMMENTED OUT: const oldKeysFound = localStorage.getItem('wf_hybrid_user') !== null ? 1 : 0;
+    const oldKeysFound = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('wf_hybrid_user') !== null ? 1 : 0;
+    // COMMENTED OUT: const newKeysFound = localStorage.getItem('consentbit-userinfo') !== null ? 1 : 0;
+    const newKeysFound = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo') !== null ? 1 : 0;
     return { migrated, oldKeysFound, newKeysFound };
 }
 // Utility function to force migration
@@ -51681,7 +52059,8 @@ function forceMigration() {
     if (typeof window === 'undefined')
         return;
     const migrationKey = 'migration_done';
-    localStorage.removeItem(migrationKey); // Remove migration flag
+    // COMMENTED OUT: localStorage.removeItem(migrationKey); // Remove migration flag
+    (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)(migrationKey); // Remove migration flag
     migrateOldData(); // Run migration again
 }
 function usePersistentState(key, defaultValue) {
@@ -51691,7 +52070,8 @@ function usePersistentState(key, defaultValue) {
     // Check if user is authorized for siteInfo
     const isAuthorized = (() => {
         if (key === 'siteInfo') {
-            const userInfo = localStorage.getItem('consentbit-userinfo');
+            // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+            const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
             if (!userInfo)
                 return false;
             try {
@@ -51715,15 +52095,19 @@ function usePersistentState(key, defaultValue) {
         }
         try {
             // First try to get from new site-specific key
-            let savedState = localStorage.getItem(siteSpecificKey);
+            // COMMENTED OUT: let savedState = localStorage.getItem(siteSpecificKey);
+            let savedState = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)(siteSpecificKey);
             // Simple approach - no migration logic
             if (!savedState && key !== 'siteInfo') {
                 // Only handle wf_hybrid_user -> consentbit-userinfo migration
                 if (key === 'consentbit-userinfo') {
-                    savedState = localStorage.getItem('wf_hybrid_user');
+                    // COMMENTED OUT: savedState = localStorage.getItem('wf_hybrid_user');
+                    savedState = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('wf_hybrid_user');
                     if (savedState) {
-                        localStorage.setItem(siteSpecificKey, savedState);
-                        localStorage.removeItem('wf_hybrid_user');
+                        // COMMENTED OUT: localStorage.setItem(siteSpecificKey, savedState);
+                        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)(siteSpecificKey, savedState);
+                        // COMMENTED OUT: localStorage.removeItem('wf_hybrid_user');
+                        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.removeAuthStorageItem)('wf_hybrid_user');
                     }
                 }
             }
@@ -51750,7 +52134,8 @@ function usePersistentState(key, defaultValue) {
         if (typeof window !== 'undefined') {
             // Special handling for siteInfo - only allow setting if user is authorized
             if (key === 'siteInfo') {
-                const userInfo = localStorage.getItem('consentbit-userinfo');
+                // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+                const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
                 if (!userInfo) {
                     return;
                 }
@@ -51765,7 +52150,8 @@ function usePersistentState(key, defaultValue) {
                 }
             }
             // Check if user is authenticated before saving any data
-            const userInfo = localStorage.getItem('consentbit-userinfo');
+            // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+            const userInfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.getAuthStorageItem)('consentbit-userinfo');
             const isUserAuthenticated = (() => {
                 if (!userInfo)
                     return false;
@@ -51777,12 +52163,13 @@ function usePersistentState(key, defaultValue) {
                     return false;
                 }
             })();
-            // Only save to localStorage if:
+            // Only save to sessionStorage if:
             // 1. User is authenticated, OR
             // 2. Value was explicitly set (not just initialized), OR
-            // 3. We're loading an existing value from localStorage
+            // 3. We're loading an existing value from sessionStorage
             if (isUserAuthenticated || wasExplicitlySet.current) {
-                localStorage.setItem(siteSpecificKey, JSON.stringify(state));
+                // COMMENTED OUT: localStorage.setItem(siteSpecificKey, JSON.stringify(state));
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_1__.setAuthStorageItem)(siteSpecificKey, JSON.stringify(state));
             }
         }
     }, [siteSpecificKey, state, key]);
@@ -51854,9 +52241,12 @@ function useAuth() {
     // Function to attempt automatic token refresh on app load
     const attemptAutoRefresh = () => __awaiter(this, void 0, void 0, function* () {
         try {
+            console.log('🔐 [DEBUG] attemptAutoRefresh started');
             // Check if user was explicitly logged out
-            const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+            // COMMENTED OUT: const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+            const wasExplicitlyLoggedOut = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("explicitly_logged_out");
             if (wasExplicitlyLoggedOut) {
+                console.log('🔐 [DEBUG] User was explicitly logged out, skipping auth');
                 return false;
             }
             // Check if there's existing auth data that might be expired or invalid
@@ -51866,17 +52256,31 @@ function useAuth() {
                     const decodedToken = (0,jwt_decode__WEBPACK_IMPORTED_MODULE_0__.jwtDecode)(authData.sessionToken);
                     // If token is not expired, don't need to refresh
                     if (decodedToken.exp * 1000 > Date.now()) {
+                        console.log('🔐 [DEBUG] Valid token found, no refresh needed');
                         return true; // Already have valid token
                     }
+                    console.log('🔐 [DEBUG] Token expired, attempting refresh');
                 }
                 catch (error) {
+                    console.log('🔐 [DEBUG] Invalid token data, attempting refresh');
                     // Invalid token data, continue with refresh attempt
                 }
             }
-            // Attempt silent auth to refresh token
-            return yield attemptSilentAuth();
+            // Attempt silent auth to refresh token with timeout
+            console.log('🔐 [DEBUG] Attempting silent auth...');
+            const silentAuthPromise = attemptSilentAuth();
+            const timeoutPromise = new Promise((resolve) => {
+                setTimeout(() => {
+                    console.log('🔐 [DEBUG] Silent auth timeout');
+                    resolve(false);
+                }, 3000); // 3 second timeout for silent auth
+            });
+            const result = yield Promise.race([silentAuthPromise, timeoutPromise]);
+            console.log('🔐 [DEBUG] Silent auth result:', result);
+            return result;
         }
         catch (error) {
+            console.log('🔐 [DEBUG] attemptAutoRefresh error:', error);
             return false;
         }
     });
@@ -51885,12 +52289,16 @@ function useAuth() {
         queryKey: ["auth"],
         queryFn: () => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
-            // Migrate existing auth data to sessionStorage on first load
+            const authStartTime = performance.now();
+            // Run lightweight migration for existing users (only essential keys, once per session)
             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.migrateAuthDataToSessionStorage)();
             const authData = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthData)();
-            const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+            // COMMENTED OUT: const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
+            const wasExplicitlyLoggedOut = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("explicitly_logged_out");
             // Return initial state if no stored user or logged out
             if (!authData || wasExplicitlyLoggedOut) {
+                console.log('🔐 [DEBUG] No auth data or explicitly logged out, returning empty state');
+                console.log('🔐 [DEBUG] useAuth queryFn completed in:', performance.now() - authStartTime, 'ms');
                 return { user: { firstName: "", email: "" }, sessionToken: "" };
             }
             try {
@@ -51962,7 +52370,8 @@ function useAuth() {
                 };
                 // Update sessionStorage for auth data
                 (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthData)(userData);
-                localStorage.removeItem("explicitly_logged_out");
+                // COMMENTED OUT: localStorage.removeItem("explicitly_logged_out");
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.removeAuthStorageItem)("explicitly_logged_out");
                 // Store site information after authentication
                 if (data.siteInfo) {
                     (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setSiteInfo)(data.siteInfo);
@@ -52017,7 +52426,8 @@ function useAuth() {
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
             };
             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthData)(userData);
-            localStorage.removeItem("explicitly_logged_out");
+            // COMMENTED OUT: localStorage.removeItem("explicitly_logged_out");
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.removeAuthStorageItem)("explicitly_logged_out");
             // Store site information after authentication
             if (siteInfo) {
                 (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setSiteInfo)(siteInfo);
@@ -52086,7 +52496,8 @@ function useAuth() {
                 exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
             };
             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthData)(userData);
-            localStorage.removeItem("explicitly_logged_out");
+            // COMMENTED OUT: localStorage.removeItem("explicitly_logged_out");
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.removeAuthStorageItem)("explicitly_logged_out");
             // Store site information after authentication
             if (siteInfo) {
                 (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setSiteInfo)(siteInfo);
@@ -52103,15 +52514,18 @@ function useAuth() {
             return data;
         }
         catch (error) {
-            localStorage.removeItem("consentbit-userinfo");
+            // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+            (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.clearAuthData)();
             throw error;
         }
     });
     // Function to handle user logout
     const logout = () => {
         // Set logout flag and clear storage
-        localStorage.setItem("explicitly_logged_out", "true");
-        localStorage.removeItem("consentbit-userinfo");
+        // COMMENTED OUT: localStorage.setItem("explicitly_logged_out", "true");
+        // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthStorageItem)("explicitly_logged_out", "true");
+        (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.clearAuthData)();
         queryClient.setQueryData(["auth"], {
             user: { firstName: "", email: "" },
             sessionToken: "",
@@ -52136,8 +52550,10 @@ function useAuth() {
             }
             catch (error) {
                 // Clear any partial auth state
-                localStorage.removeItem("consentbit-userinfo");
-                localStorage.setItem("explicitly_logged_out", "true");
+                // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+                // COMMENTED OUT: localStorage.setItem("explicitly_logged_out", "true");
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.clearAuthData)();
+                (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.setAuthStorageItem)("explicitly_logged_out", "true");
             }
         });
         const checkWindow = setInterval(() => {
@@ -52734,9 +53150,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getSessionTokenFromLocalStorage: () => (/* binding */ getSessionTokenFromLocalStorage)
 /* harmony export */ });
+/* harmony import */ var _authStorage__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./authStorage */ "./src/util/authStorage.ts");
 // src/util/session.ts
+
 function getSessionTokenFromLocalStorage() {
-    const userinfo = localStorage.getItem("consentbit-userinfo");
+    // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+    const userinfo = (0,_authStorage__WEBPACK_IMPORTED_MODULE_0__.getAuthStorageItem)("consentbit-userinfo");
     if (!userinfo)
         return null;
     try {
@@ -52745,7 +53164,8 @@ function getSessionTokenFromLocalStorage() {
     }
     catch (_a) {
         // Invalid JSON, clear it
-        localStorage.removeItem("consentbit-userinfo");
+        // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+        (0,_authStorage__WEBPACK_IMPORTED_MODULE_0__.removeAuthStorageItem)("consentbit-userinfo");
         return null;
     }
 }
@@ -52780,23 +53200,29 @@ __webpack_require__.r(__webpack_exports__);
  * Uses sessionStorage for authentication data (cleared when tab closes)
  * Uses localStorage for other persistent app data
  */
-// Authentication keys that should use sessionStorage
-const AUTH_KEYS = [
+// ALL keys now use sessionStorage (commented out localStorage usage)
+const ALL_KEYS = [
     'consentbit-userinfo',
     'siteInfo',
-    'explicitly_logged_out'
+    'explicitly_logged_out',
+    'cookiePreferences',
+    'selectedOptions',
+    'scriptContext_scripts',
+    'cookieBannerAdded',
+    'bannerAdded',
+    'wf_hybrid_user'
 ];
 /**
- * Check if a key is an authentication key
+ * Check if a key should use sessionStorage (now all keys do)
  */
-function isAuthKey(key) {
-    return AUTH_KEYS.includes(key) || key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user');
+function isSessionStorageKey(key) {
+    return true; // All keys now use sessionStorage
 }
 /**
- * Get storage instance based on key type
+ * Get storage instance - now always sessionStorage
  */
 function getStorage(key) {
-    return isAuthKey(key) ? sessionStorage : localStorage;
+    return sessionStorage; // Always use sessionStorage now
 }
 /**
  * Set item in appropriate storage
@@ -52806,7 +53232,7 @@ function setAuthStorageItem(key, value) {
         return;
     const storage = getStorage(key);
     storage.setItem(key, value);
-    console.log(`🔐 Stored ${isAuthKey(key) ? 'auth' : 'app'} data in ${isAuthKey(key) ? 'sessionStorage' : 'localStorage'}:`, key);
+    console.log(`🔐 Stored data in sessionStorage:`, key);
 }
 /**
  * Get item from appropriate storage
@@ -52825,10 +53251,10 @@ function removeAuthStorageItem(key) {
         return;
     const storage = getStorage(key);
     storage.removeItem(key);
-    console.log(`🗑️ Removed ${isAuthKey(key) ? 'auth' : 'app'} data from ${isAuthKey(key) ? 'sessionStorage' : 'localStorage'}:`, key);
+    console.log(`🗑️ Removed data from sessionStorage:`, key);
 }
 /**
- * Clear all authentication data (sessionStorage)
+ * Clear all data (sessionStorage only now)
  */
 function clearAuthData() {
     if (typeof window === 'undefined')
@@ -52837,46 +53263,48 @@ function clearAuthData() {
     // Clear from sessionStorage
     for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && isAuthKey(key)) {
+        if (key) {
             sessionStorage.removeItem(key);
             keysToRemove.push(key);
         }
     }
-    // Also clear from localStorage (for migration purposes)
-    AUTH_KEYS.forEach(key => {
-        if (localStorage.getItem(key) !== null) {
-            localStorage.removeItem(key);
-            keysToRemove.push(key);
-        }
-    });
-    console.log('🧹 Cleared authentication data:', keysToRemove);
+    // COMMENTED OUT: Also clear from localStorage (for migration purposes)
+    // AUTH_KEYS.forEach(key => {
+    //   if (localStorage.getItem(key) !== null) {
+    //     localStorage.removeItem(key);
+    //     keysToRemove.push(key);
+    //   }
+    // });
+    console.log('🧹 Cleared all data from sessionStorage:', keysToRemove);
 }
 /**
- * Clear all app data (localStorage) but preserve auth data
+ * COMMENTED OUT: Clear all app data (localStorage) but preserve auth data
+ * Now everything is in sessionStorage
  */
 function clearAppData() {
     if (typeof window === 'undefined')
         return;
-    const keysToRemove = [];
-    // Get all localStorage keys
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && !isAuthKey(key)) {
-            localStorage.removeItem(key);
-            keysToRemove.push(key);
-        }
-    }
-    console.log('🧹 Cleared app data:', keysToRemove);
+    // COMMENTED OUT: localStorage usage
+    // const keysToRemove: string[] = [];
+    // // Get all localStorage keys
+    // for (let i = 0; i < localStorage.length; i++) {
+    //   const key = localStorage.key(i);
+    //   if (key && !isAuthKey(key)) {
+    //     localStorage.removeItem(key);
+    //     keysToRemove.push(key);
+    //   }
+    // }
+    console.log('🧹 clearAppData: All data now in sessionStorage, no localStorage to clear');
 }
 /**
- * Clear all data (both localStorage and sessionStorage)
+ * Clear all data (sessionStorage only now)
  */
 function clearAllData() {
     if (typeof window === 'undefined')
         return;
-    localStorage.clear();
+    // COMMENTED OUT: localStorage.clear();
     sessionStorage.clear();
-    console.log('🧹 Cleared all data from both localStorage and sessionStorage');
+    console.log('🧹 Cleared all data from sessionStorage');
 }
 /**
  * Get authentication data from sessionStorage
@@ -52932,33 +53360,35 @@ function isAuthenticated() {
     return authData.exp > now;
 }
 /**
- * Migration function to move existing auth data from localStorage to sessionStorage
+ * Migration function to move existing data from localStorage to sessionStorage
  */
 function migrateAuthDataToSessionStorage() {
     if (typeof window === 'undefined')
         return;
-    console.log('🔄 Migrating authentication data from localStorage to sessionStorage...');
-    AUTH_KEYS.forEach(key => {
+    console.log('🔄 [DEBUG] Migration function called');
+    const migrationStartTime = performance.now();
+    // Check if migration has already been completed in this session
+    const migrationCompleted = sessionStorage.getItem('migration_completed');
+    if (migrationCompleted) {
+        console.log('🔄 [DEBUG] Migration already completed, skipping');
+        return; // Migration already done, skip expensive operations
+    }
+    console.log('🔄 [DEBUG] Migrating essential data from localStorage to sessionStorage...');
+    // Only migrate essential keys to avoid expensive operations
+    const essentialKeys = ['consentbit-userinfo', 'siteInfo', 'explicitly_logged_out'];
+    let migratedCount = 0;
+    essentialKeys.forEach(key => {
         const value = localStorage.getItem(key);
         if (value) {
             sessionStorage.setItem(key, value);
             localStorage.removeItem(key);
-            console.log(`✅ Migrated ${key} to sessionStorage`);
+            migratedCount++;
+            console.log(`✅ [DEBUG] Migrated ${key} to sessionStorage`);
         }
     });
-    // Also migrate any site-specific auth keys
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
-            const value = localStorage.getItem(key);
-            if (value) {
-                sessionStorage.setItem(key, value);
-                localStorage.removeItem(key);
-                console.log(`✅ Migrated ${key} to sessionStorage`);
-            }
-        }
-    }
-    console.log('✅ Migration completed');
+    // Mark migration as completed for this session
+    sessionStorage.setItem('migration_completed', 'true');
+    console.log(`✅ [DEBUG] Migration completed - migrated ${migratedCount} essential keys to sessionStorage in ${performance.now() - migrationStartTime}ms`);
 }
 /**
  * Debug function to show current storage state
@@ -52967,7 +53397,7 @@ function debugStorageState() {
     if (typeof window === 'undefined')
         return;
     console.log('🔍 Current Storage State:');
-    console.log('📦 localStorage keys:', Object.keys(localStorage));
+    // COMMENTED OUT: console.log('📦 localStorage keys:', Object.keys(localStorage));
     console.log('🔐 sessionStorage keys:', Object.keys(sessionStorage));
     const authData = getAuthData();
     const siteInfo = getSiteInfo();

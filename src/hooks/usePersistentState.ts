@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { getAuthStorageItem, setAuthStorageItem, removeAuthStorageItem } from '../util/authStorage';
 
 // Function to migrate old data to new site-specific format
 function migrateOldData(): void {
   if (typeof window === 'undefined') return;
   
   const migrationKey = 'migration_done';
-  if (localStorage.getItem(migrationKey)) {
+  // COMMENTED OUT: if (localStorage.getItem(migrationKey)) {
+  if (getAuthStorageItem(migrationKey)) {
     return; // Migration already done
   }
   
   // Only migrate wf_hybrid_user to consentbit-userinfo
-  const oldWfHybridUser = localStorage.getItem('wf_hybrid_user');
+  // COMMENTED OUT: const oldWfHybridUser = localStorage.getItem('wf_hybrid_user');
+  const oldWfHybridUser = getAuthStorageItem('wf_hybrid_user');
   if (oldWfHybridUser !== null) {
     // Migrate wf_hybrid_user to consentbit-userinfo
-    localStorage.setItem('consentbit-userinfo', oldWfHybridUser);
-    localStorage.removeItem('wf_hybrid_user');
+    // COMMENTED OUT: localStorage.setItem('consentbit-userinfo', oldWfHybridUser);
+    setAuthStorageItem('consentbit-userinfo', oldWfHybridUser);
+    // COMMENTED OUT: localStorage.removeItem('wf_hybrid_user');
+    removeAuthStorageItem('wf_hybrid_user');
   }
 
   // Mark migration as complete
-  localStorage.setItem(migrationKey, 'true');
+  // COMMENTED OUT: localStorage.setItem(migrationKey, 'true');
+  setAuthStorageItem(migrationKey, 'true');
 }
 
 // Function to get key (simple approach - no site-specific storage)
@@ -32,7 +38,8 @@ export function getCurrentSiteId(): string {
   if (typeof window === 'undefined') return 'default';
   
   // Check if user is authorized first
-  const userInfo = localStorage.getItem('consentbit-userinfo');
+  // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+  const userInfo = getAuthStorageItem('consentbit-userinfo');
   if (!userInfo) {
     // User not authorized - return default
     return 'default';
@@ -51,7 +58,8 @@ export function getCurrentSiteId(): string {
   }
   
   // User is authorized - now get site ID
-  const siteInfo = localStorage.getItem('siteInfo');
+  // COMMENTED OUT: const siteInfo = localStorage.getItem('siteInfo');
+  const siteInfo = getAuthStorageItem('siteInfo');
   if (siteInfo) {
     try {
       const parsed = JSON.parse(siteInfo);
@@ -99,8 +107,10 @@ export function clearCurrentSiteData(includeAuth: boolean = false): void {
   ];
   
   appKeys.forEach(key => {
-    if (localStorage.getItem(key) !== null) {
-      localStorage.removeItem(key);
+    // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+    if (getAuthStorageItem(key) !== null) {
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
       keysToRemove.push(key);
     }
   });
@@ -109,8 +119,10 @@ export function clearCurrentSiteData(includeAuth: boolean = false): void {
   if (includeAuth) {
     const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo'];
     authKeys.forEach(key => {
-      if (localStorage.getItem(key) !== null) {
-        localStorage.removeItem(key);
+      // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+      if (getAuthStorageItem(key) !== null) {
+        // COMMENTED OUT: localStorage.removeItem(key);
+        removeAuthStorageItem(key);
         keysToRemove.push(key);
       }
     });
@@ -139,8 +151,10 @@ export function clearAllData(): void {
   ];
   
   appKeys.forEach(key => {
-    if (localStorage.getItem(key) !== null) {
-      localStorage.removeItem(key);
+    // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+    if (getAuthStorageItem(key) !== null) {
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
       keysToRemove.push(key);
     }
   });
@@ -148,8 +162,10 @@ export function clearAllData(): void {
   // Clear authentication data
   const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo'];
   authKeys.forEach(key => {
-    if (localStorage.getItem(key) !== null) {
-      localStorage.removeItem(key);
+    // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+    if (getAuthStorageItem(key) !== null) {
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
       keysToRemove.push(key);
     }
   });
@@ -163,17 +179,22 @@ export function clearAuthData(): void {
   const keysToRemove: string[] = [];
   
   authKeys.forEach(key => {
-    if (localStorage.getItem(key) !== null) {
-      localStorage.removeItem(key);
+    // COMMENTED OUT: if (localStorage.getItem(key) !== null) {
+    if (getAuthStorageItem(key) !== null) {
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
       keysToRemove.push(key);
     }
   });
   
   // Also clear any site-specific auth keys
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
+  // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+  for (let i = 0; i < sessionStorage.length; i++) {
+    // COMMENTED OUT: const key = localStorage.key(i);
+    const key = sessionStorage.key(i);
     if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
-      localStorage.removeItem(key);
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
       keysToRemove.push(key);
     }
   }
@@ -187,10 +208,12 @@ export function clearAllDataOnReload(): void {
   
   try {
     // Set flag to indicate data should be cleared on next load
-    localStorage.setItem('__clear_on_reload__', 'true');
+    // COMMENTED OUT: localStorage.setItem('__clear_on_reload__', 'true');
+    setAuthStorageItem('__clear_on_reload__', 'true');
     
     // Clear everything immediately
-    localStorage.clear();
+    // COMMENTED OUT: localStorage.clear();
+    sessionStorage.clear();
     
     // Also clear any session storage if used
     if (typeof sessionStorage !== 'undefined') {
@@ -207,11 +230,13 @@ export function handleClearOnReload(): boolean {
   if (typeof window === 'undefined') return false;
   
   try {
-    const shouldClear = localStorage.getItem('__clear_on_reload__');
+    // COMMENTED OUT: const shouldClear = localStorage.getItem('__clear_on_reload__');
+    const shouldClear = getAuthStorageItem('__clear_on_reload__');
     
     if (shouldClear === 'true') {
       // Clear everything
-      localStorage.clear();
+      // COMMENTED OUT: localStorage.clear();
+      sessionStorage.clear();
       
       // Also clear session storage
       if (typeof sessionStorage !== 'undefined') {
@@ -242,13 +267,16 @@ export function clearAllPersistentData(): void {
     // Save authentication data temporarily
     const preservedData: Record<string, string | null> = {};
     authKeysToPreserve.forEach(key => {
-      preservedData[key] = localStorage.getItem(key);
+      // COMMENTED OUT: preservedData[key] = localStorage.getItem(key);
+      preservedData[key] = getAuthStorageItem(key);
     });
     
-    // Get all localStorage keys first
+    // Get all sessionStorage keys first
     const allKeys: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
+    // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      // COMMENTED OUT: const key = localStorage.key(i);
+      const key = sessionStorage.key(i);
       if (key) {
         allKeys.push(key);
       }
@@ -256,13 +284,15 @@ export function clearAllPersistentData(): void {
     
     // Clear all keys
     allKeys.forEach(key => {
-      localStorage.removeItem(key);
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
     });
     
     // Restore authentication data
     authKeysToPreserve.forEach(key => {
       if (preservedData[key] !== null) {
-        localStorage.setItem(key, preservedData[key]!);
+        // COMMENTED OUT: localStorage.setItem(key, preservedData[key]!);
+        setAuthStorageItem(key, preservedData[key]!);
       }
     });
     
@@ -292,7 +322,8 @@ export function clearAllDataIncludingAuth(): void {
     }
     
     allKeys.forEach(key => {
-      localStorage.removeItem(key);
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
     });
     
     // Clear sessionStorage
@@ -310,7 +341,8 @@ export function enableAutoClearOnReload(): void {
   if (typeof window === 'undefined') return;
   
   try {
-    localStorage.setItem('__auto_clear_enabled__', 'true');
+    // COMMENTED OUT: localStorage.setItem('__auto_clear_enabled__', 'true');
+    setAuthStorageItem('__auto_clear_enabled__', 'true');
   } catch (error) {
     // Silent error handling
   }
@@ -321,7 +353,8 @@ export function disableAutoClearOnReload(): void {
   if (typeof window === 'undefined') return;
   
   try {
-    localStorage.removeItem('__auto_clear_enabled__');
+    // COMMENTED OUT: localStorage.removeItem('__auto_clear_enabled__');
+    removeAuthStorageItem('__auto_clear_enabled__');
   } catch (error) {
     // Silent error handling
   }
@@ -332,7 +365,8 @@ export function checkAndHandleAutoClear(): boolean {
   if (typeof window === 'undefined') return false;
   
   try {
-    const autoClearEnabled = localStorage.getItem('__auto_clear_enabled__');
+    // COMMENTED OUT: const autoClearEnabled = localStorage.getItem('__auto_clear_enabled__');
+    const autoClearEnabled = getAuthStorageItem('__auto_clear_enabled__');
     
     if (autoClearEnabled === 'true') {
       // Temporarily save the auto-clear flag
@@ -342,7 +376,8 @@ export function checkAndHandleAutoClear(): boolean {
       clearAllPersistentData();
       
       // Restore the auto-clear flag so it persists
-      localStorage.setItem('__auto_clear_enabled__', tempFlag);
+      // COMMENTED OUT: localStorage.setItem('__auto_clear_enabled__', tempFlag);
+      setAuthStorageItem('__auto_clear_enabled__', tempFlag);
       
       return true;
     }
@@ -358,7 +393,8 @@ export function setSiteInfoAfterAuth(siteInfo: { siteId: string; siteName: strin
   if (typeof window === 'undefined') return;
   
   // Check if user is authorized
-  const userInfo = localStorage.getItem('consentbit-userinfo');
+  // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+  const userInfo = getAuthStorageItem('consentbit-userinfo');
   if (!userInfo) {
     return;
   }
@@ -373,14 +409,16 @@ export function setSiteInfoAfterAuth(siteInfo: { siteId: string; siteName: strin
   }
   
   // User is authorized - set site info
-  localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+  // COMMENTED OUT: localStorage.setItem('siteInfo', JSON.stringify(siteInfo));
+  setAuthStorageItem('siteInfo', JSON.stringify(siteInfo));
 }
 
 // Utility function to check if user can set site info
 export function canSetSiteInfo(): boolean {
   if (typeof window === 'undefined') return false;
   
-  const userInfo = localStorage.getItem('consentbit-userinfo');
+  // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+  const userInfo = getAuthStorageItem('consentbit-userinfo');
   if (!userInfo) return false;
   
   try {
@@ -395,10 +433,14 @@ export function canSetSiteInfo(): boolean {
 export function debugAuthStatus(): void {
   if (typeof window === 'undefined') return;
   
-  const userInfo = localStorage.getItem('consentbit-userinfo');
-  const wfHybridUser = localStorage.getItem('wf_hybrid_user');
-  const siteInfo = localStorage.getItem('siteInfo');
-  const explicitlyLoggedOut = localStorage.getItem('explicitly_logged_out');
+  // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+  const userInfo = getAuthStorageItem('consentbit-userinfo');
+  // COMMENTED OUT: const wfHybridUser = localStorage.getItem('wf_hybrid_user');
+  const wfHybridUser = getAuthStorageItem('wf_hybrid_user');
+  // COMMENTED OUT: const siteInfo = localStorage.getItem('siteInfo');
+  const siteInfo = getAuthStorageItem('siteInfo');
+  // COMMENTED OUT: const explicitlyLoggedOut = localStorage.getItem('explicitly_logged_out');
+  const explicitlyLoggedOut = getAuthStorageItem('explicitly_logged_out');
   
   if (userInfo) {
     try {
@@ -423,18 +465,23 @@ export function forceClearAuthData(): void {
   
   // Clear all auth-related keys
   const authKeys = ['consentbit-userinfo', 'wf_hybrid_user', 'siteInfo', 'explicitly_logged_out'];
-  authKeys.forEach(key => localStorage.removeItem(key));
+  // COMMENTED OUT: authKeys.forEach(key => localStorage.removeItem(key));
+  authKeys.forEach(key => removeAuthStorageItem(key));
   
   // Clear any site-specific auth keys
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
+  // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+  for (let i = 0; i < sessionStorage.length; i++) {
+    // COMMENTED OUT: const key = localStorage.key(i);
+    const key = sessionStorage.key(i);
     if (key && (key.includes('consentbit-userinfo') || key.includes('wf_hybrid_user'))) {
-      localStorage.removeItem(key);
+      // COMMENTED OUT: localStorage.removeItem(key);
+      removeAuthStorageItem(key);
     }
   }
   
   // Set explicitly logged out flag to prevent restoration
-  localStorage.setItem('explicitly_logged_out', 'true');
+  // COMMENTED OUT: localStorage.setItem('explicitly_logged_out', 'true');
+  setAuthStorageItem('explicitly_logged_out', 'true');
   
 
 }
@@ -443,7 +490,8 @@ export function forceClearAuthData(): void {
 export function clearAuthIfNotAuthorized(): void {
   if (typeof window === 'undefined') return;
   
-  const userInfo = localStorage.getItem('consentbit-userinfo');
+  // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+  const userInfo = getAuthStorageItem('consentbit-userinfo');
   if (!userInfo) {
     return;
   }
@@ -454,12 +502,14 @@ export function clearAuthIfNotAuthorized(): void {
     if (!parsed?.sessionToken || !parsed?.email || !parsed?.siteId) {
       clearAuthData();
       // Also clear site info if user is not authorized
-      localStorage.removeItem('siteInfo');
+      // COMMENTED OUT: localStorage.removeItem('siteInfo');
+      removeAuthStorageItem('siteInfo');
     }
   } catch (error) {
     clearAuthData();
     // Also clear site info if auth data is corrupted
-    localStorage.removeItem('siteInfo');
+    // COMMENTED OUT: localStorage.removeItem('siteInfo');
+    removeAuthStorageItem('siteInfo');
   }
 }
 
@@ -470,14 +520,18 @@ export function listCurrentSiteData(): Record<string, any> {
   const siteId = getCurrentSiteId();
   const siteData: Record<string, any> = {};
   
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
+  // COMMENTED OUT: for (let i = 0; i < localStorage.length; i++) {
+  for (let i = 0; i < sessionStorage.length; i++) {
+    // COMMENTED OUT: const key = localStorage.key(i);
+    const key = sessionStorage.key(i);
     if (key && key.startsWith(`${siteId}_`)) {
       try {
-        const value = localStorage.getItem(key);
+        // COMMENTED OUT: const value = localStorage.getItem(key);
+        const value = getAuthStorageItem(key);
         siteData[key] = value ? JSON.parse(value) : value;
       } catch (e) {
-        siteData[key] = localStorage.getItem(key);
+        // COMMENTED OUT: siteData[key] = localStorage.getItem(key);
+        siteData[key] = getAuthStorageItem(key);
       }
     }
   }
@@ -490,11 +544,14 @@ export function checkMigrationStatus(): { migrated: boolean; oldKeysFound: numbe
   if (typeof window === 'undefined') return { migrated: false, oldKeysFound: 0, newKeysFound: 0 };
   
   const migrationKey = 'migration_done';
-  const migrated = localStorage.getItem(migrationKey) === 'true';
+  // COMMENTED OUT: const migrated = localStorage.getItem(migrationKey) === 'true';
+  const migrated = getAuthStorageItem(migrationKey) === 'true';
   
   // Only check for wf_hybrid_user migration
-  const oldKeysFound = localStorage.getItem('wf_hybrid_user') !== null ? 1 : 0;
-  const newKeysFound = localStorage.getItem('consentbit-userinfo') !== null ? 1 : 0;
+  // COMMENTED OUT: const oldKeysFound = localStorage.getItem('wf_hybrid_user') !== null ? 1 : 0;
+  const oldKeysFound = getAuthStorageItem('wf_hybrid_user') !== null ? 1 : 0;
+  // COMMENTED OUT: const newKeysFound = localStorage.getItem('consentbit-userinfo') !== null ? 1 : 0;
+  const newKeysFound = getAuthStorageItem('consentbit-userinfo') !== null ? 1 : 0;
   
   return { migrated, oldKeysFound, newKeysFound };
 }
@@ -504,7 +561,8 @@ export function forceMigration(): void {
   if (typeof window === 'undefined') return;
   
   const migrationKey = 'migration_done';
-  localStorage.removeItem(migrationKey); // Remove migration flag
+  // COMMENTED OUT: localStorage.removeItem(migrationKey); // Remove migration flag
+  removeAuthStorageItem(migrationKey); // Remove migration flag
   migrateOldData(); // Run migration again
 }
 
@@ -517,7 +575,8 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
   // Check if user is authorized for siteInfo
   const isAuthorized = (() => {
     if (key === 'siteInfo') {
-      const userInfo = localStorage.getItem('consentbit-userinfo');
+      // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+      const userInfo = getAuthStorageItem('consentbit-userinfo');
       if (!userInfo) return false;
       
       try {
@@ -543,16 +602,20 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
     
     try {
       // First try to get from new site-specific key
-      let savedState = localStorage.getItem(siteSpecificKey);
+      // COMMENTED OUT: let savedState = localStorage.getItem(siteSpecificKey);
+      let savedState = getAuthStorageItem(siteSpecificKey);
       
       // Simple approach - no migration logic
       if (!savedState && key !== 'siteInfo') {
         // Only handle wf_hybrid_user -> consentbit-userinfo migration
         if (key === 'consentbit-userinfo') {
-          savedState = localStorage.getItem('wf_hybrid_user');
+          // COMMENTED OUT: savedState = localStorage.getItem('wf_hybrid_user');
+          savedState = getAuthStorageItem('wf_hybrid_user');
           if (savedState) {
-            localStorage.setItem(siteSpecificKey, savedState);
-            localStorage.removeItem('wf_hybrid_user');
+            // COMMENTED OUT: localStorage.setItem(siteSpecificKey, savedState);
+            setAuthStorageItem(siteSpecificKey, savedState);
+            // COMMENTED OUT: localStorage.removeItem('wf_hybrid_user');
+            removeAuthStorageItem('wf_hybrid_user');
           }
         }
       }
@@ -582,7 +645,8 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
     if (typeof window !== 'undefined') {
       // Special handling for siteInfo - only allow setting if user is authorized
       if (key === 'siteInfo') {
-        const userInfo = localStorage.getItem('consentbit-userinfo');
+        // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+        const userInfo = getAuthStorageItem('consentbit-userinfo');
         if (!userInfo) {
           return;
         }
@@ -598,7 +662,8 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
       }
       
       // Check if user is authenticated before saving any data
-      const userInfo = localStorage.getItem('consentbit-userinfo');
+      // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
+      const userInfo = getAuthStorageItem('consentbit-userinfo');
       const isUserAuthenticated = (() => {
         if (!userInfo) return false;
         try {
@@ -609,12 +674,13 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
         }
       })();
       
-      // Only save to localStorage if:
+      // Only save to sessionStorage if:
       // 1. User is authenticated, OR
       // 2. Value was explicitly set (not just initialized), OR
-      // 3. We're loading an existing value from localStorage
+      // 3. We're loading an existing value from sessionStorage
       if (isUserAuthenticated || wasExplicitlySet.current) {
-        localStorage.setItem(siteSpecificKey, JSON.stringify(state));
+        // COMMENTED OUT: localStorage.setItem(siteSpecificKey, JSON.stringify(state));
+        setAuthStorageItem(siteSpecificKey, JSON.stringify(state));
       }
     }
   }, [siteSpecificKey, state, key]);

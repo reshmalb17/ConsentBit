@@ -1,13 +1,17 @@
 // src/util/session.ts
+import { getAuthStorageItem, removeAuthStorageItem } from './authStorage';
+
 export function getSessionTokenFromLocalStorage() {
-  const userinfo = localStorage.getItem("consentbit-userinfo");
+  // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
+  const userinfo = getAuthStorageItem("consentbit-userinfo");
   if (!userinfo) return null;
   try {
     const tokenss = JSON.parse(userinfo);
     return tokenss?.sessionToken || null;
   } catch {
     // Invalid JSON, clear it
-    localStorage.removeItem("consentbit-userinfo");
+    // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
+    removeAuthStorageItem("consentbit-userinfo");
     return null;
   }
 }
