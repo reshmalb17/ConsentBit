@@ -57,7 +57,6 @@ export function setAuthStorageItem(key: string, value: string): void {
   const storage = getStorage(key);
   storage.setItem(key, value);
   
-  console.log(`🔐 Stored data in sessionStorage:`, key);
 }
 
 /**
@@ -79,7 +78,6 @@ export function removeAuthStorageItem(key: string): void {
   const storage = getStorage(key);
   storage.removeItem(key);
   
-  console.log(`🗑️ Removed data from sessionStorage:`, key);
 }
 
 /**
@@ -107,7 +105,6 @@ export function clearAuthData(): void {
   //   }
   // });
   
-  console.log('🧹 Cleared all data from sessionStorage:', keysToRemove);
 }
 
 /**
@@ -129,7 +126,6 @@ export function clearAppData(): void {
   //   }
   // }
   
-  console.log('🧹 clearAppData: All data now in sessionStorage, no localStorage to clear');
 }
 
 /**
@@ -141,7 +137,6 @@ export function clearAllData(): void {
   // COMMENTED OUT: localStorage.clear();
   sessionStorage.clear();
   
-  console.log('🧹 Cleared all data from sessionStorage');
 }
 
 /**
@@ -154,7 +149,6 @@ export function getAuthData(): AuthData | null {
   try {
     return JSON.parse(authData);
   } catch (error) {
-    console.error('Error parsing auth data:', error);
     return null;
   }
 }
@@ -176,7 +170,6 @@ export function getSiteInfo(): SiteInfo | null {
   try {
     return JSON.parse(siteInfo);
   } catch (error) {
-    console.error('Error parsing site info:', error);
     return null;
   }
 }
@@ -206,17 +199,14 @@ export function isAuthenticated(): boolean {
 export function migrateAuthDataToSessionStorage(): void {
   if (typeof window === 'undefined') return;
   
-  console.log('🔄 [DEBUG] Migration function called');
   const migrationStartTime = performance.now();
   
   // Check if migration has already been completed in this session
   const migrationCompleted = sessionStorage.getItem('migration_completed');
   if (migrationCompleted) {
-    console.log('🔄 [DEBUG] Migration already completed, skipping');
     return; // Migration already done, skip expensive operations
   }
   
-  console.log('🔄 [DEBUG] Migrating essential data from localStorage to sessionStorage...');
   
   // Only migrate essential keys to avoid expensive operations
   const essentialKeys = ['consentbit-userinfo', 'siteInfo', 'explicitly_logged_out'];
@@ -228,13 +218,11 @@ export function migrateAuthDataToSessionStorage(): void {
       sessionStorage.setItem(key, value);
       localStorage.removeItem(key);
       migratedCount++;
-      console.log(`✅ [DEBUG] Migrated ${key} to sessionStorage`);
     }
   });
   
   // Mark migration as completed for this session
   sessionStorage.setItem('migration_completed', 'true');
-  console.log(`✅ [DEBUG] Migration completed - migrated ${migratedCount} essential keys to sessionStorage in ${performance.now() - migrationStartTime}ms`);
 }
 
 /**
@@ -243,14 +231,9 @@ export function migrateAuthDataToSessionStorage(): void {
 export function debugStorageState(): void {
   if (typeof window === 'undefined') return;
   
-  console.log('🔍 Current Storage State:');
-  // COMMENTED OUT: console.log('📦 localStorage keys:', Object.keys(localStorage));
-  console.log('🔐 sessionStorage keys:', Object.keys(sessionStorage));
   
   const authData = getAuthData();
   const siteInfo = getSiteInfo();
   
-  console.log('👤 Auth data:', authData);
-  console.log('🏢 Site info:', siteInfo);
-  console.log('✅ Is authenticated:', isAuthenticated());
 }
+

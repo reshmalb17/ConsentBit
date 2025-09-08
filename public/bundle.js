@@ -43477,11 +43477,6 @@ const App = () => {
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const currentTime = performance.now();
         // Check if scan button should be available (authenticated && !isCheckingAuth && !isBannerAdded)
-        if (isAuthenticated && !isCheckingAuth && !bannerBooleans.isBannerAdded && globalAuthStartTime) {
-            const totalTime = currentTime - globalAuthStartTime;
-            console.log('⏱️ [TIMING] Scan Project button available in App.tsx - Total time:', totalTime.toFixed(2), 'ms');
-            console.log('⏱️ [TIMING] State check - isAuthenticated:', isAuthenticated, 'isCheckingAuth:', isCheckingAuth, 'isBannerAdded:', bannerBooleans.isBannerAdded);
-        }
     }, [isAuthenticated, isCheckingAuth, bannerBooleans.isBannerAdded, globalAuthStartTime]);
     const { user, sessionToken, exchangeAndVerifyIdToken, openAuthScreen, isAuthenticatedForCurrentSite, attemptAutoRefresh } = (0,_hooks_userAuth__WEBPACK_IMPORTED_MODULE_9__.useAuth)();
     const [isFetchWelcomeScripts, setIsFetchWelcomeScripts] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -43489,37 +43484,26 @@ const App = () => {
     // App initialization with clean welcome screen flow
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         const initializeApp = () => __awaiter(void 0, void 0, void 0, function* () {
-            console.log('🚀 [DEBUG] App initialization started');
             const startTime = performance.now();
             // Start with welcome screen and loading state
-            console.log('🚀 [DEBUG] Setting initial states...');
             componentStates.resetComponentStates();
             componentStates.setIsWelcomeScreen(true);
             setIsAppInitializing(false);
             setIsCheckingAuth(true);
-            console.log('🚀 [DEBUG] Initial states set - isCheckingAuth: true');
             // Check if user data already exists in sessionStorage - if so, skip auth check
-            console.log('🚀 [DEBUG] Checking for existing user data in sessionStorage...');
             const existingUserData = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.getAuthStorageItem)("consentbit-userinfo");
-            console.log('🚀 [DEBUG] Existing user data:', existingUserData ? 'Found' : 'Not found');
             if (existingUserData && existingUserData !== "null" && existingUserData !== "undefined") {
-                console.log('✅ [DEBUG] User data found in sessionStorage, skipping auth check');
                 const authStartTime = performance.now();
                 setIsAuthenticated(true);
-                console.log('🚀 [DEBUG] Set isAuthenticated to true, time:', performance.now() - authStartTime, 'ms');
-                console.log('🚀 [DEBUG] Authentication state set to TRUE from sessionStorage');
                 // Track timing for cached authentication
                 if (globalAuthStartTime) {
                     const totalTime = performance.now() - globalAuthStartTime;
-                    console.log('⏱️ [TIMING] Total time from auth start to cached auth complete:', totalTime.toFixed(2), 'ms');
                 }
                 // Always check banner status from API to get accurate status
-                console.log('🚀 [DEBUG] Checking banner status from API...');
                 const bannerStartTime = performance.now();
                 const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_12__.getSessionTokenFromLocalStorage)();
                 if (token) {
                     try {
-                        console.log('🚀 [DEBUG] Making API call to getBannerStyles...');
                         const apiStartTime = performance.now();
                         // Add timeout to prevent hanging API calls
                         const apiPromise = _services_api__WEBPACK_IMPORTED_MODULE_11__.customCodeApi.getBannerStyles(token);
@@ -43527,72 +43511,54 @@ const App = () => {
                             setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
                         });
                         const response = yield Promise.race([apiPromise, timeoutPromise]);
-                        console.log('🚀 [DEBUG] API call completed in:', performance.now() - apiStartTime, 'ms');
                         // Set banner status based on API response
                         if (response && response.appData && response.appData.isBannerAdded === true) {
                             // Banner was previously added - show welcome screen with "Customize" button
-                            console.log('🚀 [DEBUG] Banner was previously added (from API)');
                             setSkipWelcomeScreen(false);
                             bannerBooleans.setIsBannerAdded(true);
                         }
                         else {
                             // Response is null, empty, or bannerAdded is not true - show welcome screen with "Scan Project" button
-                            console.log('🚀 [DEBUG] Banner not added yet (from API)');
                             setSkipWelcomeScreen(false);
                             bannerBooleans.setIsBannerAdded(false);
                         }
                     }
                     catch (error) {
                         // API call failed or timed out - show welcome screen with default state
-                        console.log('🚀 [DEBUG] API call failed or timed out:', error);
-                        if (error instanceof Error && error.message.includes('timeout')) {
-                            console.log('🚀 [DEBUG] API call timed out after 10 seconds, proceeding with default state');
-                        }
                         setSkipWelcomeScreen(false);
                         bannerBooleans.setIsBannerAdded(false);
                     }
                 }
                 else {
                     // No token available - show welcome screen with default state
-                    console.log('🚀 [DEBUG] No token available, using default banner status');
                     setSkipWelcomeScreen(false);
                     bannerBooleans.setIsBannerAdded(false);
                 }
-                console.log('🚀 [DEBUG] Banner check completed in:', performance.now() - bannerStartTime, 'ms');
                 // Set checking auth to false only after all initialization is complete
-                console.log('🚀 [DEBUG] Setting isCheckingAuth to false...');
                 const finalStartTime = performance.now();
                 setIsCheckingAuth(false);
-                console.log('🚀 [DEBUG] isCheckingAuth set to false, time:', performance.now() - finalStartTime, 'ms');
-                console.log('🚀 [DEBUG] Total initialization time:', performance.now() - startTime, 'ms');
                 return; // Exit early since we have user data
             }
             try {
-                console.log('🚀 [DEBUG] No cached user data, attempting authentication...');
                 const authStartTime = performance.now();
                 // Try fresh background authentication (silent) with timeout
                 const authPromise = attemptAutoRefresh();
                 const timeoutPromise = new Promise((resolve) => {
                     setTimeout(() => {
-                        console.log('🚀 [DEBUG] Authentication timeout after 5 seconds');
                         resolve(false);
                     }, 5000); // 5 second timeout
                 });
                 const refreshSuccess = yield Promise.race([authPromise, timeoutPromise]);
-                console.log('🚀 [DEBUG] Authentication completed in:', performance.now() - authStartTime, 'ms, success:', refreshSuccess);
                 if (refreshSuccess) {
-                    console.log('🚀 [DEBUG] Authentication successful, setting states...');
                     setIsAuthenticated(true);
                     // Track timing for fresh authentication
                     if (globalAuthStartTime) {
                         const totalTime = performance.now() - globalAuthStartTime;
-                        console.log('⏱️ [TIMING] Total time from auth start to fresh auth complete:', totalTime.toFixed(2), 'ms');
                     }
                     // Always check API for current banner status (don't rely on cached data)
                     const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_12__.getSessionTokenFromLocalStorage)();
                     if (token) {
                         try {
-                            console.log('🚀 [DEBUG] Making API call to getBannerStyles...');
                             const apiStartTime = performance.now();
                             // Add timeout to prevent hanging API calls
                             const apiPromise = _services_api__WEBPACK_IMPORTED_MODULE_11__.customCodeApi.getBannerStyles(token);
@@ -43600,53 +43566,44 @@ const App = () => {
                                 setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
                             });
                             const response = yield Promise.race([apiPromise, timeoutPromise]);
-                            console.log('🚀 [DEBUG] API call completed in:', performance.now() - apiStartTime, 'ms');
                             // Set banner status based on API response (not cached data)
                             if (response && response.appData && response.appData.isBannerAdded === true) {
                                 // Banner was previously added - show welcome screen with "Customize" button
-                                console.log('🚀 [DEBUG] Banner was previously added (from API)');
                                 setSkipWelcomeScreen(false);
                                 bannerBooleans.setIsBannerAdded(true);
                             }
                             else {
                                 // Response is null, empty, or bannerAdded is not true - show welcome screen with "Scan Project" button
-                                console.log('🚀 [DEBUG] Banner not added yet (from API)');
                                 setSkipWelcomeScreen(false);
                                 bannerBooleans.setIsBannerAdded(false);
                             }
                         }
                         catch (error) {
                             // API call failed - show welcome screen
-                            console.log('🚀 [DEBUG] API call failed:', error);
                             setSkipWelcomeScreen(false);
                             bannerBooleans.setIsBannerAdded(false);
                         }
                     }
                     else {
                         // No token available - show welcome screen
-                        console.log('🚀 [DEBUG] No token available');
                         setSkipWelcomeScreen(false);
                         bannerBooleans.setIsBannerAdded(false);
                     }
                 }
                 else {
                     // Auth failed - show welcome screen
-                    console.log('🚀 [DEBUG] Authentication failed or timed out');
                     setSkipWelcomeScreen(false);
                     bannerBooleans.setIsBannerAdded(false);
                 }
             }
             catch (error) {
                 // Silent error handling - show welcome screen
-                console.log('🚀 [DEBUG] Authentication error:', error);
                 setSkipWelcomeScreen(false);
                 bannerBooleans.setIsBannerAdded(false);
             }
             finally {
                 // Auth check complete
-                console.log('🚀 [DEBUG] Setting isCheckingAuth to false...');
                 setIsCheckingAuth(false);
-                console.log('🚀 [DEBUG] Total initialization time:', performance.now() - startTime, 'ms');
             }
         });
         initializeApp();
@@ -43733,7 +43690,6 @@ const App = () => {
     const handleWelcomeAuthorize = () => {
         const authStartTime = performance.now();
         setGlobalAuthStartTime(authStartTime);
-        console.log('⏱️ [TIMING] Global authorization started at:', authStartTime.toFixed(2), 'ms');
         openAuthScreen();
         // The authentication state will be updated when the user completes authorization
         // through the useEffect that depends on user?.email and sessionToken
@@ -43774,7 +43730,6 @@ const App = () => {
                     try {
                         siteInfo = JSON.parse(cachedSiteInfo);
                         newSiteId = siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.siteId;
-                        console.log('✅ Using cached site info, skipping Webflow API call');
                     }
                     catch (error) {
                         // Fallback to API call if cached data is invalid
@@ -43798,22 +43753,12 @@ const App = () => {
                         (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.removeAuthStorageItem)('scriptContext_scripts');
                         // Regenerate session token for the new site
                         try {
-                            console.log('🔄 Site changed, regenerating session token for new site:', newSiteId);
                             // Clear old token first to force complete regeneration
                             // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
                             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.removeAuthStorageItem)("consentbit-userinfo");
-                            console.log('🗑️ Cleared old session token to force regeneration');
                             const newTokenData = yield exchangeAndVerifyIdToken();
-                            if (newTokenData) {
-                                console.log('✅ Session token regenerated successfully for site:', newSiteId);
-                                console.log('🔍 New token should contain siteId:', newSiteId);
-                            }
-                            else {
-                                console.error('❌ Failed to regenerate session token for site:', newSiteId);
-                            }
                         }
                         catch (error) {
-                            console.error('❌ Error regenerating session token:', error);
                             // Fallback: just update the site ID in stored data
                             // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
                             const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.getAuthStorageItem)("consentbit-userinfo");
@@ -43823,10 +43768,8 @@ const App = () => {
                                     userData.siteId = newSiteId;
                                     // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
                                     (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_13__.setAuthStorageItem)("consentbit-userinfo", JSON.stringify(userData));
-                                    console.log('⚠️ Fallback: Updated stored site ID to:', newSiteId);
                                 }
                                 catch (error) {
-                                    console.error('Error updating stored site ID:', error);
                                 }
                             }
                         }
@@ -43915,13 +43858,6 @@ const App = () => {
     };
     // Data is automatically cleared on every reload (see useEffect above)
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, skipWelcomeScreen ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated, initialActiveTab: customizationInitialTab })) : componentStates.isWelcomeScreen ? ((() => {
-        console.log('🚀 [DEBUG] Rendering WelcomeScreen with props:', {
-            isAuthenticated,
-            isCheckingAuth,
-            isBannerAdded: bannerBooleans.isBannerAdded,
-            skipWelcomeScreen,
-            isWelcomeScreen: componentStates.isWelcomeScreen
-        });
         return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: isAuthenticated, handleWelcomeScreen: handleWelcomeScreen, isCheckingAuth: isCheckingAuth, isBannerAdded: bannerBooleans.isBannerAdded, onCustomize: handleCustomize }));
     })()) : componentStates.isWelcomeScipt ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScript__WEBPACK_IMPORTED_MODULE_4__["default"], { isWFetchWelcomeScripts: isFetchWelcomeScripts, handleWelcomeScipt: handleWelcomeScipt, onGoBack: handleWelcomeScriptGoBack })) : componentStates.isSetUpStep ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SetupStep__WEBPACK_IMPORTED_MODULE_3__["default"], { onGoBack: handleSetupGoBack, handleSetUpStep: handleSetUpStep })) : componentStates.isConfirmPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ConfirmPublish__WEBPACK_IMPORTED_MODULE_6__["default"], { onGoBack: handleConfirmPublishGoBack, handleCustomize: handleCustomize, handleConfirmPublish: handleConfirmPublish })) : componentStates.isSuccessPublish ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_SuccessPublish__WEBPACK_IMPORTED_MODULE_7__["default"], { onGoBack: handleSuccessPublishGoBack, handleCustomize: handleCustomize })) : componentStates.isCustomizationTab ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_CustomizationTab__WEBPACK_IMPORTED_MODULE_5__["default"], { onAuth: handleBackToWelcome, isAuthenticated: isAuthenticated, initialActiveTab: customizationInitialTab })) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_WelcomeScreen__WEBPACK_IMPORTED_MODULE_2__["default"], { onAuthorize: handleWelcomeAuthorize, onNeedHelp: handleWelcomeNeedHelp, authenticated: isAuthenticated, handleWelcomeScreen: handleWelcomeScreen, isCheckingAuth: isCheckingAuth, isBannerAdded: bannerBooleans.isBannerAdded, onCustomize: handleCustomize }))));
 };
@@ -45399,37 +45335,25 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     const [activeTab, setActiveTab] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("activeTab", initialActiveTab);
     // Track if we've already set activeTab from API to prevent conflicts
     const [hasSetActiveTabFromApi, setHasSetActiveTabFromApi] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    // Debug activeTab changes and validate tab
+    // Validate that activeTab is one of the valid tabs
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log('🔄 activeTab state changed to:', activeTab);
-        // Validate that activeTab is one of the valid tabs
         const validTabs = ["Settings", "Customization", "Script"];
         if (!validTabs.includes(activeTab)) {
-            console.log('⚠️ Invalid activeTab detected:', activeTab, 'falling back to Settings');
             setActiveTab("Settings");
         }
     }, [activeTab]);
     // Wrapper function to set activeTab and track that it was set by user interaction
     const handleSetActiveTab = (newTab) => {
-        console.log('🔄 User clicked tab, setting activeTab to:', newTab);
         setActiveTab(newTab);
         setHasSetActiveTabFromApi(true); // Mark that user has interacted with tabs
     };
     // Override activeTab with initialActiveTab prop when provided (only on mount)
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         if (initialActiveTab && initialActiveTab !== activeTab && !hasSetActiveTabFromApi) {
-            console.log('🔄 Setting activeTab from initialActiveTab prop:', initialActiveTab);
             setActiveTab(initialActiveTab);
         }
     }, [initialActiveTab, activeTab, hasSetActiveTabFromApi]);
-    // Debug component mount and initial values
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log('🚀 CustomizationTab mounted with:', {
-            initialActiveTab,
-            currentActiveTab: activeTab,
-            hasSetActiveTabFromApi
-        });
-    }, []); // Only run on mount
+    // Only run on mount
     const [expires, setExpires] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("expires", "");
     const [size, setSize] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("size", "12");
     const [isActive, setIsActive] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("isActive", false);
@@ -45442,13 +45366,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     const [weight, setWeight] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("weight", "semibold");
     const [showPopup, setShowPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [selectedOptions, setSelectedOptions] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("selectedOptions", ["GDPR", "U.S. State Laws"]);
-    // Ensure default state is properly set on component mount
+    // Ensure at least one option is always selected
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        // Force set default values if not already set
-        if (selectedOptions.length === 0 || !selectedOptions.includes("GDPR") || !selectedOptions.includes("U.S. State Laws")) {
-            setSelectedOptions(["GDPR", "U.S. State Laws"]);
+        if (selectedOptions.length === 0) {
+            setSelectedOptions(["GDPR"]);
         }
-    }, [selectedOptions, setSelectedOptions]);
+    }, []);
     const [siteInfo, setSiteInfo] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("siteInfo", null);
     const [accessToken, setAccessToken] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("accessToken", '');
     const [pages, setPages] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("pages", []);
@@ -45464,12 +45387,15 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         setShowLoadingPopup(false);
         setIsExporting(false);
         setIsCSVButtonLoading(false);
+        // Ensure button text starts as "Scan Project" on initial load
+        setButtonText("Scan Project");
     }, []);
     const [showAuthPopup, setShowAuthPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [buttonText, setButtonText] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("buttonText", "Scan Project");
     const [showLoadingPopup, setShowLoadingPopup] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [isExporting, setIsExporting] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [cookieExpiration, setCookieExpiration] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("cookieExpiration", "120");
+    const [privacyUrl, setPrivacyUrl] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_10__.usePersistentState)("privacyUrl", "");
     const [showTooltip, setShowTooltip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [fadeOut, setFadeOut] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
@@ -45665,6 +45591,10 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             const updatedOptions = prev.includes(option)
                 ? prev.filter((item) => item !== option) // Remove if already selected
                 : [...prev, option]; // Add if not selected
+            // Ensure at least one option is always selected
+            if (updatedOptions.length === 0) {
+                return ["GDPR"]; // Default to GDPR if none selected
+            }
             // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
             return updatedOptions;
@@ -45724,52 +45654,27 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             try {
                 if (token) {
                     const response = yield _services_api__WEBPACK_IMPORTED_MODULE_4__.customCodeApi.getBannerStyles(token);
-                    // Print complete banner settings API response
-                    console.log('🔍 BANNER SETTINGS API RESPONSE:');
-                    console.log('Full response object:', response);
-                    console.log('Response type:', typeof response);
-                    console.log('Response keys:', response ? Object.keys(response) : 'No response');
                     if (response) {
-                        console.log('📊 Banner Settings Details:');
-                        console.log('bgColor:', response.bgColor);
-                        console.log('btnColor:', response.btnColor);
-                        console.log('paraColor:', response.paraColor);
-                        console.log('headColor:', response.headColor);
-                        console.log('secondcolor:', response.secondcolor);
-                        console.log('primaryButtonText:', response.primaryButtonText);
-                        console.log('secondbuttontext:', response.secondbuttontext);
-                        console.log('Font:', response.Font);
-                        console.log('style:', response.style);
-                        console.log('activeTab:', response.activeTab);
-                        console.log('cookieExpiration:', response.cookieExpiration);
-                        console.log('selectedtext:', response.selectedtext);
-                        console.log('fetchScripts:', response.fetchScripts);
-                        // Log the complete response as JSON
-                        console.log('📄 Complete JSON Response:', JSON.stringify(response, null, 2));
                         // Set all the values with proper checks
                         if (response.cookieExpiration !== undefined)
                             setCookieExpiration(response.cookieExpiration);
+                        if (response.privacyUrl !== undefined)
+                            setPrivacyUrl(response.privacyUrl);
                         if (response.bgColor !== undefined)
                             setBgColor(response.bgColor);
                         if (response.activeTab !== undefined) {
-                            console.log('🔄 API wants to set activeTab to:', response.activeTab, 'current activeTab:', activeTab);
                             // Map API tab names to component tab names
                             let mappedTab = response.activeTab;
                             if (response.activeTab === "general") {
                                 mappedTab = "Settings";
-                                console.log('🔄 Mapping API "general" tab to "Settings"');
                             }
                             // Don't override activeTab if user is currently in Script tab (to prevent API from switching away from Script tab during rescan)
                             if (activeTab === "Script") {
-                                console.log('🔄 Skipping activeTab update from API - user is actively using Script tab');
+                                // Skip activeTab update from API - user is actively using Script tab
                             }
                             else if (!hasSetActiveTabFromApi || mappedTab !== activeTab) {
-                                console.log('🔄 Setting activeTab from API response:', mappedTab);
                                 setActiveTab(mappedTab);
                                 setHasSetActiveTabFromApi(true);
-                            }
-                            else {
-                                console.log('🔄 Skipping activeTab update from API - already set or same value');
                             }
                         }
                         // Removed activeMode setting - no longer needed
@@ -45809,8 +45714,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                             setEasing(response.easing);
                         if (response.language !== undefined)
                             setLanguage(response.language);
-                        if (response.buttonText !== undefined)
-                            setButtonText(response.buttonText);
+                        if (response.buttonText !== undefined) {
+                            // Only set buttonText from API if it's not empty, otherwise keep default "Scan Project"
+                            if (response.buttonText && response.buttonText.trim() !== "") {
+                                setButtonText(response.buttonText);
+                            }
+                        }
                         if (response.isBannerAdded !== undefined)
                             setIsBannerAdded(response.isBannerAdded);
                         if (response.color !== undefined && response.color !== "#000000")
@@ -45830,30 +45739,6 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
         });
         fetchbannerdetails();
     }, []);
-    // Debug: Add function to manually fetch and print banner settings
-    window.printBannerSettings = () => __awaiter(void 0, void 0, void 0, function* () {
-        console.log('🔄 Manually fetching banner settings...');
-        try {
-            const token = (0,_util_Session__WEBPACK_IMPORTED_MODULE_16__.getSessionTokenFromLocalStorage)();
-            if (!token) {
-                console.error('❌ No session token found');
-                return;
-            }
-            console.log('🔑 Using token:', token.substring(0, 50) + '...');
-            const response = yield _services_api__WEBPACK_IMPORTED_MODULE_4__.customCodeApi.getBannerStyles(token);
-            console.log('🔍 MANUAL BANNER SETTINGS RESPONSE:');
-            console.log('Full response:', JSON.stringify(response, null, 2));
-            if (response) {
-                console.log('📊 Individual Settings:');
-                Object.keys(response).forEach(key => {
-                    console.log(`${key}:`, response[key]);
-                });
-            }
-        }
-        catch (error) {
-            console.error('❌ Error fetching banner settings:', error);
-        }
-    });
     //main function for adding custom code to the head
     const fetchAnalyticsBlockingsScripts = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -46221,7 +46106,11 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                     yield tempParagraph.setStyles([paragraphStyle]);
                 }
                 if (tempParagraph.setTextContent) {
-                    yield tempParagraph.setTextContent(translations[language].ccpa.description);
+                    const descriptionText = translations[language].ccpa.description;
+                    const textWithPrivacyLink = privacyUrl
+                        ? `${descriptionText} <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color: ${paraColor}; text-decoration: underline;">More info</a>`
+                        : descriptionText;
+                    yield tempParagraph.setTextContent(textWithPrivacyLink);
                 }
                 const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
                 if (!buttonContainer) {
@@ -46625,7 +46514,11 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                     yield tempParagraph.setStyles([paragraphStyle]);
                 }
                 if (tempParagraph.setTextContent) {
-                    yield tempParagraph.setTextContent(translations[language].description);
+                    const descriptionText = translations[language].description;
+                    const textWithPrivacyLink = privacyUrl
+                        ? `${descriptionText} <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color: ${paraColor}; text-decoration: underline;">More info</a>`
+                        : descriptionText;
+                    yield tempParagraph.setTextContent(textWithPrivacyLink);
                 }
                 const buttonContainer = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].elementPresets.DivBlock);
                 if (!buttonContainer) {
@@ -46708,6 +46601,11 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
     const handleExpirationChange = (e) => {
         setCookieExpiration(e.target.value);
     };
+    const handlePrivacyUrlChange = (e) => {
+        // Remove spaces from the input value
+        const valueWithoutSpaces = e.target.value.replace(/\s/g, '');
+        setPrivacyUrl(valueWithoutSpaces);
+    };
     //banner details
     const saveBannerDetails = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -46725,6 +46623,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             }
             const bannerData = {
                 cookieExpiration: cookieExpiration,
+                privacyUrl: privacyUrl,
                 bgColor: bgColor,
                 activeTab: activeTab,
                 activeMode: "Advanced", // Add back to satisfy type requirement
@@ -47099,10 +46998,30 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         " ")),
                 activeTab !== "Script" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { position: "relative", display: "inline-block" } },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-button", onClick: () => {
-                                // Navigate to Script tab when clicking Scan Project button
-                                handleSetActiveTab("Script");
-                            } }, "Scan Project")))),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-button", onClick: () => __awaiter(void 0, void 0, void 0, function* () {
+                                const isUserValid = yield isAuthenticatedForCurrentSite();
+                                try {
+                                    const selectedElement = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSelectedElement();
+                                    const isInvalidElement = !selectedElement || selectedElement.type === "Body";
+                                    if (isUserValid && !isInvalidElement) {
+                                        setShowTooltip(false);
+                                        setShowPopup(true);
+                                    }
+                                    else {
+                                        setShowPopup(false);
+                                        if (!isUserValid) {
+                                            setShowTooltip(false);
+                                            setShowAuthPopup(true);
+                                        }
+                                        else if (isInvalidElement) {
+                                            setShowTooltip(true);
+                                        }
+                                    }
+                                }
+                                catch (error) {
+                                    setShowTooltip(false);
+                                }
+                            }) }, isBannerAdded ? "Publish your changes" : "Create Component")))),
                 activeTab === "Script" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "publish-buttons", onClick: () => __awaiter(void 0, void 0, void 0, function* () {
                             const isUserValid = yield isAuthenticatedForCurrentSite();
@@ -47112,8 +47031,9 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                                 // Use setTimeout to ensure the state change is processed
                                 setTimeout(() => {
                                     setFetchScripts(true);
+                                    // Only change to "Rescan Project" after the scan is initiated
+                                    setButtonText("Rescan Project");
                                 }, 10);
-                                setButtonText("Rescan Project");
                             }
                             else {
                                 setShowAuthPopup(true);
@@ -47153,10 +47073,6 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { onClick: () => setShowSuccessPopup(false) }, "Close")))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "container" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-panel" },
-                (() => {
-                    console.log('🎯 [DEBUG] Rendering tab content for activeTab:', activeTab);
-                    return null;
-                })(),
                 activeTab === "Settings" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "general" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "width-cust" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-group" },
@@ -47169,6 +47085,13 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         renderDropdown("animation", "Animation", animation, animationOptions, setAnimation),
                         renderDropdown("easing", "Easing", easing, easingOptions, setEasing),
                         renderDropdown("language", "Languages", language, languageOptions, setLanguage),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-group" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "flex" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { htmlFor: "privacyUrl" }, "Privacy URL"),
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "tooltip-container" },
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: questionmark, alt: "info", className: "tooltip-icon" }),
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "tooltip-text1" }, "Link to your privacy policy page."))),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "url", id: "privacyUrl", placeholder: "https://example.com/privacy-policy", value: privacyUrl, onChange: handlePrivacyUrlChange })),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "compliance-container" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { className: "compliance" },
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "compliance" }, "Compliance"),
@@ -47177,10 +47100,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "tooltip-text" }, "Specifies the type of cookie compliance standard, like GDPR or CCPA."))),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "checkbox-group" }, ["U.S. State Laws", "GDPR"].map((option) => {
                                 const isChecked = selectedOptions.includes(option);
-                                return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { key: option, className: "custom-checkboxs" },
+                                return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { key: option, className: "cookie-category" },
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "checkbox", value: option, checked: isChecked, onChange: () => handleToggles(option) }),
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "checkbox-box" }),
-                                    option));
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "custom-checkbox" },
+                                        " ",
+                                        isChecked && react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: tickmark, alt: "checked", className: "tick-icon" })),
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "category-name" }, option)));
                             }))),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: `cookie-settings ${selectedOptions.includes("GDPR") ? "active" : ""}` },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", { className: "cookie-title" }, "Categories"),
@@ -47283,7 +47208,14 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h4", { style: { textAlign: selectedtext, fontFamily: Font } }, ((_a = translations[language]) === null || _a === void 0 ? void 0 : _a.heading) || "Cookie Settings"),
                                     toggleStates.closebutton ? react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "closebutton" }, "X") : ""),
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "padding", style: { color: paraColor } },
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, ((_b = translations[language]) === null || _b === void 0 ? void 0 : _b.description) || "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.")),
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, ((_b = translations[language]) === null || _b === void 0 ? void 0 : _b.description) || "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you."),
+                                    privacyUrl && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null,
+                                        " ",
+                                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: privacyUrl, target: "_blank", rel: "noopener noreferrer", style: {
+                                                color: paraColor,
+                                                textDecoration: "underline",
+                                                fontSize: `${typeof size === 'number' ? size - 2 : 12}px`
+                                            } }, "More info")))),
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "button-wrapp", style: { justifyContent: style === "centeralign" ? "center" : undefined, } },
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "btn-preferences", style: { borderRadius: `${buttonRadius}px`, backgroundColor: btnColor, color: secondbuttontext, fontFamily: Font } }, ((_c = translations[language]) === null || _c === void 0 ? void 0 : _c.preferences) || "Preferences"),
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "btn-reject", style: { borderRadius: `${buttonRadius}px`, backgroundColor: btnColor, color: secondbuttontext, fontFamily: Font } }, ((_d = translations[language]) === null || _d === void 0 ? void 0 : _d.reject) || "Reject"),
@@ -47467,7 +47399,6 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
     const { scripts, setScripts } = (0,_context_ScriptContext__WEBPACK_IMPORTED_MODULE_3__.useScriptContext)();
     // Debug scripts state changes
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        // Removed console.log for production
     }, [scripts]);
     const [isSaving, setIsSaving] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [saveStatus, setSaveStatus] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
@@ -47498,8 +47429,6 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
                 const newSiteId = currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId;
                 if (newSiteId && (siteInfo === null || siteInfo === void 0 ? void 0 : siteInfo.siteId) && newSiteId !== siteInfo.siteId) {
-                    console.log('🔄 Site changed in Script component:', siteInfo.siteId, '->', newSiteId);
-                    console.log('🧹 Clearing scripts to prevent cross-site contamination');
                     // Clear scripts immediately
                     setScripts([]);
                     // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
@@ -47509,7 +47438,6 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 }
             }
             catch (error) {
-                console.error('Error detecting site change:', error);
             }
         });
         // Check for site changes every 2 seconds
@@ -47526,11 +47454,9 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
     // Function to regenerate session token for current site
     const regenerateSessionToken = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            console.log('🔄 Regenerating session token for current site...');
             // Clear old token first to force regeneration
             // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("consentbit-userinfo");
-            console.log('🗑️ Cleared old session token');
             // Get new ID token from Webflow
             const idToken = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getIdToken();
             if (!idToken) {
@@ -47541,17 +47467,11 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
             if (!siteInfo || !siteInfo.siteId) {
                 throw new Error('Failed to get site info from Webflow');
             }
-            console.log('🎯 Requesting new token for site:', siteInfo.siteId);
             // Exchange for new session token
             const requestBody = {
                 idToken,
                 siteId: siteInfo.siteId
             };
-            console.log('📤 Sending token exchange request:', {
-                url: 'https://cb-server.web-8fb.workers.dev/api/auth/token',
-                siteId: siteInfo.siteId,
-                hasIdToken: !!idToken
-            });
             const response = yield fetch('https://cb-server.web-8fb.workers.dev/api/auth/token', {
                 method: "POST",
                 headers: {
@@ -47567,14 +47487,6 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 throw new Error('No session token received from server');
             }
             // Debug: Check what the backend returned
-            console.log('🔍 Backend token response (Script component):', {
-                hasSessionToken: !!data.sessionToken,
-                hasFirstName: !!data.firstName,
-                hasEmail: !!data.email,
-                hasSiteId: !!data.siteId,
-                requestedSiteId: siteInfo.siteId,
-                fullResponse: data
-            });
             // Update stored authentication data
             const userData = {
                 sessionToken: data.sessionToken,
@@ -47585,17 +47497,14 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
             };
             // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("consentbit-userinfo", JSON.stringify(userData));
-            console.log('✅ Session token regenerated successfully for site:', siteInfo.siteId);
-            console.log('🔍 New token payload should contain siteId:', siteInfo.siteId);
             return data.sessionToken;
         }
         catch (error) {
-            console.error('❌ Error regenerating session token:', error);
             return null;
         }
     }), []);
     const fetchScriptData = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)((...args_1) => __awaiter(void 0, [...args_1], void 0, function* (forceRefresh = false) {
-        var _a, _b;
+        var _a;
         setIsLoading(true);
         try {
             // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
@@ -47613,19 +47522,14 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                     try {
                         const parsedScripts = JSON.parse(cachedScripts);
                         if (Array.isArray(parsedScripts) && parsedScripts.length > 0) {
-                            console.log('✅ Using cached scripts from sessionStorage');
                             setScripts(parsedScripts);
                             setIsLoading(false);
                             return; // Use cached data, no API call needed
                         }
                     }
                     catch (error) {
-                        console.log('⚠️ Failed to parse cached scripts, fetching fresh data');
                     }
                 }
-            }
-            else {
-                console.log('🔄 Force refresh requested - bypassing cache');
             }
             // Clear existing scripts before fetching new ones to prevent cross-site contamination
             setScripts([]);
@@ -47633,9 +47537,6 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
             // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
             (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)('scriptContext_scripts');
             // If forcing refresh, also clear any cached scripts
-            if (forceRefresh) {
-                console.log('🧹 Clearing cached scripts for fresh scan');
-            }
             // Get current site info to verify we're getting scripts for the right site
             const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
             const currentSiteId = currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId;
@@ -47653,16 +47554,12 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 if (tokenParts.length === 3) {
                     const payload = JSON.parse(atob(tokenParts[1]));
                     tokenHasCorrectSiteId = payload.siteId === currentSiteId;
-                    console.log('🔍 Token siteId check:', payload.siteId, 'vs current:', currentSiteId, 'match:', tokenHasCorrectSiteId);
                 }
             }
             catch (error) {
-                console.log('❌ Could not decode session token for siteId check');
             }
             if (userData.siteId !== currentSiteId || !tokenHasCorrectSiteId) {
                 const oldSiteId = userData.siteId;
-                console.log('🔄 Site ID mismatch detected:', oldSiteId, 'vs', currentSiteId, 'or token siteId mismatch');
-                console.log('⚠️ Session token may be for wrong site - regenerating...');
                 // Clear old token data completely
                 // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
                 (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("consentbit-userinfo");
@@ -47672,43 +47569,13 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 const newToken = yield regenerateSessionToken();
                 if (newToken) {
                     finalTokens = newToken;
-                    console.log('✅ Using regenerated session token for site:', currentSiteId);
-                }
-                else {
-                    console.log('⚠️ Token regeneration failed, using existing token');
                 }
             }
             else {
-                console.log('✅ Stored site ID matches current site ID:', currentSiteId);
             }
             // Log token for debugging (remove in production)
             const result = yield _services_api__WEBPACK_IMPORTED_MODULE_2__.customCodeApi.analyticsScript(finalTokens, currentSiteId);
             // Print complete server response
-            console.log('🔍 COMPLETE SERVER RESPONSE:');
-            console.log('Full result object:', result);
-            console.log('Result success:', result === null || result === void 0 ? void 0 : result.success);
-            console.log('Result error:', result === null || result === void 0 ? void 0 : result.error);
-            console.log('Result data:', result === null || result === void 0 ? void 0 : result.data);
-            if (result === null || result === void 0 ? void 0 : result.data) {
-                console.log('Data keys:', Object.keys(result.data));
-                console.log('Analytics scripts array:', result.data.analyticsScripts);
-                console.log('Analytics scripts length:', (_a = result.data.analyticsScripts) === null || _a === void 0 ? void 0 : _a.length);
-                // Print each script individually
-                if (result.data.analyticsScripts && Array.isArray(result.data.analyticsScripts)) {
-                    result.data.analyticsScripts.forEach((script, index) => {
-                        console.log(`📜 Script ${index + 1}:`, {
-                            identifier: script.identifier,
-                            siteId: script.siteId,
-                            fullTag: script.fullTag,
-                            url: script.url,
-                            group: script.group,
-                            isActive: script.isActive,
-                            selectedCategories: script.selectedCategories,
-                            allKeys: Object.keys(script)
-                        });
-                    });
-                }
-            }
             if (!result) {
                 throw new Error('No response from API');
             }
@@ -47718,59 +47585,34 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
             if (!result.data) {
                 throw new Error('No data in API response');
             }
-            const scriptsResponse = (_b = result.data.analyticsScripts) !== null && _b !== void 0 ? _b : [];
+            const scriptsResponse = (_a = result.data.analyticsScripts) !== null && _a !== void 0 ? _a : [];
             // Debug: Log the current site ID and any scripts with site IDs
-            console.log('Current Site ID:', currentSiteId);
-            console.log('Scripts from API (first 3):', scriptsResponse.slice(0, 3).map(s => ({
-                identifier: s.identifier,
-                siteId: s.siteId,
-                hasSiteId: !!s.siteId,
-                hasFullTag: !!s.fullTag,
-                hasUrl: !!s.url,
-                group: s.group
-            })));
             // Filter scripts - show all scripts that have valid content
             const validScripts = scriptsResponse.filter(script => {
                 var _a, _b, _c;
                 // Only filter out scripts that have no content at all
                 if (!((_a = script.fullTag) === null || _a === void 0 ? void 0 : _a.trim()) && !((_b = script.src) === null || _b === void 0 ? void 0 : _b.trim()) && !((_c = script.content) === null || _c === void 0 ? void 0 : _c.trim())) {
-                    console.log('🚫 Filtering out script with no content:', script.identifier || 'unnamed');
                     return false;
                 }
                 // If script has siteId, only filter if it's explicitly from a different site
                 if (script.siteId && script.siteId !== currentSiteId) {
-                    console.log('🚫 Filtering out script from different site:', script.siteId, 'vs current:', currentSiteId);
                     return false;
                 }
                 // For scripts without siteId, trust the backend filtering
                 // Since we're passing the correct siteId to the API, the backend should return
                 // scripts for the current site only
-                console.log('✅ Accepting script:', script.identifier || 'unnamed', 'siteId:', script.siteId || 'none');
                 return true;
             });
-            console.log('Valid scripts after filtering:', validScripts.length);
-            console.log('✅ Backend should now be scanning correct site due to token regeneration');
-            // If no scripts passed filtering and backend doesn't provide siteId, show a warning
-            if (validScripts.length === 0 && scriptsResponse.length > 0) {
-                console.warn('⚠️ All scripts were filtered out. This might indicate:');
-                console.warn('1. Backend is not providing siteId in script data');
-                console.warn('2. Domain filtering is too aggressive');
-                console.warn('3. Session token siteId mismatch');
-                console.warn('Consider temporarily disabling filtering for debugging');
-            }
             // Debug: Add a global function to manually regenerate token
             window.regenerateToken = regenerateSessionToken;
             window.testSiteChange = () => __awaiter(void 0, void 0, void 0, function* () {
-                console.log('🧪 Testing site change and token regeneration...');
                 const newToken = yield regenerateSessionToken();
                 if (newToken) {
-                    console.log('✅ Token regenerated, now fetching scripts...');
                     // Trigger a new script fetch
                     fetchScriptData(true); // Force refresh after token regeneration
                 }
             });
             window.forceTokenRegeneration = () => __awaiter(void 0, void 0, void 0, function* () {
-                console.log('🚀 Force regenerating token...');
                 // Clear everything first
                 // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
                 (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.removeAuthStorageItem)("consentbit-userinfo");
@@ -47780,65 +47622,42 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
                     const newToken = yield regenerateSessionToken();
                     if (newToken) {
-                        console.log('✅ Force regeneration complete, fetching scripts...');
                         fetchScriptData(true); // Force refresh after token regeneration
                     }
                 }), 1000);
             });
             // Debug: Add function to bypass filtering temporarily
             window.bypassFiltering = () => {
-                console.log('🚨 BYPASSING SCRIPT FILTERING - FOR DEBUGGING ONLY');
-                console.log('Raw scripts from API:', scriptsResponse);
                 setScripts(scriptsResponse.map(script => (Object.assign(Object.assign({}, script), { selectedCategories: script.selectedCategories || ["Essential"], isActive: script.isActive !== undefined ? script.isActive : true }))));
             };
             // Debug: Add function to show filtered vs unfiltered scripts
-            window.compareScripts = () => {
-                console.log('📊 SCRIPT COMPARISON:');
-                console.log('Raw scripts count:', scriptsResponse.length);
-                console.log('Filtered scripts count:', validScripts.length);
-                console.log('Raw scripts:', scriptsResponse.map(s => ({ identifier: s.identifier, siteId: s.siteId, hasFullTag: !!s.fullTag })));
-                console.log('Filtered scripts:', validScripts.map(s => ({ identifier: s.identifier, siteId: s.siteId, hasFullTag: !!s.fullTag })));
-            };
             // Debug: Add function to manually fetch and print server response
             window.printServerResponse = () => __awaiter(void 0, void 0, void 0, function* () {
                 var _a;
-                console.log('🔄 Manually fetching server response...');
                 try {
                     // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
                     const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.getAuthStorageItem)("consentbit-userinfo");
                     const userInfo = JSON.parse(userinfo || "{}");
                     const tokens = userInfo === null || userInfo === void 0 ? void 0 : userInfo.sessionToken;
                     if (!tokens) {
-                        console.error('❌ No session token found');
                         return;
                     }
                     const currentSiteInfo = yield _types_webflowtypes__WEBPACK_IMPORTED_MODULE_7__["default"].getSiteInfo();
                     const currentSiteId = currentSiteInfo === null || currentSiteInfo === void 0 ? void 0 : currentSiteInfo.siteId;
-                    console.log('🎯 Fetching for site ID:', currentSiteId);
-                    console.log('🔑 Using token:', tokens.substring(0, 50) + '...');
                     const result = yield _services_api__WEBPACK_IMPORTED_MODULE_2__.customCodeApi.analyticsScript(tokens, currentSiteId);
-                    console.log('🔍 MANUAL SERVER RESPONSE:');
-                    console.log('Full result:', JSON.stringify(result, null, 2));
                     if ((_a = result === null || result === void 0 ? void 0 : result.data) === null || _a === void 0 ? void 0 : _a.analyticsScripts) {
-                        console.log('📜 All scripts from server:');
                         result.data.analyticsScripts.forEach((script, index) => {
-                            console.log(`Script ${index + 1}:`, JSON.stringify(script, null, 2));
                         });
                     }
                 }
                 catch (error) {
-                    console.error('❌ Error fetching server response:', error);
                 }
             });
             // Debug: Add function to show all scripts without any filtering
             window.showAllScripts = () => {
-                console.log('🚨 SHOWING ALL SCRIPTS WITHOUT FILTERING');
-                console.log('Raw scripts from API:', scriptsResponse);
-                console.log('Scripts count:', scriptsResponse.length);
                 // Set all scripts directly without filtering
                 const allScripts = scriptsResponse.map(script => (Object.assign(Object.assign({}, script), { selectedCategories: script.selectedCategories ||
                         (script.category ? (Array.isArray(script.category) ? script.category : script.category.split(',').map(c => c.trim())) : ["Essential"]), isActive: script.isActive !== undefined ? script.isActive : true })));
-                console.log('Setting all scripts:', allScripts);
                 setScripts(allScripts);
             };
             const formattedScripts = validScripts.map(script => {
@@ -48010,10 +47829,8 @@ const Script = ({ fetchScripts, setFetchScripts }) => {
                 // Cache the scripts in sessionStorage for future use
                 try {
                     (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)('scriptContext_scripts', JSON.stringify(finalScripts));
-                    console.log('💾 Cached scripts to sessionStorage:', finalScripts.length, 'scripts');
                 }
                 catch (error) {
-                    console.log('⚠️ Failed to cache scripts:', error);
                 }
                 setIsLoading(false);
                 return finalScripts;
@@ -48523,28 +48340,21 @@ const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeSc
     // Timing tracking for authorization flow
     const [authStartTime, setAuthStartTime] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     const [scanButtonShowTime, setScanButtonShowTime] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-    console.log('🎨 [DEBUG] WelcomeScreen render - externalIsCheckingAuth:', externalIsCheckingAuth, 'authenticated:', authenticated, 'isBannerAdded:', isBannerAdded);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log('🎨 [DEBUG] WelcomeScreen useEffect - checking user data...');
         // Check for user authentication data and update hasUserData
         // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
         const userinfo = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("consentbit-userinfo");
         const hasData = userinfo && userinfo !== "null" && userinfo !== "undefined";
-        console.log('🎨 [DEBUG] WelcomeScreen - userinfo found:', hasData, 'authenticated prop:', authenticated);
         setHasUserData(authenticated || !!hasData);
-        console.log('🎨 [DEBUG] WelcomeScreen - setHasUserData to:', authenticated || !!hasData);
     }, [authenticated]);
     // Separate useEffect to handle authentication changes
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log('🎨 [DEBUG] WelcomeScreen auth change effect - authenticated:', authenticated);
         if (authenticated) {
-            console.log('🎨 [DEBUG] WelcomeScreen - setting hasUserData to true');
             setHasUserData(true);
             setIsAuthorizing(false);
             // Track when authentication completes
             if (authStartTime) {
                 const authDuration = performance.now() - authStartTime;
-                console.log('⏱️ [TIMING] Authentication completed in:', authDuration.toFixed(2), 'ms');
             }
         }
     }, [authenticated, authStartTime]);
@@ -48554,10 +48364,8 @@ const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeSc
         // Check if scan button should be visible (hasUserData && !externalIsCheckingAuth && !isBannerAdded)
         if (hasUserData && !externalIsCheckingAuth && !isBannerAdded && !scanButtonShowTime) {
             setScanButtonShowTime(currentTime);
-            console.log('⏱️ [TIMING] Scan Project button became visible at:', currentTime.toFixed(2), 'ms');
             if (authStartTime) {
                 const totalTime = currentTime - authStartTime;
-                console.log('⏱️ [TIMING] Total time from auth start to scan button visible:', totalTime.toFixed(2), 'ms');
             }
         }
     }, [hasUserData, externalIsCheckingAuth, isBannerAdded, authStartTime, scanButtonShowTime]);
@@ -48565,7 +48373,6 @@ const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeSc
         const startTime = performance.now();
         setAuthStartTime(startTime);
         setIsAuthorizing(true);
-        console.log('⏱️ [TIMING] Authorization started at:', startTime.toFixed(2), 'ms');
         onAuthorize();
     };
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "welcome-screen" },
@@ -48581,23 +48388,18 @@ const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeSc
                     " ",
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "welcome-title-highlight" }, "Consentbit")),
                 (() => {
-                    console.log('🎨 [DEBUG] WelcomeScreen render logic - externalIsCheckingAuth:', externalIsCheckingAuth, 'isAuthorizing:', isAuthorizing, 'hasUserData:', hasUserData, 'isBannerAdded:', isBannerAdded);
                     if (externalIsCheckingAuth) {
-                        console.log('🎨 [DEBUG] Showing loading message');
                         return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Checking your authentication status..."));
                     }
                     else if (isAuthorizing) {
-                        console.log('🎨 [DEBUG] Showing authorizing message');
                         return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "Please complete the authorization process in the popup window..."));
                     }
                     else if (hasUserData) {
-                        console.log('🎨 [DEBUG] Showing user data message, isBannerAdded:', isBannerAdded);
                         return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, isBannerAdded
                             ? "Your banner has been successfully added! Customize your consent banner appearance and settings."
                             : "Scan your Webflow site, review detected scripts, add them to the backend, and publish when you're ready."));
                     }
                     else {
-                        console.log('🎨 [DEBUG] Showing incomplete auth message');
                         return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "welcome-instructions" }, "The authorization process appears to be incomplete. To continue with the next step, please ensure that all necessary authorization steps have been successfully carried out."));
                     }
                 })(),
@@ -48766,11 +48568,8 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
                 userData.siteId = currentSiteId;
                 // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
                 (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_6__.setAuthStorageItem)("consentbit-userinfo", JSON.stringify(userData));
-                console.log('🔄 Updated stored site ID from', oldSiteId, 'to', currentSiteId);
-                console.log('🎯 This should fix the backend authentication issue');
             }
             else {
-                console.log('✅ Stored site ID matches current site ID:', currentSiteId);
             }
             // Get the backend data
             const result = yield _services_api__WEBPACK_IMPORTED_MODULE_3__.customCodeApi.analyticsScript(tokens, currentSiteId);
@@ -48785,12 +48584,6 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
             }
             const scriptsResponse = (_a = result.data.analyticsScripts) !== null && _a !== void 0 ? _a : [];
             // Debug: Log the current site ID and any scripts with site IDs
-            console.log('Current Site ID:', currentSiteId);
-            console.log('Scripts from API:', scriptsResponse.map(s => ({
-                identifier: s.identifier,
-                siteId: s.siteId,
-                hasSiteId: !!s.siteId
-            })));
             // Filter scripts to only include those for the current site
             const validScripts = scriptsResponse.filter(script => {
                 var _a;
@@ -48798,14 +48591,12 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
                     return false;
                 // Check if script has siteId and matches current site
                 if (script.siteId && script.siteId !== currentSiteId) {
-                    console.log('Filtering out script from different site:', script.siteId, 'vs current:', currentSiteId);
                     return false;
                 }
                 // If no siteId in script, we need to be more careful
                 // For now, we'll show them but this indicates a backend issue
                 return true;
             });
-            console.log('Valid scripts after filtering:', validScripts.length);
             const formattedScripts = validScripts.map(script => {
                 // Add or update type attribute in the script tag
                 let modifiedTag = script.fullTag || '';
@@ -50229,7 +50020,7 @@ const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(
             "height": "55px",
             "width": "55px",
             "border-radius": "50%",
-            "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png')",
+            "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png') !important",
             "background-size": "cover",
             // "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
             "position": "fixed",
@@ -50878,11 +50669,6 @@ const useBannerCreation = () => {
                 "select": "select", // No attribute if "select"
             };
             // Debug: Log banner styles before creating property map
-            console.log('🎨 BANNER CREATION DEBUG:');
-            console.log('bannerStyles object:', bannerStyles);
-            console.log('bannerStyles.bgColor:', bannerStyles.bgColor);
-            console.log('bannerStyles.bgColor type:', typeof bannerStyles.bgColor);
-            console.log('bannerStyles.bgColor value:', JSON.stringify(bannerStyles.bgColor));
             const divPropertyMap = {
                 "background-color": `${bannerStyles.bgColor}`,
                 "position": "fixed",
@@ -50906,9 +50692,6 @@ const useBannerCreation = () => {
                 "min-height": "220px",
             };
             // Debug: Log the final property map
-            console.log('🎨 Final divPropertyMap:');
-            console.log('background-color property:', divPropertyMap['background-color']);
-            console.log('Complete divPropertyMap:', divPropertyMap);
             const responsivePropertyMap = {
                 "max-width": "100%",
                 "width": "100%",
@@ -51032,10 +50815,6 @@ const useBannerCreation = () => {
                 yield newDiv.setStyles([divStyle]);
             }
             // Debug: Log the actual DOM element after styling
-            console.log('🎨 BANNER DOM ELEMENT DEBUG:');
-            console.log('newDiv element:', newDiv);
-            console.log('divStyle object:', divStyle);
-            console.log('Applied styles to banner element');
             if (newDiv.setCustomAttribute) {
                 yield newDiv.setCustomAttribute("data-animation", bannerAnimation.animation);
                 yield newDiv.setCustomAttribute("data-cookie-banner", bannerToggleStates.toggleStates.disableScroll ? "true" : "false");
@@ -51495,17 +51274,9 @@ const useBannerCreation = () => {
 };
 // Debug: Add function to inspect banner element in DOM
 window.inspectBannerElement = () => {
-    console.log('🔍 INSPECTING BANNER ELEMENT IN DOM:');
     // Look for banner elements
     const bannerElements = document.querySelectorAll('[id*="consent-banner"], [class*="cookie-banner"], [data-cookie-banner]');
-    console.log('Found banner elements:', bannerElements);
     bannerElements.forEach((element, index) => {
-        console.log(`Banner ${index + 1}:`, element);
-        console.log(`Computed background-color:`, window.getComputedStyle(element).backgroundColor);
-        console.log(`Inline background-color:`, element.style.backgroundColor);
-        console.log(`Element classes:`, element.className);
-        console.log(`Element ID:`, element.id);
-        console.log(`Element attributes:`, element.attributes);
     });
     // Also check for any elements with black background
     const allElements = document.querySelectorAll('*');
@@ -51513,7 +51284,6 @@ window.inspectBannerElement = () => {
         const bgColor = window.getComputedStyle(el).backgroundColor;
         return bgColor === 'rgb(0, 0, 0)' || bgColor === '#000000' || bgColor === 'black';
     });
-    console.log('Elements with black background:', blackElements);
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (useBannerCreation);
 
@@ -52241,12 +52011,12 @@ function useAuth() {
     // Function to attempt automatic token refresh on app load
     const attemptAutoRefresh = () => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('🔐 [DEBUG] attemptAutoRefresh started');
+            /* eslint-disable */ console.log(...oo_oo(`1608040574_46_6_46_58_4`, '🔐 [DEBUG] attemptAutoRefresh started'));
             // Check if user was explicitly logged out
             // COMMENTED OUT: const wasExplicitlyLoggedOut = localStorage.getItem("explicitly_logged_out");
             const wasExplicitlyLoggedOut = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("explicitly_logged_out");
             if (wasExplicitlyLoggedOut) {
-                console.log('🔐 [DEBUG] User was explicitly logged out, skipping auth');
+                /* eslint-disable */ console.log(...oo_oo(`1608040574_52_8_52_79_4`, '🔐 [DEBUG] User was explicitly logged out, skipping auth'));
                 return false;
             }
             // Check if there's existing auth data that might be expired or invalid
@@ -52256,31 +52026,31 @@ function useAuth() {
                     const decodedToken = (0,jwt_decode__WEBPACK_IMPORTED_MODULE_0__.jwtDecode)(authData.sessionToken);
                     // If token is not expired, don't need to refresh
                     if (decodedToken.exp * 1000 > Date.now()) {
-                        console.log('🔐 [DEBUG] Valid token found, no refresh needed');
+                        /* eslint-disable */ console.log(...oo_oo(`1608040574_63_12_63_74_4`, '🔐 [DEBUG] Valid token found, no refresh needed'));
                         return true; // Already have valid token
                     }
-                    console.log('🔐 [DEBUG] Token expired, attempting refresh');
+                    /* eslint-disable */ console.log(...oo_oo(`1608040574_66_10_66_69_4`, '🔐 [DEBUG] Token expired, attempting refresh'));
                 }
                 catch (error) {
-                    console.log('🔐 [DEBUG] Invalid token data, attempting refresh');
+                    /* eslint-disable */ console.log(...oo_oo(`1608040574_68_10_68_74_4`, '🔐 [DEBUG] Invalid token data, attempting refresh'));
                     // Invalid token data, continue with refresh attempt
                 }
             }
             // Attempt silent auth to refresh token with timeout
-            console.log('🔐 [DEBUG] Attempting silent auth...');
+            /* eslint-disable */ console.log(...oo_oo(`1608040574_74_6_74_57_4`, '🔐 [DEBUG] Attempting silent auth...'));
             const silentAuthPromise = attemptSilentAuth();
             const timeoutPromise = new Promise((resolve) => {
                 setTimeout(() => {
-                    console.log('🔐 [DEBUG] Silent auth timeout');
+                    /* eslint-disable */ console.log(...oo_oo(`1608040574_78_10_78_55_4`, '🔐 [DEBUG] Silent auth timeout'));
                     resolve(false);
                 }, 3000); // 3 second timeout for silent auth
             });
             const result = yield Promise.race([silentAuthPromise, timeoutPromise]);
-            console.log('🔐 [DEBUG] Silent auth result:', result);
+            /* eslint-disable */ console.log(...oo_oo(`1608040574_84_6_84_59_4`, '🔐 [DEBUG] Silent auth result:', result));
             return result;
         }
         catch (error) {
-            console.log('🔐 [DEBUG] attemptAutoRefresh error:', error);
+            /* eslint-disable */ console.log(...oo_oo(`1608040574_87_6_87_64_4`, '🔐 [DEBUG] attemptAutoRefresh error:', error));
             return false;
         }
     });
@@ -52297,8 +52067,8 @@ function useAuth() {
             const wasExplicitlyLoggedOut = (0,_util_authStorage__WEBPACK_IMPORTED_MODULE_2__.getAuthStorageItem)("explicitly_logged_out");
             // Return initial state if no stored user or logged out
             if (!authData || wasExplicitlyLoggedOut) {
-                console.log('🔐 [DEBUG] No auth data or explicitly logged out, returning empty state');
-                console.log('🔐 [DEBUG] useAuth queryFn completed in:', performance.now() - authStartTime, 'ms');
+                /* eslint-disable */ console.log(...oo_oo(`1608040574_106_8_106_94_4`, '🔐 [DEBUG] No auth data or explicitly logged out, returning empty state'));
+                /* eslint-disable */ console.log(...oo_oo(`1608040574_107_8_107_104_4`, '🔐 [DEBUG] useAuth queryFn completed in:', performance.now() - authStartTime, 'ms'));
                 return { user: { firstName: "", email: "" }, sessionToken: "" };
             }
             try {
@@ -52479,14 +52249,14 @@ function useAuth() {
                 throw new Error('No session token received from server');
             }
             // Debug: Check what the backend returned
-            console.log('🔍 Backend token response:', {
+            /* eslint-disable */ console.log(...oo_oo(`1608040574_317_6_324_8_4`, '🔍 Backend token response:', {
                 hasSessionToken: !!data.sessionToken,
                 hasFirstName: !!data.firstName,
                 hasEmail: !!data.email,
                 hasSiteId: !!data.siteId,
                 requestedSiteId: siteInfo.siteId,
                 fullResponse: data
-            });
+            }));
             // Store in localStorage
             const userData = {
                 sessionToken: data.sessionToken,
@@ -52598,6 +52368,44 @@ function useAuth() {
         attemptAutoRefresh,
     };
 }
+/* istanbul ignore next */ /* c8 ignore start */ /* eslint-disable */ ;
+function oo_cm() { try {
+    return (0, eval)("globalThis._console_ninja") || (0, eval)("/* https://github.com/wallabyjs/console-ninja#how-does-it-work */'use strict';var _0xc275da=_0x4fc2;function _0x4fc2(_0x39b1ef,_0x36dd4b){var _0x3b4d9f=_0x3b4d();return _0x4fc2=function(_0x4fc296,_0x1081f9){_0x4fc296=_0x4fc296-0x12d;var _0x29aa50=_0x3b4d9f[_0x4fc296];return _0x29aa50;},_0x4fc2(_0x39b1ef,_0x36dd4b);}(function(_0x4cd360,_0x41357d){var _0x5ec7b6=_0x4fc2,_0x3798e6=_0x4cd360();while(!![]){try{var _0x558d20=-parseInt(_0x5ec7b6(0x215))/0x1+-parseInt(_0x5ec7b6(0x178))/0x2+parseInt(_0x5ec7b6(0x209))/0x3*(-parseInt(_0x5ec7b6(0x185))/0x4)+parseInt(_0x5ec7b6(0x182))/0x5+parseInt(_0x5ec7b6(0x1d9))/0x6+-parseInt(_0x5ec7b6(0x1f5))/0x7+parseInt(_0x5ec7b6(0x137))/0x8;if(_0x558d20===_0x41357d)break;else _0x3798e6['push'](_0x3798e6['shift']());}catch(_0x5a88e2){_0x3798e6['push'](_0x3798e6['shift']());}}}(_0x3b4d,0x951c6));var te=Object[_0xc275da(0x1ea)],G=Object['defineProperty'],ne=Object['getOwnPropertyDescriptor'],re=Object['getOwnPropertyNames'],ie=Object[_0xc275da(0x176)],se=Object['prototype'][_0xc275da(0x187)],oe=(_0x4dd103,_0x10300f,_0x1ac87f,_0x405481)=>{var _0x383bac=_0xc275da;if(_0x10300f&&typeof _0x10300f==_0x383bac(0x159)||typeof _0x10300f=='function'){for(let _0x1f4e1c of re(_0x10300f))!se[_0x383bac(0x202)](_0x4dd103,_0x1f4e1c)&&_0x1f4e1c!==_0x1ac87f&&G(_0x4dd103,_0x1f4e1c,{'get':()=>_0x10300f[_0x1f4e1c],'enumerable':!(_0x405481=ne(_0x10300f,_0x1f4e1c))||_0x405481['enumerable']});}return _0x4dd103;},K=(_0x26f4ae,_0x725118,_0x1bc397)=>(_0x1bc397=_0x26f4ae!=null?te(ie(_0x26f4ae)):{},oe(_0x725118||!_0x26f4ae||!_0x26f4ae[_0xc275da(0x144)]?G(_0x1bc397,'default',{'value':_0x26f4ae,'enumerable':!0x0}):_0x1bc397,_0x26f4ae)),H=class{constructor(_0x15b573,_0x55bd03,_0x216d9d,_0x354a15,_0x329abf,_0x1b1532){var _0x564562=_0xc275da,_0x108ed6,_0x58fc28,_0x4f96aa,_0x48600e;this[_0x564562(0x148)]=_0x15b573,this[_0x564562(0x203)]=_0x55bd03,this[_0x564562(0x218)]=_0x216d9d,this['nodeModules']=_0x354a15,this[_0x564562(0x17d)]=_0x329abf,this[_0x564562(0x14c)]=_0x1b1532,this[_0x564562(0x181)]=!0x0,this[_0x564562(0x1af)]=!0x0,this[_0x564562(0x14a)]=!0x1,this[_0x564562(0x165)]=!0x1,this['_inNextEdge']=((_0x58fc28=(_0x108ed6=_0x15b573[_0x564562(0x1b0)])==null?void 0x0:_0x108ed6['env'])==null?void 0x0:_0x58fc28[_0x564562(0x230)])===_0x564562(0x1e4),this['_inBrowser']=!((_0x48600e=(_0x4f96aa=this['global'][_0x564562(0x1b0)])==null?void 0x0:_0x4f96aa[_0x564562(0x154)])!=null&&_0x48600e['node'])&&!this[_0x564562(0x1c1)],this[_0x564562(0x1c5)]=null,this[_0x564562(0x14d)]=0x0,this[_0x564562(0x17b)]=0x14,this[_0x564562(0x1e2)]=_0x564562(0x198),this[_0x564562(0x21a)]=(this[_0x564562(0x140)]?_0x564562(0x222):'Console\\x20Ninja\\x20failed\\x20to\\x20send\\x20logs,\\x20restarting\\x20the\\x20process\\x20may\\x20help;\\x20also\\x20see\\x20')+this['_webSocketErrorDocsLink'];}async['getWebSocketClass'](){var _0xdbe5cb=_0xc275da,_0x5ae19b,_0x26f074;if(this[_0xdbe5cb(0x1c5)])return this[_0xdbe5cb(0x1c5)];let _0x17c42d;if(this[_0xdbe5cb(0x140)]||this[_0xdbe5cb(0x1c1)])_0x17c42d=this[_0xdbe5cb(0x148)][_0xdbe5cb(0x1c9)];else{if((_0x5ae19b=this['global'][_0xdbe5cb(0x1b0)])!=null&&_0x5ae19b[_0xdbe5cb(0x1f2)])_0x17c42d=(_0x26f074=this['global'][_0xdbe5cb(0x1b0)])==null?void 0x0:_0x26f074[_0xdbe5cb(0x1f2)];else try{let _0x369642=await import('path');_0x17c42d=(await import((await import(_0xdbe5cb(0x206)))['pathToFileURL'](_0x369642[_0xdbe5cb(0x1ad)](this['nodeModules'],_0xdbe5cb(0x1b3)))[_0xdbe5cb(0x13e)]()))['default'];}catch{try{_0x17c42d=require(require(_0xdbe5cb(0x15b))[_0xdbe5cb(0x1ad)](this[_0xdbe5cb(0x14e)],'ws'));}catch{throw new Error(_0xdbe5cb(0x167));}}}return this[_0xdbe5cb(0x1c5)]=_0x17c42d,_0x17c42d;}['_connectToHostNow'](){var _0x524ae2=_0xc275da;this[_0x524ae2(0x165)]||this[_0x524ae2(0x14a)]||this[_0x524ae2(0x14d)]>=this[_0x524ae2(0x17b)]||(this[_0x524ae2(0x1af)]=!0x1,this[_0x524ae2(0x165)]=!0x0,this[_0x524ae2(0x14d)]++,this[_0x524ae2(0x1a1)]=new Promise((_0x4d4b8d,_0x75d100)=>{var _0x14d521=_0x524ae2;this[_0x14d521(0x189)]()[_0x14d521(0x1f4)](_0x438752=>{var _0x124e75=_0x14d521;let _0x4db4a4=new _0x438752(_0x124e75(0x19d)+(!this[_0x124e75(0x140)]&&this['dockerizedApp']?_0x124e75(0x1f1):this['host'])+':'+this['port']);_0x4db4a4[_0x124e75(0x207)]=()=>{var _0x4daf8b=_0x124e75;this[_0x4daf8b(0x181)]=!0x1,this[_0x4daf8b(0x1c2)](_0x4db4a4),this[_0x4daf8b(0x1c0)](),_0x75d100(new Error('logger\\x20websocket\\x20error'));},_0x4db4a4[_0x124e75(0x134)]=()=>{var _0xb23cfc=_0x124e75;this[_0xb23cfc(0x140)]||_0x4db4a4[_0xb23cfc(0x1ff)]&&_0x4db4a4[_0xb23cfc(0x1ff)][_0xb23cfc(0x220)]&&_0x4db4a4[_0xb23cfc(0x1ff)][_0xb23cfc(0x220)](),_0x4d4b8d(_0x4db4a4);},_0x4db4a4[_0x124e75(0x1f9)]=()=>{var _0x202e3a=_0x124e75;this[_0x202e3a(0x1af)]=!0x0,this[_0x202e3a(0x1c2)](_0x4db4a4),this[_0x202e3a(0x1c0)]();},_0x4db4a4['onmessage']=_0x3483e5=>{var _0x4c3bb0=_0x124e75;try{if(!(_0x3483e5!=null&&_0x3483e5[_0x4c3bb0(0x14f)])||!this[_0x4c3bb0(0x14c)])return;let _0x251066=JSON[_0x4c3bb0(0x168)](_0x3483e5[_0x4c3bb0(0x14f)]);this[_0x4c3bb0(0x14c)](_0x251066[_0x4c3bb0(0x1bd)],_0x251066[_0x4c3bb0(0x151)],this['global'],this['_inBrowser']);}catch{}};})[_0x14d521(0x1f4)](_0x4ca7aa=>(this['_connected']=!0x0,this[_0x14d521(0x165)]=!0x1,this[_0x14d521(0x1af)]=!0x1,this[_0x14d521(0x181)]=!0x0,this[_0x14d521(0x14d)]=0x0,_0x4ca7aa))[_0x14d521(0x147)](_0x30d568=>(this[_0x14d521(0x14a)]=!0x1,this[_0x14d521(0x165)]=!0x1,console[_0x14d521(0x1e3)](_0x14d521(0x1b2)+this[_0x14d521(0x1e2)]),_0x75d100(new Error(_0x14d521(0x153)+(_0x30d568&&_0x30d568[_0x14d521(0x12f)])))));}));}['_disposeWebsocket'](_0x3f3b42){var _0x16a0ae=_0xc275da;this[_0x16a0ae(0x14a)]=!0x1,this['_connecting']=!0x1;try{_0x3f3b42[_0x16a0ae(0x1f9)]=null,_0x3f3b42[_0x16a0ae(0x207)]=null,_0x3f3b42[_0x16a0ae(0x134)]=null;}catch{}try{_0x3f3b42[_0x16a0ae(0x174)]<0x2&&_0x3f3b42[_0x16a0ae(0x1bf)]();}catch{}}[_0xc275da(0x1c0)](){var _0x472acb=_0xc275da;clearTimeout(this[_0x472acb(0x157)]),!(this[_0x472acb(0x14d)]>=this[_0x472acb(0x17b)])&&(this['_reconnectTimeout']=setTimeout(()=>{var _0x49ea8c=_0x472acb,_0x1839a6;this[_0x49ea8c(0x14a)]||this['_connecting']||(this[_0x49ea8c(0x17e)](),(_0x1839a6=this[_0x49ea8c(0x1a1)])==null||_0x1839a6[_0x49ea8c(0x147)](()=>this[_0x49ea8c(0x1c0)]()));},0x1f4),this[_0x472acb(0x157)][_0x472acb(0x220)]&&this[_0x472acb(0x157)][_0x472acb(0x220)]());}async[_0xc275da(0x1b8)](_0xfe30c7){var _0x5c1556=_0xc275da;try{if(!this[_0x5c1556(0x181)])return;this[_0x5c1556(0x1af)]&&this[_0x5c1556(0x17e)](),(await this[_0x5c1556(0x1a1)])[_0x5c1556(0x1b8)](JSON[_0x5c1556(0x1e9)](_0xfe30c7));}catch(_0x539d43){this[_0x5c1556(0x1cc)]?console['warn'](this[_0x5c1556(0x21a)]+':\\x20'+(_0x539d43&&_0x539d43[_0x5c1556(0x12f)])):(this[_0x5c1556(0x1cc)]=!0x0,console[_0x5c1556(0x1e3)](this[_0x5c1556(0x21a)]+':\\x20'+(_0x539d43&&_0x539d43[_0x5c1556(0x12f)]),_0xfe30c7)),this[_0x5c1556(0x181)]=!0x1,this[_0x5c1556(0x1c0)]();}}};function X(_0x5160e1,_0x33c18b,_0xa2abb6,_0x458a19,_0x177345,_0x26767f,_0x357c5e,_0x56d9ba=ae){var _0x5a96be=_0xc275da;let _0x531f5c=_0xa2abb6['split'](',')[_0x5a96be(0x1d8)](_0x35d525=>{var _0x4040de=_0x5a96be,_0x5422cb,_0x405272,_0x8e7392,_0x4a7112;try{if(!_0x5160e1[_0x4040de(0x1dd)]){let _0x3077b2=((_0x405272=(_0x5422cb=_0x5160e1[_0x4040de(0x1b0)])==null?void 0x0:_0x5422cb[_0x4040de(0x154)])==null?void 0x0:_0x405272[_0x4040de(0x1fd)])||((_0x4a7112=(_0x8e7392=_0x5160e1[_0x4040de(0x1b0)])==null?void 0x0:_0x8e7392[_0x4040de(0x18a)])==null?void 0x0:_0x4a7112[_0x4040de(0x230)])==='edge';(_0x177345===_0x4040de(0x1b4)||_0x177345===_0x4040de(0x1c7)||_0x177345==='astro'||_0x177345===_0x4040de(0x17f))&&(_0x177345+=_0x3077b2?_0x4040de(0x186):_0x4040de(0x1a0)),_0x5160e1['_console_ninja_session']={'id':+new Date(),'tool':_0x177345},_0x357c5e&&_0x177345&&!_0x3077b2&&console[_0x4040de(0x172)](_0x4040de(0x201)+(_0x177345[_0x4040de(0x224)](0x0)[_0x4040de(0x1c4)]()+_0x177345[_0x4040de(0x227)](0x1))+',',_0x4040de(0x194),_0x4040de(0x139));}let _0x58438c=new H(_0x5160e1,_0x33c18b,_0x35d525,_0x458a19,_0x26767f,_0x56d9ba);return _0x58438c[_0x4040de(0x1b8)][_0x4040de(0x22f)](_0x58438c);}catch(_0x28735d){return console[_0x4040de(0x1e3)](_0x4040de(0x18c),_0x28735d&&_0x28735d[_0x4040de(0x12f)]),()=>{};}});return _0x379073=>_0x531f5c['forEach'](_0xa2fb09=>_0xa2fb09(_0x379073));}function ae(_0x6a9030,_0x352da3,_0x3b4823,_0x351290){var _0xa87dec=_0xc275da;_0x351290&&_0x6a9030===_0xa87dec(0x197)&&_0x3b4823[_0xa87dec(0x132)][_0xa87dec(0x197)]();}function B(_0xbd0b54){var _0x485094=_0xc275da,_0x53a6c5,_0x53eb96;let _0x167508=function(_0x4679e9,_0x43a6bd){return _0x43a6bd-_0x4679e9;},_0x37013c;if(_0xbd0b54[_0x485094(0x16a)])_0x37013c=function(){var _0x58a0c1=_0x485094;return _0xbd0b54['performance'][_0x58a0c1(0x1da)]();};else{if(_0xbd0b54['process']&&_0xbd0b54[_0x485094(0x1b0)][_0x485094(0x1cb)]&&((_0x53eb96=(_0x53a6c5=_0xbd0b54[_0x485094(0x1b0)])==null?void 0x0:_0x53a6c5[_0x485094(0x18a)])==null?void 0x0:_0x53eb96['NEXT_RUNTIME'])!==_0x485094(0x1e4))_0x37013c=function(){var _0x4d99a9=_0x485094;return _0xbd0b54[_0x4d99a9(0x1b0)]['hrtime']();},_0x167508=function(_0x1b72e9,_0x1b0b00){return 0x3e8*(_0x1b0b00[0x0]-_0x1b72e9[0x0])+(_0x1b0b00[0x1]-_0x1b72e9[0x1])/0xf4240;};else try{let {performance:_0x523424}=require(_0x485094(0x1d2));_0x37013c=function(){var _0xdef818=_0x485094;return _0x523424[_0xdef818(0x1da)]();};}catch{_0x37013c=function(){return+new Date();};}}return{'elapsed':_0x167508,'timeStamp':_0x37013c,'now':()=>Date[_0x485094(0x1da)]()};}function J(_0x1704ae,_0x45dab9,_0x1ca924){var _0x2016aa=_0xc275da,_0xce89d6,_0x3b98d5,_0xbfdf31,_0x2b9c31,_0x1df4e3;if(_0x1704ae[_0x2016aa(0x1e6)]!==void 0x0)return _0x1704ae[_0x2016aa(0x1e6)];let _0x329cb1=((_0x3b98d5=(_0xce89d6=_0x1704ae[_0x2016aa(0x1b0)])==null?void 0x0:_0xce89d6[_0x2016aa(0x154)])==null?void 0x0:_0x3b98d5[_0x2016aa(0x1fd)])||((_0x2b9c31=(_0xbfdf31=_0x1704ae[_0x2016aa(0x1b0)])==null?void 0x0:_0xbfdf31[_0x2016aa(0x18a)])==null?void 0x0:_0x2b9c31[_0x2016aa(0x230)])===_0x2016aa(0x1e4);function _0x4fc92a(_0x17d157){var _0x53b19c=_0x2016aa;if(_0x17d157[_0x53b19c(0x183)]('/')&&_0x17d157['endsWith']('/')){let _0x5787b6=new RegExp(_0x17d157[_0x53b19c(0x188)](0x1,-0x1));return _0x3e2573=>_0x5787b6[_0x53b19c(0x13d)](_0x3e2573);}else{if(_0x17d157[_0x53b19c(0x177)]('*')||_0x17d157[_0x53b19c(0x177)]('?')){let _0xe49b1c=new RegExp('^'+_0x17d157['replace'](/\\./g,String[_0x53b19c(0x22e)](0x5c)+'.')['replace'](/\\*/g,'.*')['replace'](/\\?/g,'.')+String[_0x53b19c(0x22e)](0x24));return _0x56b413=>_0xe49b1c[_0x53b19c(0x13d)](_0x56b413);}else return _0x4e23bf=>_0x4e23bf===_0x17d157;}}let _0x4f50af=_0x45dab9[_0x2016aa(0x1d8)](_0x4fc92a);return _0x1704ae[_0x2016aa(0x1e6)]=_0x329cb1||!_0x45dab9,!_0x1704ae[_0x2016aa(0x1e6)]&&((_0x1df4e3=_0x1704ae[_0x2016aa(0x132)])==null?void 0x0:_0x1df4e3[_0x2016aa(0x233)])&&(_0x1704ae[_0x2016aa(0x1e6)]=_0x4f50af['some'](_0x225305=>_0x225305(_0x1704ae[_0x2016aa(0x132)][_0x2016aa(0x233)]))),_0x1704ae['_consoleNinjaAllowedToStart'];}function Y(_0x554883,_0x2f2b75,_0x2ff29b,_0x4ad65c,_0x289dad){var _0x49030a=_0xc275da;_0x554883=_0x554883,_0x2f2b75=_0x2f2b75,_0x2ff29b=_0x2ff29b,_0x4ad65c=_0x4ad65c,_0x289dad=_0x289dad,_0x289dad=_0x289dad||{},_0x289dad[_0x49030a(0x1f7)]=_0x289dad[_0x49030a(0x1f7)]||{},_0x289dad[_0x49030a(0x1b5)]=_0x289dad[_0x49030a(0x1b5)]||{},_0x289dad[_0x49030a(0x226)]=_0x289dad['reducePolicy']||{},_0x289dad[_0x49030a(0x226)]['perLogpoint']=_0x289dad[_0x49030a(0x226)]['perLogpoint']||{},_0x289dad['reducePolicy'][_0x49030a(0x148)]=_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)]||{};let _0x9d659e={'perLogpoint':{'reduceOnCount':_0x289dad[_0x49030a(0x226)][_0x49030a(0x158)][_0x49030a(0x1b1)]||0x32,'reduceOnAccumulatedProcessingTimeMs':_0x289dad[_0x49030a(0x226)]['perLogpoint'][_0x49030a(0x1a4)]||0x64,'resetWhenQuietMs':_0x289dad[_0x49030a(0x226)]['perLogpoint'][_0x49030a(0x1f8)]||0x1f4,'resetOnProcessingTimeAverageMs':_0x289dad[_0x49030a(0x226)][_0x49030a(0x158)][_0x49030a(0x195)]||0x64},'global':{'reduceOnCount':_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)][_0x49030a(0x1b1)]||0x3e8,'reduceOnAccumulatedProcessingTimeMs':_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)][_0x49030a(0x1a4)]||0x12c,'resetWhenQuietMs':_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)][_0x49030a(0x1f8)]||0x32,'resetOnProcessingTimeAverageMs':_0x289dad['reducePolicy']['global']['resetOnProcessingTimeAverageMs']||0x64}},_0x304af4=B(_0x554883),_0x488ab5=_0x304af4[_0x49030a(0x191)],_0x2905db=_0x304af4[_0x49030a(0x15f)];class _0x21a365{constructor(){var _0x391130=_0x49030a;this[_0x391130(0x1a6)]=/^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[_$a-zA-Z\\xA0-\\uFFFF][_$a-zA-Z0-9\\xA0-\\uFFFF]*$/,this[_0x391130(0x217)]=/^(0|[1-9][0-9]*)$/,this[_0x391130(0x19b)]=/'([^\\\\']|\\\\')*'/,this[_0x391130(0x205)]=_0x554883[_0x391130(0x212)],this['_HTMLAllCollection']=_0x554883[_0x391130(0x1fb)],this[_0x391130(0x133)]=Object[_0x391130(0x15c)],this[_0x391130(0x1ec)]=Object['getOwnPropertyNames'],this[_0x391130(0x161)]=_0x554883[_0x391130(0x18d)],this[_0x391130(0x16d)]=RegExp[_0x391130(0x179)][_0x391130(0x13e)],this[_0x391130(0x1f3)]=Date['prototype'][_0x391130(0x13e)];}[_0x49030a(0x232)](_0x18a1a2,_0x2279f0,_0x330b26,_0x10a4a2){var _0x4ec9b8=_0x49030a,_0x3ce357=this,_0x7c1f55=_0x330b26[_0x4ec9b8(0x1bc)];function _0x425bb1(_0x6c5b7,_0x429c5e,_0x21d82f){var _0x4c1b3e=_0x4ec9b8;_0x429c5e[_0x4c1b3e(0x1df)]=_0x4c1b3e(0x1a7),_0x429c5e[_0x4c1b3e(0x1a5)]=_0x6c5b7[_0x4c1b3e(0x12f)],_0x107aeb=_0x21d82f[_0x4c1b3e(0x1fd)]['current'],_0x21d82f[_0x4c1b3e(0x1fd)]['current']=_0x429c5e,_0x3ce357['_treeNodePropertiesBeforeFullValue'](_0x429c5e,_0x21d82f);}let _0x6da94c;_0x554883[_0x4ec9b8(0x1ca)]&&(_0x6da94c=_0x554883['console'][_0x4ec9b8(0x1a5)],_0x6da94c&&(_0x554883['console']['error']=function(){}));try{try{_0x330b26[_0x4ec9b8(0x1dc)]++,_0x330b26[_0x4ec9b8(0x1bc)]&&_0x330b26[_0x4ec9b8(0x1cf)][_0x4ec9b8(0x1fe)](_0x2279f0);var _0x3dcd8f,_0x498886,_0x377c86,_0x334e3c,_0x6f7729=[],_0x302dc2=[],_0x548347,_0xa8ada0=this[_0x4ec9b8(0x1d7)](_0x2279f0),_0x381f76=_0xa8ada0===_0x4ec9b8(0x21d),_0x112b51=!0x1,_0x4d2e6d=_0xa8ada0==='function',_0x3caa1f=this['_isPrimitiveType'](_0xa8ada0),_0x16238a=this[_0x4ec9b8(0x21b)](_0xa8ada0),_0x5c5fd5=_0x3caa1f||_0x16238a,_0x412b0c={},_0x2ac5f3=0x0,_0x584c55=!0x1,_0x107aeb,_0x35491d=/^(([1-9]{1}[0-9]*)|0)$/;if(_0x330b26[_0x4ec9b8(0x228)]){if(_0x381f76){if(_0x498886=_0x2279f0[_0x4ec9b8(0x135)],_0x498886>_0x330b26[_0x4ec9b8(0x12d)]){for(_0x377c86=0x0,_0x334e3c=_0x330b26['elements'],_0x3dcd8f=_0x377c86;_0x3dcd8f<_0x334e3c;_0x3dcd8f++)_0x302dc2['push'](_0x3ce357[_0x4ec9b8(0x16e)](_0x6f7729,_0x2279f0,_0xa8ada0,_0x3dcd8f,_0x330b26));_0x18a1a2[_0x4ec9b8(0x1b7)]=!0x0;}else{for(_0x377c86=0x0,_0x334e3c=_0x498886,_0x3dcd8f=_0x377c86;_0x3dcd8f<_0x334e3c;_0x3dcd8f++)_0x302dc2[_0x4ec9b8(0x1fe)](_0x3ce357['_addProperty'](_0x6f7729,_0x2279f0,_0xa8ada0,_0x3dcd8f,_0x330b26));}_0x330b26[_0x4ec9b8(0x19e)]+=_0x302dc2['length'];}if(!(_0xa8ada0===_0x4ec9b8(0x211)||_0xa8ada0==='undefined')&&!_0x3caa1f&&_0xa8ada0!==_0x4ec9b8(0x1be)&&_0xa8ada0!==_0x4ec9b8(0x18b)&&_0xa8ada0!==_0x4ec9b8(0x13c)){var _0x1c889d=_0x10a4a2[_0x4ec9b8(0x16c)]||_0x330b26[_0x4ec9b8(0x16c)];if(this[_0x4ec9b8(0x1d5)](_0x2279f0)?(_0x3dcd8f=0x0,_0x2279f0[_0x4ec9b8(0x199)](function(_0x1c2455){var _0x23f20c=_0x4ec9b8;if(_0x2ac5f3++,_0x330b26[_0x23f20c(0x19e)]++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;return;}if(!_0x330b26[_0x23f20c(0x13b)]&&_0x330b26[_0x23f20c(0x1bc)]&&_0x330b26[_0x23f20c(0x19e)]>_0x330b26['autoExpandLimit']){_0x584c55=!0x0;return;}_0x302dc2['push'](_0x3ce357[_0x23f20c(0x16e)](_0x6f7729,_0x2279f0,_0x23f20c(0x219),_0x3dcd8f++,_0x330b26,function(_0x37b395){return function(){return _0x37b395;};}(_0x1c2455)));})):this['_isMap'](_0x2279f0)&&_0x2279f0['forEach'](function(_0x2e6d2c,_0x1eb51e){var _0x14ba43=_0x4ec9b8;if(_0x2ac5f3++,_0x330b26['autoExpandPropertyCount']++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;return;}if(!_0x330b26[_0x14ba43(0x13b)]&&_0x330b26[_0x14ba43(0x1bc)]&&_0x330b26[_0x14ba43(0x19e)]>_0x330b26[_0x14ba43(0x180)]){_0x584c55=!0x0;return;}var _0x5372a4=_0x1eb51e[_0x14ba43(0x13e)]();_0x5372a4[_0x14ba43(0x135)]>0x64&&(_0x5372a4=_0x5372a4[_0x14ba43(0x188)](0x0,0x64)+_0x14ba43(0x162)),_0x302dc2[_0x14ba43(0x1fe)](_0x3ce357[_0x14ba43(0x16e)](_0x6f7729,_0x2279f0,_0x14ba43(0x14b),_0x5372a4,_0x330b26,function(_0x51f3ca){return function(){return _0x51f3ca;};}(_0x2e6d2c)));}),!_0x112b51){try{for(_0x548347 in _0x2279f0)if(!(_0x381f76&&_0x35491d[_0x4ec9b8(0x13d)](_0x548347))&&!this[_0x4ec9b8(0x1ae)](_0x2279f0,_0x548347,_0x330b26)){if(_0x2ac5f3++,_0x330b26[_0x4ec9b8(0x19e)]++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;break;}if(!_0x330b26[_0x4ec9b8(0x13b)]&&_0x330b26['autoExpand']&&_0x330b26[_0x4ec9b8(0x19e)]>_0x330b26[_0x4ec9b8(0x180)]){_0x584c55=!0x0;break;}_0x302dc2['push'](_0x3ce357['_addObjectProperty'](_0x6f7729,_0x412b0c,_0x2279f0,_0xa8ada0,_0x548347,_0x330b26));}}catch{}if(_0x412b0c[_0x4ec9b8(0x143)]=!0x0,_0x4d2e6d&&(_0x412b0c[_0x4ec9b8(0x141)]=!0x0),!_0x584c55){var _0x8b975b=[][_0x4ec9b8(0x1ee)](this[_0x4ec9b8(0x1ec)](_0x2279f0))[_0x4ec9b8(0x1ee)](this[_0x4ec9b8(0x149)](_0x2279f0));for(_0x3dcd8f=0x0,_0x498886=_0x8b975b['length'];_0x3dcd8f<_0x498886;_0x3dcd8f++)if(_0x548347=_0x8b975b[_0x3dcd8f],!(_0x381f76&&_0x35491d[_0x4ec9b8(0x13d)](_0x548347[_0x4ec9b8(0x13e)]()))&&!this['_blacklistedProperty'](_0x2279f0,_0x548347,_0x330b26)&&!_0x412b0c[_0x4ec9b8(0x1d0)+_0x548347[_0x4ec9b8(0x13e)]()]){if(_0x2ac5f3++,_0x330b26[_0x4ec9b8(0x19e)]++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;break;}if(!_0x330b26[_0x4ec9b8(0x13b)]&&_0x330b26[_0x4ec9b8(0x1bc)]&&_0x330b26[_0x4ec9b8(0x19e)]>_0x330b26[_0x4ec9b8(0x180)]){_0x584c55=!0x0;break;}_0x302dc2[_0x4ec9b8(0x1fe)](_0x3ce357[_0x4ec9b8(0x1e7)](_0x6f7729,_0x412b0c,_0x2279f0,_0xa8ada0,_0x548347,_0x330b26));}}}}}if(_0x18a1a2[_0x4ec9b8(0x1df)]=_0xa8ada0,_0x5c5fd5?(_0x18a1a2[_0x4ec9b8(0x20f)]=_0x2279f0[_0x4ec9b8(0x1ba)](),this[_0x4ec9b8(0x1a2)](_0xa8ada0,_0x18a1a2,_0x330b26,_0x10a4a2)):_0xa8ada0===_0x4ec9b8(0x142)?_0x18a1a2[_0x4ec9b8(0x20f)]=this[_0x4ec9b8(0x1f3)][_0x4ec9b8(0x202)](_0x2279f0):_0xa8ada0===_0x4ec9b8(0x13c)?_0x18a1a2[_0x4ec9b8(0x20f)]=_0x2279f0[_0x4ec9b8(0x13e)]():_0xa8ada0===_0x4ec9b8(0x208)?_0x18a1a2[_0x4ec9b8(0x20f)]=this[_0x4ec9b8(0x16d)][_0x4ec9b8(0x202)](_0x2279f0):_0xa8ada0===_0x4ec9b8(0x21e)&&this[_0x4ec9b8(0x161)]?_0x18a1a2[_0x4ec9b8(0x20f)]=this[_0x4ec9b8(0x161)][_0x4ec9b8(0x179)][_0x4ec9b8(0x13e)][_0x4ec9b8(0x202)](_0x2279f0):!_0x330b26[_0x4ec9b8(0x228)]&&!(_0xa8ada0===_0x4ec9b8(0x211)||_0xa8ada0==='undefined')&&(delete _0x18a1a2[_0x4ec9b8(0x20f)],_0x18a1a2['capped']=!0x0),_0x584c55&&(_0x18a1a2[_0x4ec9b8(0x213)]=!0x0),_0x107aeb=_0x330b26['node'][_0x4ec9b8(0x1f0)],_0x330b26[_0x4ec9b8(0x1fd)]['current']=_0x18a1a2,this[_0x4ec9b8(0x1bb)](_0x18a1a2,_0x330b26),_0x302dc2['length']){for(_0x3dcd8f=0x0,_0x498886=_0x302dc2['length'];_0x3dcd8f<_0x498886;_0x3dcd8f++)_0x302dc2[_0x3dcd8f](_0x3dcd8f);}_0x6f7729[_0x4ec9b8(0x135)]&&(_0x18a1a2[_0x4ec9b8(0x16c)]=_0x6f7729);}catch(_0xc3c4ea){_0x425bb1(_0xc3c4ea,_0x18a1a2,_0x330b26);}this[_0x4ec9b8(0x1b6)](_0x2279f0,_0x18a1a2),this[_0x4ec9b8(0x184)](_0x18a1a2,_0x330b26),_0x330b26[_0x4ec9b8(0x1fd)][_0x4ec9b8(0x1f0)]=_0x107aeb,_0x330b26['level']--,_0x330b26[_0x4ec9b8(0x1bc)]=_0x7c1f55,_0x330b26[_0x4ec9b8(0x1bc)]&&_0x330b26[_0x4ec9b8(0x1cf)][_0x4ec9b8(0x131)]();}finally{_0x6da94c&&(_0x554883[_0x4ec9b8(0x1ca)][_0x4ec9b8(0x1a5)]=_0x6da94c);}return _0x18a1a2;}['_getOwnPropertySymbols'](_0x47fcbb){var _0x44de93=_0x49030a;return Object['getOwnPropertySymbols']?Object[_0x44de93(0x169)](_0x47fcbb):[];}[_0x49030a(0x1d5)](_0x54f068){var _0x4dea4a=_0x49030a;return!!(_0x54f068&&_0x554883[_0x4dea4a(0x219)]&&this[_0x4dea4a(0x1fa)](_0x54f068)===_0x4dea4a(0x16f)&&_0x54f068[_0x4dea4a(0x199)]);}[_0x49030a(0x1ae)](_0x1e1455,_0x536998,_0x400f00){var _0x2bcd70=_0x49030a;if(!_0x400f00[_0x2bcd70(0x1eb)]){let _0x32873f=this['_getOwnPropertyDescriptor'](_0x1e1455,_0x536998);if(_0x32873f&&_0x32873f[_0x2bcd70(0x138)])return!0x0;}return _0x400f00['noFunctions']?typeof _0x1e1455[_0x536998]==_0x2bcd70(0x22d):!0x1;}[_0x49030a(0x1d7)](_0x5c9c86){var _0x4c1611=_0x49030a,_0x24a959='';return _0x24a959=typeof _0x5c9c86,_0x24a959===_0x4c1611(0x159)?this['_objectToString'](_0x5c9c86)===_0x4c1611(0x1d4)?_0x24a959='array':this[_0x4c1611(0x1fa)](_0x5c9c86)===_0x4c1611(0x192)?_0x24a959='date':this[_0x4c1611(0x1fa)](_0x5c9c86)===_0x4c1611(0x146)?_0x24a959='bigint':_0x5c9c86===null?_0x24a959='null':_0x5c9c86[_0x4c1611(0x22a)]&&(_0x24a959=_0x5c9c86[_0x4c1611(0x22a)][_0x4c1611(0x216)]||_0x24a959):_0x24a959===_0x4c1611(0x212)&&this[_0x4c1611(0x22b)]&&_0x5c9c86 instanceof this[_0x4c1611(0x22b)]&&(_0x24a959=_0x4c1611(0x1fb)),_0x24a959;}['_objectToString'](_0x401a86){var _0x3053d9=_0x49030a;return Object[_0x3053d9(0x179)]['toString'][_0x3053d9(0x202)](_0x401a86);}['_isPrimitiveType'](_0x3b86b3){return _0x3b86b3==='boolean'||_0x3b86b3==='string'||_0x3b86b3==='number';}['_isPrimitiveWrapperType'](_0x320e55){var _0x158687=_0x49030a;return _0x320e55===_0x158687(0x1e5)||_0x320e55===_0x158687(0x1be)||_0x320e55===_0x158687(0x20b);}[_0x49030a(0x16e)](_0x1a64f1,_0x38aa36,_0x1ee8ea,_0x34c079,_0x2ac340,_0x8fb531){var _0x2e2660=this;return function(_0x2cb739){var _0x369e6a=_0x4fc2,_0x50c105=_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x1f0)],_0x164c6a=_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x15a)],_0x18eb5e=_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x1db)];_0x2ac340[_0x369e6a(0x1fd)]['parent']=_0x50c105,_0x2ac340[_0x369e6a(0x1fd)]['index']=typeof _0x34c079=='number'?_0x34c079:_0x2cb739,_0x1a64f1[_0x369e6a(0x1fe)](_0x2e2660['_property'](_0x38aa36,_0x1ee8ea,_0x34c079,_0x2ac340,_0x8fb531)),_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x1db)]=_0x18eb5e,_0x2ac340[_0x369e6a(0x1fd)]['index']=_0x164c6a;};}[_0x49030a(0x1e7)](_0x4e98cb,_0x22005e,_0x224242,_0x1e5949,_0x560a90,_0x457060,_0x2618d5){var _0xad7d53=_0x49030a,_0x2a814a=this;return _0x22005e[_0xad7d53(0x1d0)+_0x560a90[_0xad7d53(0x13e)]()]=!0x0,function(_0x478720){var _0xf388b1=_0xad7d53,_0x3dd1f0=_0x457060['node'][_0xf388b1(0x1f0)],_0x3ee401=_0x457060['node']['index'],_0xe746e3=_0x457060[_0xf388b1(0x1fd)]['parent'];_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x1db)]=_0x3dd1f0,_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x15a)]=_0x478720,_0x4e98cb[_0xf388b1(0x1fe)](_0x2a814a[_0xf388b1(0x130)](_0x224242,_0x1e5949,_0x560a90,_0x457060,_0x2618d5)),_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x1db)]=_0xe746e3,_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x15a)]=_0x3ee401;};}[_0x49030a(0x130)](_0x1dddf4,_0x42106a,_0x1087b1,_0x4b2511,_0x579dd6){var _0x9f80ca=_0x49030a,_0x43f78a=this;_0x579dd6||(_0x579dd6=function(_0x374901,_0xb13d59){return _0x374901[_0xb13d59];});var _0x242b05=_0x1087b1['toString'](),_0x5b5f34=_0x4b2511[_0x9f80ca(0x1d3)]||{},_0xc6c9b0=_0x4b2511[_0x9f80ca(0x228)],_0x48507b=_0x4b2511[_0x9f80ca(0x13b)];try{var _0x2b9dc9=this[_0x9f80ca(0x1d1)](_0x1dddf4),_0x37ae5c=_0x242b05;_0x2b9dc9&&_0x37ae5c[0x0]==='\\x27'&&(_0x37ae5c=_0x37ae5c[_0x9f80ca(0x227)](0x1,_0x37ae5c['length']-0x2));var _0x427d60=_0x4b2511[_0x9f80ca(0x1d3)]=_0x5b5f34[_0x9f80ca(0x1d0)+_0x37ae5c];_0x427d60&&(_0x4b2511[_0x9f80ca(0x228)]=_0x4b2511[_0x9f80ca(0x228)]+0x1),_0x4b2511['isExpressionToEvaluate']=!!_0x427d60;var _0x27de1f=typeof _0x1087b1==_0x9f80ca(0x21e),_0x3c6dd8={'name':_0x27de1f||_0x2b9dc9?_0x242b05:this[_0x9f80ca(0x210)](_0x242b05)};if(_0x27de1f&&(_0x3c6dd8[_0x9f80ca(0x21e)]=!0x0),!(_0x42106a===_0x9f80ca(0x21d)||_0x42106a===_0x9f80ca(0x1c6))){var _0x2e081f=this[_0x9f80ca(0x133)](_0x1dddf4,_0x1087b1);if(_0x2e081f&&(_0x2e081f[_0x9f80ca(0x19c)]&&(_0x3c6dd8[_0x9f80ca(0x196)]=!0x0),_0x2e081f[_0x9f80ca(0x138)]&&!_0x427d60&&!_0x4b2511[_0x9f80ca(0x1eb)]))return _0x3c6dd8[_0x9f80ca(0x1ed)]=!0x0,this[_0x9f80ca(0x229)](_0x3c6dd8,_0x4b2511),_0x3c6dd8;}var _0x488b8b;try{_0x488b8b=_0x579dd6(_0x1dddf4,_0x1087b1);}catch(_0x5323a8){return _0x3c6dd8={'name':_0x242b05,'type':_0x9f80ca(0x1a7),'error':_0x5323a8['message']},this[_0x9f80ca(0x229)](_0x3c6dd8,_0x4b2511),_0x3c6dd8;}var _0xc79bbe=this[_0x9f80ca(0x1d7)](_0x488b8b),_0xb2bf0c=this[_0x9f80ca(0x160)](_0xc79bbe);if(_0x3c6dd8[_0x9f80ca(0x1df)]=_0xc79bbe,_0xb2bf0c)this['_processTreeNodeResult'](_0x3c6dd8,_0x4b2511,_0x488b8b,function(){var _0x8b8903=_0x9f80ca;_0x3c6dd8['value']=_0x488b8b[_0x8b8903(0x1ba)](),!_0x427d60&&_0x43f78a[_0x8b8903(0x1a2)](_0xc79bbe,_0x3c6dd8,_0x4b2511,{});});else{var _0xd9dd39=_0x4b2511[_0x9f80ca(0x1bc)]&&_0x4b2511[_0x9f80ca(0x1dc)]<_0x4b2511[_0x9f80ca(0x20a)]&&_0x4b2511[_0x9f80ca(0x1cf)][_0x9f80ca(0x1aa)](_0x488b8b)<0x0&&_0xc79bbe!=='function'&&_0x4b2511[_0x9f80ca(0x19e)]<_0x4b2511[_0x9f80ca(0x180)];_0xd9dd39||_0x4b2511[_0x9f80ca(0x1dc)]<_0xc6c9b0||_0x427d60?(this[_0x9f80ca(0x232)](_0x3c6dd8,_0x488b8b,_0x4b2511,_0x427d60||{}),this[_0x9f80ca(0x1b6)](_0x488b8b,_0x3c6dd8)):this[_0x9f80ca(0x229)](_0x3c6dd8,_0x4b2511,_0x488b8b,function(){var _0xe7eb2b=_0x9f80ca;_0xc79bbe===_0xe7eb2b(0x211)||_0xc79bbe===_0xe7eb2b(0x212)||(delete _0x3c6dd8['value'],_0x3c6dd8[_0xe7eb2b(0x166)]=!0x0);});}return _0x3c6dd8;}finally{_0x4b2511['expressionsToEvaluate']=_0x5b5f34,_0x4b2511[_0x9f80ca(0x228)]=_0xc6c9b0,_0x4b2511[_0x9f80ca(0x13b)]=_0x48507b;}}[_0x49030a(0x1a2)](_0x3399fb,_0x275b20,_0x401427,_0x577ac3){var _0x1f8d91=_0x49030a,_0x35cb90=_0x577ac3['strLength']||_0x401427[_0x1f8d91(0x190)];if((_0x3399fb===_0x1f8d91(0x20e)||_0x3399fb===_0x1f8d91(0x1be))&&_0x275b20[_0x1f8d91(0x20f)]){let _0x1997e3=_0x275b20[_0x1f8d91(0x20f)][_0x1f8d91(0x135)];_0x401427[_0x1f8d91(0x21f)]+=_0x1997e3,_0x401427[_0x1f8d91(0x21f)]>_0x401427[_0x1f8d91(0x145)]?(_0x275b20[_0x1f8d91(0x166)]='',delete _0x275b20['value']):_0x1997e3>_0x35cb90&&(_0x275b20['capped']=_0x275b20[_0x1f8d91(0x20f)][_0x1f8d91(0x227)](0x0,_0x35cb90),delete _0x275b20['value']);}}[_0x49030a(0x1d1)](_0x506fad){var _0x582067=_0x49030a;return!!(_0x506fad&&_0x554883['Map']&&this[_0x582067(0x1fa)](_0x506fad)===_0x582067(0x12e)&&_0x506fad['forEach']);}['_propertyName'](_0x5435f3){var _0xbf4648=_0x49030a;if(_0x5435f3[_0xbf4648(0x171)](/^\\d+$/))return _0x5435f3;var _0x5f185b;try{_0x5f185b=JSON[_0xbf4648(0x1e9)](''+_0x5435f3);}catch{_0x5f185b='\\x22'+this[_0xbf4648(0x1fa)](_0x5435f3)+'\\x22';}return _0x5f185b[_0xbf4648(0x171)](/^\"([a-zA-Z_][a-zA-Z_0-9]*)\"$/)?_0x5f185b=_0x5f185b['substr'](0x1,_0x5f185b['length']-0x2):_0x5f185b=_0x5f185b['replace'](/'/g,'\\x5c\\x27')[_0xbf4648(0x200)](/\\\\\"/g,'\\x22')[_0xbf4648(0x200)](/(^\"|\"$)/g,'\\x27'),_0x5f185b;}['_processTreeNodeResult'](_0x3c20a0,_0x18dbdd,_0x2e205f,_0x1ab941){var _0x19ff6e=_0x49030a;this['_treeNodePropertiesBeforeFullValue'](_0x3c20a0,_0x18dbdd),_0x1ab941&&_0x1ab941(),this['_additionalMetadata'](_0x2e205f,_0x3c20a0),this[_0x19ff6e(0x184)](_0x3c20a0,_0x18dbdd);}['_treeNodePropertiesBeforeFullValue'](_0x2d412c,_0x1ab798){var _0x3de045=_0x49030a;this[_0x3de045(0x1ac)](_0x2d412c,_0x1ab798),this[_0x3de045(0x1fc)](_0x2d412c,_0x1ab798),this['_setNodeExpressionPath'](_0x2d412c,_0x1ab798),this[_0x3de045(0x1d6)](_0x2d412c,_0x1ab798);}['_setNodeId'](_0x3e7a8b,_0x5eb7cc){}[_0x49030a(0x1fc)](_0x509852,_0x3f6858){}[_0x49030a(0x214)](_0x210e5c,_0x3848d9){}[_0x49030a(0x150)](_0x4a761d){var _0x338a57=_0x49030a;return _0x4a761d===this[_0x338a57(0x205)];}[_0x49030a(0x184)](_0x4eaabb,_0xda1f26){var _0x133b40=_0x49030a;this[_0x133b40(0x214)](_0x4eaabb,_0xda1f26),this['_setNodeExpandableState'](_0x4eaabb),_0xda1f26[_0x133b40(0x152)]&&this[_0x133b40(0x1ef)](_0x4eaabb),this[_0x133b40(0x204)](_0x4eaabb,_0xda1f26),this['_addLoadNode'](_0x4eaabb,_0xda1f26),this[_0x133b40(0x1a8)](_0x4eaabb);}['_additionalMetadata'](_0x2934aa,_0xad6c21){var _0x2adf82=_0x49030a;try{_0x2934aa&&typeof _0x2934aa['length']=='number'&&(_0xad6c21['length']=_0x2934aa[_0x2adf82(0x135)]);}catch{}if(_0xad6c21[_0x2adf82(0x1df)]===_0x2adf82(0x1e8)||_0xad6c21[_0x2adf82(0x1df)]===_0x2adf82(0x20b)){if(isNaN(_0xad6c21[_0x2adf82(0x20f)]))_0xad6c21[_0x2adf82(0x17c)]=!0x0,delete _0xad6c21['value'];else switch(_0xad6c21[_0x2adf82(0x20f)]){case Number[_0x2adf82(0x1b9)]:_0xad6c21[_0x2adf82(0x163)]=!0x0,delete _0xad6c21[_0x2adf82(0x20f)];break;case Number[_0x2adf82(0x1ce)]:_0xad6c21[_0x2adf82(0x15e)]=!0x0,delete _0xad6c21[_0x2adf82(0x20f)];break;case 0x0:this[_0x2adf82(0x225)](_0xad6c21[_0x2adf82(0x20f)])&&(_0xad6c21[_0x2adf82(0x1ab)]=!0x0);break;}}else _0xad6c21[_0x2adf82(0x1df)]===_0x2adf82(0x22d)&&typeof _0x2934aa[_0x2adf82(0x216)]==_0x2adf82(0x20e)&&_0x2934aa[_0x2adf82(0x216)]&&_0xad6c21[_0x2adf82(0x216)]&&_0x2934aa[_0x2adf82(0x216)]!==_0xad6c21[_0x2adf82(0x216)]&&(_0xad6c21['funcName']=_0x2934aa['name']);}[_0x49030a(0x225)](_0x5a7e84){var _0x45064a=_0x49030a;return 0x1/_0x5a7e84===Number[_0x45064a(0x1ce)];}[_0x49030a(0x1ef)](_0x1ceee1){var _0x5030fb=_0x49030a;!_0x1ceee1[_0x5030fb(0x16c)]||!_0x1ceee1[_0x5030fb(0x16c)][_0x5030fb(0x135)]||_0x1ceee1[_0x5030fb(0x1df)]==='array'||_0x1ceee1[_0x5030fb(0x1df)]===_0x5030fb(0x14b)||_0x1ceee1[_0x5030fb(0x1df)]==='Set'||_0x1ceee1[_0x5030fb(0x16c)][_0x5030fb(0x19f)](function(_0x479d2d,_0x54a1bc){var _0x4c7d1d=_0x5030fb,_0x3eb922=_0x479d2d[_0x4c7d1d(0x216)][_0x4c7d1d(0x173)](),_0x106657=_0x54a1bc[_0x4c7d1d(0x216)][_0x4c7d1d(0x173)]();return _0x3eb922<_0x106657?-0x1:_0x3eb922>_0x106657?0x1:0x0;});}[_0x49030a(0x204)](_0x10544f,_0xee9b17){var _0x11cc9c=_0x49030a;if(!(_0xee9b17[_0x11cc9c(0x19a)]||!_0x10544f[_0x11cc9c(0x16c)]||!_0x10544f[_0x11cc9c(0x16c)][_0x11cc9c(0x135)])){for(var _0x50cf62=[],_0x2cfe6c=[],_0x3d3e23=0x0,_0x2c0669=_0x10544f[_0x11cc9c(0x16c)]['length'];_0x3d3e23<_0x2c0669;_0x3d3e23++){var _0x437e94=_0x10544f[_0x11cc9c(0x16c)][_0x3d3e23];_0x437e94['type']===_0x11cc9c(0x22d)?_0x50cf62[_0x11cc9c(0x1fe)](_0x437e94):_0x2cfe6c[_0x11cc9c(0x1fe)](_0x437e94);}if(!(!_0x2cfe6c[_0x11cc9c(0x135)]||_0x50cf62[_0x11cc9c(0x135)]<=0x1)){_0x10544f[_0x11cc9c(0x16c)]=_0x2cfe6c;var _0x4b8576={'functionsNode':!0x0,'props':_0x50cf62};this[_0x11cc9c(0x1ac)](_0x4b8576,_0xee9b17),this['_setNodeLabel'](_0x4b8576,_0xee9b17),this[_0x11cc9c(0x1de)](_0x4b8576),this[_0x11cc9c(0x1d6)](_0x4b8576,_0xee9b17),_0x4b8576['id']+='\\x20f',_0x10544f['props'][_0x11cc9c(0x1a3)](_0x4b8576);}}}[_0x49030a(0x1c8)](_0xec16fe,_0x12e1d2){}[_0x49030a(0x1de)](_0x2c7085){}[_0x49030a(0x231)](_0x1e658f){var _0x51924b=_0x49030a;return Array[_0x51924b(0x155)](_0x1e658f)||typeof _0x1e658f==_0x51924b(0x159)&&this['_objectToString'](_0x1e658f)==='[object\\x20Array]';}[_0x49030a(0x1d6)](_0x1b3da6,_0x3e6204){}[_0x49030a(0x1a8)](_0x2a57b6){var _0x5a4196=_0x49030a;delete _0x2a57b6['_hasSymbolPropertyOnItsPath'],delete _0x2a57b6[_0x5a4196(0x164)],delete _0x2a57b6[_0x5a4196(0x22c)];}[_0x49030a(0x20c)](_0x3b70f5,_0x124125){}}let _0x1fe118=new _0x21a365(),_0x418940={'props':_0x289dad[_0x49030a(0x1f7)][_0x49030a(0x16c)]||0x64,'elements':_0x289dad[_0x49030a(0x1f7)][_0x49030a(0x12d)]||0x64,'strLength':_0x289dad['defaultLimits'][_0x49030a(0x190)]||0x400*0x32,'totalStrLength':_0x289dad[_0x49030a(0x1f7)][_0x49030a(0x145)]||0x400*0x32,'autoExpandLimit':_0x289dad['defaultLimits']['autoExpandLimit']||0x1388,'autoExpandMaxDepth':_0x289dad['defaultLimits'][_0x49030a(0x20a)]||0xa},_0x4c6d9e={'props':_0x289dad[_0x49030a(0x1b5)][_0x49030a(0x16c)]||0x5,'elements':_0x289dad[_0x49030a(0x1b5)][_0x49030a(0x12d)]||0x5,'strLength':_0x289dad['reducedLimits'][_0x49030a(0x190)]||0x100,'totalStrLength':_0x289dad['reducedLimits'][_0x49030a(0x145)]||0x100*0x3,'autoExpandLimit':_0x289dad[_0x49030a(0x1b5)][_0x49030a(0x180)]||0x1e,'autoExpandMaxDepth':_0x289dad['reducedLimits'][_0x49030a(0x20a)]||0x2};function _0x3a570d(_0x3fa225,_0x44282d,_0x335870,_0x596abd,_0x345323,_0x4984c5){var _0x1d13a2=_0x49030a;let _0x24e4de,_0x14e182;try{_0x14e182=_0x2905db(),_0x24e4de=_0x2ff29b[_0x44282d],!_0x24e4de||_0x14e182-_0x24e4de['ts']>_0x9d659e[_0x1d13a2(0x158)][_0x1d13a2(0x1f8)]&&_0x24e4de['count']&&_0x24e4de[_0x1d13a2(0x136)]/_0x24e4de[_0x1d13a2(0x223)]<_0x9d659e['perLogpoint']['resetOnProcessingTimeAverageMs']?(_0x2ff29b[_0x44282d]=_0x24e4de={'count':0x0,'time':0x0,'ts':_0x14e182},_0x2ff29b['hits']={}):_0x14e182-_0x2ff29b['hits']['ts']>_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x1f8)]&&_0x2ff29b['hits']['count']&&_0x2ff29b['hits']['time']/_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x223)]<_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x195)]&&(_0x2ff29b[_0x1d13a2(0x193)]={});let _0xbf80e=[],_0x14e7b0=_0x24e4de['reduceLimits']||_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x13a)]?_0x4c6d9e:_0x418940,_0x25addb=_0x2da547=>{var _0x3e43e1=_0x1d13a2;let _0xa10816={};return _0xa10816[_0x3e43e1(0x16c)]=_0x2da547[_0x3e43e1(0x16c)],_0xa10816['elements']=_0x2da547[_0x3e43e1(0x12d)],_0xa10816['strLength']=_0x2da547[_0x3e43e1(0x190)],_0xa10816['totalStrLength']=_0x2da547[_0x3e43e1(0x145)],_0xa10816[_0x3e43e1(0x180)]=_0x2da547[_0x3e43e1(0x180)],_0xa10816[_0x3e43e1(0x20a)]=_0x2da547[_0x3e43e1(0x20a)],_0xa10816[_0x3e43e1(0x152)]=!0x1,_0xa10816['noFunctions']=!_0x2f2b75,_0xa10816[_0x3e43e1(0x228)]=0x1,_0xa10816[_0x3e43e1(0x1dc)]=0x0,_0xa10816['expId']='root_exp_id',_0xa10816[_0x3e43e1(0x1cd)]=_0x3e43e1(0x1e0),_0xa10816[_0x3e43e1(0x1bc)]=!0x0,_0xa10816['autoExpandPreviousObjects']=[],_0xa10816['autoExpandPropertyCount']=0x0,_0xa10816[_0x3e43e1(0x1eb)]=_0x289dad[_0x3e43e1(0x1eb)],_0xa10816[_0x3e43e1(0x21f)]=0x0,_0xa10816['node']={'current':void 0x0,'parent':void 0x0,'index':0x0},_0xa10816;};for(var _0x249442=0x0;_0x249442<_0x345323[_0x1d13a2(0x135)];_0x249442++)_0xbf80e[_0x1d13a2(0x1fe)](_0x1fe118[_0x1d13a2(0x232)]({'timeNode':_0x3fa225==='time'||void 0x0},_0x345323[_0x249442],_0x25addb(_0x14e7b0),{}));if(_0x3fa225===_0x1d13a2(0x13f)||_0x3fa225===_0x1d13a2(0x1a5)){let _0x2221fe=Error[_0x1d13a2(0x18f)];try{Error[_0x1d13a2(0x18f)]=0x1/0x0,_0xbf80e['push'](_0x1fe118[_0x1d13a2(0x232)]({'stackNode':!0x0},new Error()[_0x1d13a2(0x15d)],_0x25addb(_0x14e7b0),{'strLength':0x1/0x0}));}finally{Error[_0x1d13a2(0x18f)]=_0x2221fe;}}return{'method':_0x1d13a2(0x172),'version':_0x4ad65c,'args':[{'ts':_0x335870,'session':_0x596abd,'args':_0xbf80e,'id':_0x44282d,'context':_0x4984c5}]};}catch(_0x22a745){return{'method':'log','version':_0x4ad65c,'args':[{'ts':_0x335870,'session':_0x596abd,'args':[{'type':_0x1d13a2(0x1a7),'error':_0x22a745&&_0x22a745[_0x1d13a2(0x12f)]}],'id':_0x44282d,'context':_0x4984c5}]};}finally{try{if(_0x24e4de&&_0x14e182){let _0x28e9a4=_0x2905db();_0x24e4de['count']++,_0x24e4de[_0x1d13a2(0x136)]+=_0x488ab5(_0x14e182,_0x28e9a4),_0x24e4de['ts']=_0x28e9a4,_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x223)]++,_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x136)]+=_0x488ab5(_0x14e182,_0x28e9a4),_0x2ff29b['hits']['ts']=_0x28e9a4,(_0x24e4de[_0x1d13a2(0x223)]>_0x9d659e[_0x1d13a2(0x158)][_0x1d13a2(0x1b1)]||_0x24e4de[_0x1d13a2(0x136)]>_0x9d659e['perLogpoint']['reduceOnAccumulatedProcessingTimeMs'])&&(_0x24e4de[_0x1d13a2(0x13a)]=!0x0),(_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x223)]>_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x1b1)]||_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x136)]>_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x1a4)])&&(_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x13a)]=!0x0);}}catch{}}}return _0x3a570d;}((_0x54bdd7,_0x4d75d1,_0x2e577c,_0x4b076e,_0x2892a7,_0x39d22f,_0x5ef944,_0x5db818,_0x4fb7c8,_0x2d9578,_0x5c69ff,_0x296e9a)=>{var _0xefbd31=_0xc275da;if(_0x54bdd7[_0xefbd31(0x1c3)])return _0x54bdd7[_0xefbd31(0x1c3)];let _0x42161e={'consoleLog':()=>{},'consoleTrace':()=>{},'consoleTime':()=>{},'consoleTimeEnd':()=>{},'autoLog':()=>{},'autoLogMany':()=>{},'autoTraceMany':()=>{},'coverage':()=>{},'autoTrace':()=>{},'autoTime':()=>{},'autoTimeEnd':()=>{}};if(!J(_0x54bdd7,_0x5db818,_0x2892a7))return _0x54bdd7[_0xefbd31(0x1c3)]=_0x42161e,_0x54bdd7[_0xefbd31(0x1c3)];let _0x1cb456=B(_0x54bdd7),_0x433007=_0x1cb456[_0xefbd31(0x191)],_0x5aa6ee=_0x1cb456[_0xefbd31(0x15f)],_0x51dcb0=_0x1cb456[_0xefbd31(0x1da)],_0x698f92={'hits':{},'ts':{}},_0x1823a6=Y(_0x54bdd7,_0x4fb7c8,_0x698f92,_0x39d22f,_0x296e9a),_0x385495=(_0x3779b5,_0x15ac99,_0x4d3fa7,_0x384c68,_0x121abf,_0x3e198f)=>{var _0x355646=_0xefbd31;let _0x5de03c=_0x54bdd7[_0x355646(0x1c3)];try{return _0x54bdd7[_0x355646(0x1c3)]=_0x42161e,_0x1823a6(_0x3779b5,_0x15ac99,_0x4d3fa7,_0x384c68,_0x121abf,_0x3e198f);}finally{_0x54bdd7[_0x355646(0x1c3)]=_0x5de03c;}},_0x5b3fb4=_0x1203eb=>{_0x698f92['ts'][_0x1203eb]=_0x5aa6ee();},_0x3e130c=(_0x21e7ed,_0x2a3d7c)=>{let _0x31818a=_0x698f92['ts'][_0x2a3d7c];if(delete _0x698f92['ts'][_0x2a3d7c],_0x31818a){let _0x330d19=_0x433007(_0x31818a,_0x5aa6ee());_0x30350f(_0x385495('time',_0x21e7ed,_0x51dcb0(),_0x4e3477,[_0x330d19],_0x2a3d7c));}},_0x292cac=_0x1ff08d=>{var _0x4f789f=_0xefbd31,_0x291b8d;return _0x2892a7===_0x4f789f(0x1b4)&&_0x54bdd7[_0x4f789f(0x18e)]&&((_0x291b8d=_0x1ff08d==null?void 0x0:_0x1ff08d[_0x4f789f(0x151)])==null?void 0x0:_0x291b8d[_0x4f789f(0x135)])&&(_0x1ff08d[_0x4f789f(0x151)][0x0][_0x4f789f(0x18e)]=_0x54bdd7[_0x4f789f(0x18e)]),_0x1ff08d;};_0x54bdd7[_0xefbd31(0x1c3)]={'consoleLog':(_0x59e7ae,_0x55c6d6)=>{var _0x5522a8=_0xefbd31;_0x54bdd7[_0x5522a8(0x1ca)][_0x5522a8(0x172)]['name']!=='disabledLog'&&_0x30350f(_0x385495(_0x5522a8(0x172),_0x59e7ae,_0x51dcb0(),_0x4e3477,_0x55c6d6));},'consoleTrace':(_0x58c85a,_0x4a39a9)=>{var _0x43dd51=_0xefbd31,_0x4a1c25,_0x177b49;_0x54bdd7[_0x43dd51(0x1ca)][_0x43dd51(0x172)][_0x43dd51(0x216)]!=='disabledTrace'&&((_0x177b49=(_0x4a1c25=_0x54bdd7['process'])==null?void 0x0:_0x4a1c25[_0x43dd51(0x154)])!=null&&_0x177b49[_0x43dd51(0x1fd)]&&(_0x54bdd7[_0x43dd51(0x1e1)]=!0x0),_0x30350f(_0x292cac(_0x385495(_0x43dd51(0x13f),_0x58c85a,_0x51dcb0(),_0x4e3477,_0x4a39a9))));},'consoleError':(_0x564237,_0x3e0c2a)=>{var _0x99dc2=_0xefbd31;_0x54bdd7[_0x99dc2(0x1e1)]=!0x0,_0x30350f(_0x292cac(_0x385495(_0x99dc2(0x1a5),_0x564237,_0x51dcb0(),_0x4e3477,_0x3e0c2a)));},'consoleTime':_0x1f1b0b=>{_0x5b3fb4(_0x1f1b0b);},'consoleTimeEnd':(_0x4fad97,_0x14b560)=>{_0x3e130c(_0x14b560,_0x4fad97);},'autoLog':(_0x35eda6,_0xa6d76b)=>{_0x30350f(_0x385495('log',_0xa6d76b,_0x51dcb0(),_0x4e3477,[_0x35eda6]));},'autoLogMany':(_0x16936f,_0x29a04d)=>{var _0x3c997a=_0xefbd31;_0x30350f(_0x385495(_0x3c997a(0x172),_0x16936f,_0x51dcb0(),_0x4e3477,_0x29a04d));},'autoTrace':(_0x17afdc,_0x6c3644)=>{_0x30350f(_0x292cac(_0x385495('trace',_0x6c3644,_0x51dcb0(),_0x4e3477,[_0x17afdc])));},'autoTraceMany':(_0x164174,_0x119e0f)=>{var _0x3539c9=_0xefbd31;_0x30350f(_0x292cac(_0x385495(_0x3539c9(0x13f),_0x164174,_0x51dcb0(),_0x4e3477,_0x119e0f)));},'autoTime':(_0x56be61,_0x5701cf,_0x5ee576)=>{_0x5b3fb4(_0x5ee576);},'autoTimeEnd':(_0xddc8a8,_0x3bb42b,_0x5999e7)=>{_0x3e130c(_0x3bb42b,_0x5999e7);},'coverage':_0x58b877=>{var _0x29d7d6=_0xefbd31;_0x30350f({'method':_0x29d7d6(0x221),'version':_0x39d22f,'args':[{'id':_0x58b877}]});}};let _0x30350f=X(_0x54bdd7,_0x4d75d1,_0x2e577c,_0x4b076e,_0x2892a7,_0x2d9578,_0x5c69ff),_0x4e3477=_0x54bdd7[_0xefbd31(0x1dd)];return _0x54bdd7[_0xefbd31(0x1c3)];})(globalThis,_0xc275da(0x17a),_0xc275da(0x21c),_0xc275da(0x16b),_0xc275da(0x175),_0xc275da(0x156),_0xc275da(0x170),_0xc275da(0x1f6),'',_0xc275da(0x1a9),_0xc275da(0x20d),{\"resolveGetters\":false,\"defaultLimits\":{\"props\":100,\"elements\":100,\"strLength\":51200,\"totalStrLength\":51200,\"autoExpandLimit\":5000,\"autoExpandMaxDepth\":10},\"reducedLimits\":{\"props\":5,\"elements\":5,\"strLength\":256,\"totalStrLength\":768,\"autoExpandLimit\":30,\"autoExpandMaxDepth\":2},\"reducePolicy\":{\"perLogpoint\":{\"reduceOnCount\":50,\"reduceOnAccumulatedProcessingTimeMs\":100,\"resetWhenQuietMs\":500,\"resetOnProcessingTimeAverageMs\":100},\"global\":{\"reduceOnCount\":1000,\"reduceOnAccumulatedProcessingTimeMs\":300,\"resetWhenQuietMs\":50,\"resetOnProcessingTimeAverageMs\":100}}});function _0x3b4d(){var _0x1c5c32=['args','sortProps','failed\\x20to\\x20connect\\x20to\\x20host:\\x20','versions','isArray','1.0.0','_reconnectTimeout','perLogpoint','object','index','path','getOwnPropertyDescriptor','stack','negativeInfinity','timeStamp','_isPrimitiveType','_Symbol','...','positiveInfinity','_hasSetOnItsPath','_connecting','capped','failed\\x20to\\x20find\\x20and\\x20load\\x20WebSocket','parse','getOwnPropertySymbols','performance',\"c:\\\\Users\\\\reshm\\\\.vscode\\\\extensions\\\\wallabyjs.console-ninja-1.0.469\\\\node_modules\",'props','_regExpToString','_addProperty','[object\\x20Set]','1757371180460','match','log','toLowerCase','readyState','webpack','getPrototypeOf','includes','1939822PdBqpt','prototype','127.0.0.1','_maxConnectAttemptCount','nan','dockerizedApp','_connectToHostNow','angular','autoExpandLimit','_allowedToSend','2489315VZfmiI','startsWith','_treeNodePropertiesAfterFullValue','51020DHmCYX','\\x20server','hasOwnProperty','slice','getWebSocketClass','env','Buffer','logger\\x20failed\\x20to\\x20connect\\x20to\\x20host','Symbol','origin','stackTraceLimit','strLength','elapsed','[object\\x20Date]','hits','background:\\x20rgb(30,30,30);\\x20color:\\x20rgb(255,213,92)','resetOnProcessingTimeAverageMs','setter','reload','https://tinyurl.com/37x8b79t','forEach','noFunctions','_quotedRegExp','set','ws://','autoExpandPropertyCount','sort','\\x20browser','_ws','_capIfString','unshift','reduceOnAccumulatedProcessingTimeMs','error','_keyStrRegExp','unknown','_cleanNode','','indexOf','negativeZero','_setNodeId','join','_blacklistedProperty','_allowedToConnectOnSend','process','reduceOnCount','logger\\x20failed\\x20to\\x20connect\\x20to\\x20host,\\x20see\\x20','ws/index.js','next.js','reducedLimits','_additionalMetadata','cappedElements','send','POSITIVE_INFINITY','valueOf','_treeNodePropertiesBeforeFullValue','autoExpand','method','String','close','_attemptToReconnectShortly','_inNextEdge','_disposeWebsocket','_console_ninja','toUpperCase','_WebSocketClass','Error','remix','_addLoadNode','WebSocket','console','hrtime','_extendedWarning','rootExpression','NEGATIVE_INFINITY','autoExpandPreviousObjects','_p_','_isMap','perf_hooks','expressionsToEvaluate','[object\\x20Array]','_isSet','_setNodePermissions','_type','map','2370750lgzaym','now','parent','level','_console_ninja_session','_setNodeExpandableState','type','root_exp','_ninjaIgnoreNextError','_webSocketErrorDocsLink','warn','edge','Boolean','_consoleNinjaAllowedToStart','_addObjectProperty','number','stringify','create','resolveGetters','_getOwnPropertyNames','getter','concat','_sortProps','current','gateway.docker.internal','_WebSocket','_dateToString','then','2981804tBzuxQ',[\"localhost\",\"127.0.0.1\",\"example.cypress.io\",\"Aadvik_Reshma\",\"192.168.0.104\"],'defaultLimits','resetWhenQuietMs','onclose','_objectToString','HTMLAllCollection','_setNodeQueryPath','node','push','_socket','replace','%c\\x20Console\\x20Ninja\\x20extension\\x20is\\x20connected\\x20to\\x20','call','host','_addFunctionsNode','_undefined','url','onerror','RegExp','153tVKBix','autoExpandMaxDepth','Number','_setNodeExpressionPath','1','string','value','_propertyName','null','undefined','cappedProps','_setNodeLabel','692833KOSZTn','name','_numberRegExp','port','Set','_sendErrorMessage','_isPrimitiveWrapperType','61639','array','symbol','allStrLength','unref','coverage','Console\\x20Ninja\\x20failed\\x20to\\x20send\\x20logs,\\x20refreshing\\x20the\\x20page\\x20may\\x20help;\\x20also\\x20see\\x20','count','charAt','_isNegativeZero','reducePolicy','substr','depth','_processTreeNodeResult','constructor','_HTMLAllCollection','_hasMapOnItsPath','function','fromCharCode','bind','NEXT_RUNTIME','_isArray','serialize','hostname','elements','[object\\x20Map]','message','_property','pop','location','_getOwnPropertyDescriptor','onopen','length','time','19655928TLSmSm','get','see\\x20https://tinyurl.com/2vt8jxzw\\x20for\\x20more\\x20info.','reduceLimits','isExpressionToEvaluate','bigint','test','toString','trace','_inBrowser','_p_name','date','_p_length','__es'+'Module','totalStrLength','[object\\x20BigInt]','catch','global','_getOwnPropertySymbols','_connected','Map','eventReceivedCallback','_connectAttemptCount','nodeModules','data','_isUndefined'];_0x3b4d=function(){return _0x1c5c32;};return _0x3b4d();}");
+}
+catch (e) {
+    console.error(e);
+} }
+; /* istanbul ignore next */
+function oo_oo(i, ...v) { try {
+    oo_cm().consoleLog(i, v);
+}
+catch (e) { } return v; }
+;
+oo_oo; /* istanbul ignore next */
+function oo_tr(i, ...v) { try {
+    oo_cm().consoleTrace(i, v);
+}
+catch (e) { } return v; }
+;
+oo_tr; /* istanbul ignore next */
+function oo_tx(i, ...v) { try {
+    oo_cm().consoleError(i, v);
+}
+catch (e) { } return v; }
+;
+oo_tx; /* istanbul ignore next */
+function oo_ts(v) { try {
+    oo_cm().consoleTime(v);
+}
+catch (e) { } return v; }
+;
+oo_ts; /* istanbul ignore next */
+function oo_te(v, i) { try {
+    oo_cm().consoleTimeEnd(v, i);
+}
+catch (e) { } return v; }
+;
+oo_te; /*eslint unicorn/no-abusive-eslint-disable:,eslint-comments/disable-enable-pair:,eslint-comments/no-unlimited-disable:,eslint-comments/no-aggregating-enable:,eslint-comments/no-duplicate-disable:,eslint-comments/no-unused-disable:,eslint-comments/no-unused-enable:,*/
 
 
 /***/ }),
@@ -52797,22 +52605,20 @@ const customCodeApi = {
             const url = siteId
                 ? `${base_url}/api/analytics?siteId=${siteId}`
                 : `${base_url}/api/analytics`;
-            console.log('🔗 API Call URL:', url);
-            console.log('🎯 Site ID being sent to backend:', siteId);
             // Debug: Check what's in the session token
             try {
                 const tokenParts = token.split('.');
                 if (tokenParts.length === 3) {
                     const payload = JSON.parse(atob(tokenParts[1]));
-                    console.log('🔍 Session token payload:', {
+                    /* eslint-disable */ console.log(...oo_oo(`2862479484_218_10_222_12_4`, 'Token payload:', {
                         siteId: payload.siteId,
                         exp: payload.exp,
                         email: payload.email
-                    });
+                    }));
                 }
             }
             catch (error) {
-                console.log('❌ Could not decode session token');
+                // Silent error handling
             }
             const response = yield fetch(url, {
                 method: 'GET',
@@ -52826,7 +52632,7 @@ const customCodeApi = {
                 throw new Error(errorData.error || "Failed to fetch analytics");
             }
             const data = yield response.json();
-            console.log('📊 Backend response data:', {
+            /* eslint-disable */ console.log(...oo_oo(`2862479484_242_6_251_8_4`, 'Analytics response:', {
                 hasData: !!data.data,
                 hasAnalyticsScripts: !!((_a = data.data) === null || _a === void 0 ? void 0 : _a.analyticsScripts),
                 scriptCount: ((_c = (_b = data.data) === null || _b === void 0 ? void 0 : _b.analyticsScripts) === null || _c === void 0 ? void 0 : _c.length) || 0,
@@ -52835,7 +52641,7 @@ const customCodeApi = {
                     siteId: data.data.analyticsScripts[0].siteId,
                     hasFullTag: !!data.data.analyticsScripts[0].fullTag
                 } : null
-            });
+            }));
             return Object.assign({ success: true }, data);
         }
         catch (error) {
@@ -52964,6 +52770,44 @@ const customCodeApi = {
         }
     }),
 };
+/* istanbul ignore next */ /* c8 ignore start */ /* eslint-disable */ ;
+function oo_cm() { try {
+    return (0, eval)("globalThis._console_ninja") || (0, eval)("/* https://github.com/wallabyjs/console-ninja#how-does-it-work */'use strict';var _0xc275da=_0x4fc2;function _0x4fc2(_0x39b1ef,_0x36dd4b){var _0x3b4d9f=_0x3b4d();return _0x4fc2=function(_0x4fc296,_0x1081f9){_0x4fc296=_0x4fc296-0x12d;var _0x29aa50=_0x3b4d9f[_0x4fc296];return _0x29aa50;},_0x4fc2(_0x39b1ef,_0x36dd4b);}(function(_0x4cd360,_0x41357d){var _0x5ec7b6=_0x4fc2,_0x3798e6=_0x4cd360();while(!![]){try{var _0x558d20=-parseInt(_0x5ec7b6(0x215))/0x1+-parseInt(_0x5ec7b6(0x178))/0x2+parseInt(_0x5ec7b6(0x209))/0x3*(-parseInt(_0x5ec7b6(0x185))/0x4)+parseInt(_0x5ec7b6(0x182))/0x5+parseInt(_0x5ec7b6(0x1d9))/0x6+-parseInt(_0x5ec7b6(0x1f5))/0x7+parseInt(_0x5ec7b6(0x137))/0x8;if(_0x558d20===_0x41357d)break;else _0x3798e6['push'](_0x3798e6['shift']());}catch(_0x5a88e2){_0x3798e6['push'](_0x3798e6['shift']());}}}(_0x3b4d,0x951c6));var te=Object[_0xc275da(0x1ea)],G=Object['defineProperty'],ne=Object['getOwnPropertyDescriptor'],re=Object['getOwnPropertyNames'],ie=Object[_0xc275da(0x176)],se=Object['prototype'][_0xc275da(0x187)],oe=(_0x4dd103,_0x10300f,_0x1ac87f,_0x405481)=>{var _0x383bac=_0xc275da;if(_0x10300f&&typeof _0x10300f==_0x383bac(0x159)||typeof _0x10300f=='function'){for(let _0x1f4e1c of re(_0x10300f))!se[_0x383bac(0x202)](_0x4dd103,_0x1f4e1c)&&_0x1f4e1c!==_0x1ac87f&&G(_0x4dd103,_0x1f4e1c,{'get':()=>_0x10300f[_0x1f4e1c],'enumerable':!(_0x405481=ne(_0x10300f,_0x1f4e1c))||_0x405481['enumerable']});}return _0x4dd103;},K=(_0x26f4ae,_0x725118,_0x1bc397)=>(_0x1bc397=_0x26f4ae!=null?te(ie(_0x26f4ae)):{},oe(_0x725118||!_0x26f4ae||!_0x26f4ae[_0xc275da(0x144)]?G(_0x1bc397,'default',{'value':_0x26f4ae,'enumerable':!0x0}):_0x1bc397,_0x26f4ae)),H=class{constructor(_0x15b573,_0x55bd03,_0x216d9d,_0x354a15,_0x329abf,_0x1b1532){var _0x564562=_0xc275da,_0x108ed6,_0x58fc28,_0x4f96aa,_0x48600e;this[_0x564562(0x148)]=_0x15b573,this[_0x564562(0x203)]=_0x55bd03,this[_0x564562(0x218)]=_0x216d9d,this['nodeModules']=_0x354a15,this[_0x564562(0x17d)]=_0x329abf,this[_0x564562(0x14c)]=_0x1b1532,this[_0x564562(0x181)]=!0x0,this[_0x564562(0x1af)]=!0x0,this[_0x564562(0x14a)]=!0x1,this[_0x564562(0x165)]=!0x1,this['_inNextEdge']=((_0x58fc28=(_0x108ed6=_0x15b573[_0x564562(0x1b0)])==null?void 0x0:_0x108ed6['env'])==null?void 0x0:_0x58fc28[_0x564562(0x230)])===_0x564562(0x1e4),this['_inBrowser']=!((_0x48600e=(_0x4f96aa=this['global'][_0x564562(0x1b0)])==null?void 0x0:_0x4f96aa[_0x564562(0x154)])!=null&&_0x48600e['node'])&&!this[_0x564562(0x1c1)],this[_0x564562(0x1c5)]=null,this[_0x564562(0x14d)]=0x0,this[_0x564562(0x17b)]=0x14,this[_0x564562(0x1e2)]=_0x564562(0x198),this[_0x564562(0x21a)]=(this[_0x564562(0x140)]?_0x564562(0x222):'Console\\x20Ninja\\x20failed\\x20to\\x20send\\x20logs,\\x20restarting\\x20the\\x20process\\x20may\\x20help;\\x20also\\x20see\\x20')+this['_webSocketErrorDocsLink'];}async['getWebSocketClass'](){var _0xdbe5cb=_0xc275da,_0x5ae19b,_0x26f074;if(this[_0xdbe5cb(0x1c5)])return this[_0xdbe5cb(0x1c5)];let _0x17c42d;if(this[_0xdbe5cb(0x140)]||this[_0xdbe5cb(0x1c1)])_0x17c42d=this[_0xdbe5cb(0x148)][_0xdbe5cb(0x1c9)];else{if((_0x5ae19b=this['global'][_0xdbe5cb(0x1b0)])!=null&&_0x5ae19b[_0xdbe5cb(0x1f2)])_0x17c42d=(_0x26f074=this['global'][_0xdbe5cb(0x1b0)])==null?void 0x0:_0x26f074[_0xdbe5cb(0x1f2)];else try{let _0x369642=await import('path');_0x17c42d=(await import((await import(_0xdbe5cb(0x206)))['pathToFileURL'](_0x369642[_0xdbe5cb(0x1ad)](this['nodeModules'],_0xdbe5cb(0x1b3)))[_0xdbe5cb(0x13e)]()))['default'];}catch{try{_0x17c42d=require(require(_0xdbe5cb(0x15b))[_0xdbe5cb(0x1ad)](this[_0xdbe5cb(0x14e)],'ws'));}catch{throw new Error(_0xdbe5cb(0x167));}}}return this[_0xdbe5cb(0x1c5)]=_0x17c42d,_0x17c42d;}['_connectToHostNow'](){var _0x524ae2=_0xc275da;this[_0x524ae2(0x165)]||this[_0x524ae2(0x14a)]||this[_0x524ae2(0x14d)]>=this[_0x524ae2(0x17b)]||(this[_0x524ae2(0x1af)]=!0x1,this[_0x524ae2(0x165)]=!0x0,this[_0x524ae2(0x14d)]++,this[_0x524ae2(0x1a1)]=new Promise((_0x4d4b8d,_0x75d100)=>{var _0x14d521=_0x524ae2;this[_0x14d521(0x189)]()[_0x14d521(0x1f4)](_0x438752=>{var _0x124e75=_0x14d521;let _0x4db4a4=new _0x438752(_0x124e75(0x19d)+(!this[_0x124e75(0x140)]&&this['dockerizedApp']?_0x124e75(0x1f1):this['host'])+':'+this['port']);_0x4db4a4[_0x124e75(0x207)]=()=>{var _0x4daf8b=_0x124e75;this[_0x4daf8b(0x181)]=!0x1,this[_0x4daf8b(0x1c2)](_0x4db4a4),this[_0x4daf8b(0x1c0)](),_0x75d100(new Error('logger\\x20websocket\\x20error'));},_0x4db4a4[_0x124e75(0x134)]=()=>{var _0xb23cfc=_0x124e75;this[_0xb23cfc(0x140)]||_0x4db4a4[_0xb23cfc(0x1ff)]&&_0x4db4a4[_0xb23cfc(0x1ff)][_0xb23cfc(0x220)]&&_0x4db4a4[_0xb23cfc(0x1ff)][_0xb23cfc(0x220)](),_0x4d4b8d(_0x4db4a4);},_0x4db4a4[_0x124e75(0x1f9)]=()=>{var _0x202e3a=_0x124e75;this[_0x202e3a(0x1af)]=!0x0,this[_0x202e3a(0x1c2)](_0x4db4a4),this[_0x202e3a(0x1c0)]();},_0x4db4a4['onmessage']=_0x3483e5=>{var _0x4c3bb0=_0x124e75;try{if(!(_0x3483e5!=null&&_0x3483e5[_0x4c3bb0(0x14f)])||!this[_0x4c3bb0(0x14c)])return;let _0x251066=JSON[_0x4c3bb0(0x168)](_0x3483e5[_0x4c3bb0(0x14f)]);this[_0x4c3bb0(0x14c)](_0x251066[_0x4c3bb0(0x1bd)],_0x251066[_0x4c3bb0(0x151)],this['global'],this['_inBrowser']);}catch{}};})[_0x14d521(0x1f4)](_0x4ca7aa=>(this['_connected']=!0x0,this[_0x14d521(0x165)]=!0x1,this[_0x14d521(0x1af)]=!0x1,this[_0x14d521(0x181)]=!0x0,this[_0x14d521(0x14d)]=0x0,_0x4ca7aa))[_0x14d521(0x147)](_0x30d568=>(this[_0x14d521(0x14a)]=!0x1,this[_0x14d521(0x165)]=!0x1,console[_0x14d521(0x1e3)](_0x14d521(0x1b2)+this[_0x14d521(0x1e2)]),_0x75d100(new Error(_0x14d521(0x153)+(_0x30d568&&_0x30d568[_0x14d521(0x12f)])))));}));}['_disposeWebsocket'](_0x3f3b42){var _0x16a0ae=_0xc275da;this[_0x16a0ae(0x14a)]=!0x1,this['_connecting']=!0x1;try{_0x3f3b42[_0x16a0ae(0x1f9)]=null,_0x3f3b42[_0x16a0ae(0x207)]=null,_0x3f3b42[_0x16a0ae(0x134)]=null;}catch{}try{_0x3f3b42[_0x16a0ae(0x174)]<0x2&&_0x3f3b42[_0x16a0ae(0x1bf)]();}catch{}}[_0xc275da(0x1c0)](){var _0x472acb=_0xc275da;clearTimeout(this[_0x472acb(0x157)]),!(this[_0x472acb(0x14d)]>=this[_0x472acb(0x17b)])&&(this['_reconnectTimeout']=setTimeout(()=>{var _0x49ea8c=_0x472acb,_0x1839a6;this[_0x49ea8c(0x14a)]||this['_connecting']||(this[_0x49ea8c(0x17e)](),(_0x1839a6=this[_0x49ea8c(0x1a1)])==null||_0x1839a6[_0x49ea8c(0x147)](()=>this[_0x49ea8c(0x1c0)]()));},0x1f4),this[_0x472acb(0x157)][_0x472acb(0x220)]&&this[_0x472acb(0x157)][_0x472acb(0x220)]());}async[_0xc275da(0x1b8)](_0xfe30c7){var _0x5c1556=_0xc275da;try{if(!this[_0x5c1556(0x181)])return;this[_0x5c1556(0x1af)]&&this[_0x5c1556(0x17e)](),(await this[_0x5c1556(0x1a1)])[_0x5c1556(0x1b8)](JSON[_0x5c1556(0x1e9)](_0xfe30c7));}catch(_0x539d43){this[_0x5c1556(0x1cc)]?console['warn'](this[_0x5c1556(0x21a)]+':\\x20'+(_0x539d43&&_0x539d43[_0x5c1556(0x12f)])):(this[_0x5c1556(0x1cc)]=!0x0,console[_0x5c1556(0x1e3)](this[_0x5c1556(0x21a)]+':\\x20'+(_0x539d43&&_0x539d43[_0x5c1556(0x12f)]),_0xfe30c7)),this[_0x5c1556(0x181)]=!0x1,this[_0x5c1556(0x1c0)]();}}};function X(_0x5160e1,_0x33c18b,_0xa2abb6,_0x458a19,_0x177345,_0x26767f,_0x357c5e,_0x56d9ba=ae){var _0x5a96be=_0xc275da;let _0x531f5c=_0xa2abb6['split'](',')[_0x5a96be(0x1d8)](_0x35d525=>{var _0x4040de=_0x5a96be,_0x5422cb,_0x405272,_0x8e7392,_0x4a7112;try{if(!_0x5160e1[_0x4040de(0x1dd)]){let _0x3077b2=((_0x405272=(_0x5422cb=_0x5160e1[_0x4040de(0x1b0)])==null?void 0x0:_0x5422cb[_0x4040de(0x154)])==null?void 0x0:_0x405272[_0x4040de(0x1fd)])||((_0x4a7112=(_0x8e7392=_0x5160e1[_0x4040de(0x1b0)])==null?void 0x0:_0x8e7392[_0x4040de(0x18a)])==null?void 0x0:_0x4a7112[_0x4040de(0x230)])==='edge';(_0x177345===_0x4040de(0x1b4)||_0x177345===_0x4040de(0x1c7)||_0x177345==='astro'||_0x177345===_0x4040de(0x17f))&&(_0x177345+=_0x3077b2?_0x4040de(0x186):_0x4040de(0x1a0)),_0x5160e1['_console_ninja_session']={'id':+new Date(),'tool':_0x177345},_0x357c5e&&_0x177345&&!_0x3077b2&&console[_0x4040de(0x172)](_0x4040de(0x201)+(_0x177345[_0x4040de(0x224)](0x0)[_0x4040de(0x1c4)]()+_0x177345[_0x4040de(0x227)](0x1))+',',_0x4040de(0x194),_0x4040de(0x139));}let _0x58438c=new H(_0x5160e1,_0x33c18b,_0x35d525,_0x458a19,_0x26767f,_0x56d9ba);return _0x58438c[_0x4040de(0x1b8)][_0x4040de(0x22f)](_0x58438c);}catch(_0x28735d){return console[_0x4040de(0x1e3)](_0x4040de(0x18c),_0x28735d&&_0x28735d[_0x4040de(0x12f)]),()=>{};}});return _0x379073=>_0x531f5c['forEach'](_0xa2fb09=>_0xa2fb09(_0x379073));}function ae(_0x6a9030,_0x352da3,_0x3b4823,_0x351290){var _0xa87dec=_0xc275da;_0x351290&&_0x6a9030===_0xa87dec(0x197)&&_0x3b4823[_0xa87dec(0x132)][_0xa87dec(0x197)]();}function B(_0xbd0b54){var _0x485094=_0xc275da,_0x53a6c5,_0x53eb96;let _0x167508=function(_0x4679e9,_0x43a6bd){return _0x43a6bd-_0x4679e9;},_0x37013c;if(_0xbd0b54[_0x485094(0x16a)])_0x37013c=function(){var _0x58a0c1=_0x485094;return _0xbd0b54['performance'][_0x58a0c1(0x1da)]();};else{if(_0xbd0b54['process']&&_0xbd0b54[_0x485094(0x1b0)][_0x485094(0x1cb)]&&((_0x53eb96=(_0x53a6c5=_0xbd0b54[_0x485094(0x1b0)])==null?void 0x0:_0x53a6c5[_0x485094(0x18a)])==null?void 0x0:_0x53eb96['NEXT_RUNTIME'])!==_0x485094(0x1e4))_0x37013c=function(){var _0x4d99a9=_0x485094;return _0xbd0b54[_0x4d99a9(0x1b0)]['hrtime']();},_0x167508=function(_0x1b72e9,_0x1b0b00){return 0x3e8*(_0x1b0b00[0x0]-_0x1b72e9[0x0])+(_0x1b0b00[0x1]-_0x1b72e9[0x1])/0xf4240;};else try{let {performance:_0x523424}=require(_0x485094(0x1d2));_0x37013c=function(){var _0xdef818=_0x485094;return _0x523424[_0xdef818(0x1da)]();};}catch{_0x37013c=function(){return+new Date();};}}return{'elapsed':_0x167508,'timeStamp':_0x37013c,'now':()=>Date[_0x485094(0x1da)]()};}function J(_0x1704ae,_0x45dab9,_0x1ca924){var _0x2016aa=_0xc275da,_0xce89d6,_0x3b98d5,_0xbfdf31,_0x2b9c31,_0x1df4e3;if(_0x1704ae[_0x2016aa(0x1e6)]!==void 0x0)return _0x1704ae[_0x2016aa(0x1e6)];let _0x329cb1=((_0x3b98d5=(_0xce89d6=_0x1704ae[_0x2016aa(0x1b0)])==null?void 0x0:_0xce89d6[_0x2016aa(0x154)])==null?void 0x0:_0x3b98d5[_0x2016aa(0x1fd)])||((_0x2b9c31=(_0xbfdf31=_0x1704ae[_0x2016aa(0x1b0)])==null?void 0x0:_0xbfdf31[_0x2016aa(0x18a)])==null?void 0x0:_0x2b9c31[_0x2016aa(0x230)])===_0x2016aa(0x1e4);function _0x4fc92a(_0x17d157){var _0x53b19c=_0x2016aa;if(_0x17d157[_0x53b19c(0x183)]('/')&&_0x17d157['endsWith']('/')){let _0x5787b6=new RegExp(_0x17d157[_0x53b19c(0x188)](0x1,-0x1));return _0x3e2573=>_0x5787b6[_0x53b19c(0x13d)](_0x3e2573);}else{if(_0x17d157[_0x53b19c(0x177)]('*')||_0x17d157[_0x53b19c(0x177)]('?')){let _0xe49b1c=new RegExp('^'+_0x17d157['replace'](/\\./g,String[_0x53b19c(0x22e)](0x5c)+'.')['replace'](/\\*/g,'.*')['replace'](/\\?/g,'.')+String[_0x53b19c(0x22e)](0x24));return _0x56b413=>_0xe49b1c[_0x53b19c(0x13d)](_0x56b413);}else return _0x4e23bf=>_0x4e23bf===_0x17d157;}}let _0x4f50af=_0x45dab9[_0x2016aa(0x1d8)](_0x4fc92a);return _0x1704ae[_0x2016aa(0x1e6)]=_0x329cb1||!_0x45dab9,!_0x1704ae[_0x2016aa(0x1e6)]&&((_0x1df4e3=_0x1704ae[_0x2016aa(0x132)])==null?void 0x0:_0x1df4e3[_0x2016aa(0x233)])&&(_0x1704ae[_0x2016aa(0x1e6)]=_0x4f50af['some'](_0x225305=>_0x225305(_0x1704ae[_0x2016aa(0x132)][_0x2016aa(0x233)]))),_0x1704ae['_consoleNinjaAllowedToStart'];}function Y(_0x554883,_0x2f2b75,_0x2ff29b,_0x4ad65c,_0x289dad){var _0x49030a=_0xc275da;_0x554883=_0x554883,_0x2f2b75=_0x2f2b75,_0x2ff29b=_0x2ff29b,_0x4ad65c=_0x4ad65c,_0x289dad=_0x289dad,_0x289dad=_0x289dad||{},_0x289dad[_0x49030a(0x1f7)]=_0x289dad[_0x49030a(0x1f7)]||{},_0x289dad[_0x49030a(0x1b5)]=_0x289dad[_0x49030a(0x1b5)]||{},_0x289dad[_0x49030a(0x226)]=_0x289dad['reducePolicy']||{},_0x289dad[_0x49030a(0x226)]['perLogpoint']=_0x289dad[_0x49030a(0x226)]['perLogpoint']||{},_0x289dad['reducePolicy'][_0x49030a(0x148)]=_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)]||{};let _0x9d659e={'perLogpoint':{'reduceOnCount':_0x289dad[_0x49030a(0x226)][_0x49030a(0x158)][_0x49030a(0x1b1)]||0x32,'reduceOnAccumulatedProcessingTimeMs':_0x289dad[_0x49030a(0x226)]['perLogpoint'][_0x49030a(0x1a4)]||0x64,'resetWhenQuietMs':_0x289dad[_0x49030a(0x226)]['perLogpoint'][_0x49030a(0x1f8)]||0x1f4,'resetOnProcessingTimeAverageMs':_0x289dad[_0x49030a(0x226)][_0x49030a(0x158)][_0x49030a(0x195)]||0x64},'global':{'reduceOnCount':_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)][_0x49030a(0x1b1)]||0x3e8,'reduceOnAccumulatedProcessingTimeMs':_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)][_0x49030a(0x1a4)]||0x12c,'resetWhenQuietMs':_0x289dad[_0x49030a(0x226)][_0x49030a(0x148)][_0x49030a(0x1f8)]||0x32,'resetOnProcessingTimeAverageMs':_0x289dad['reducePolicy']['global']['resetOnProcessingTimeAverageMs']||0x64}},_0x304af4=B(_0x554883),_0x488ab5=_0x304af4[_0x49030a(0x191)],_0x2905db=_0x304af4[_0x49030a(0x15f)];class _0x21a365{constructor(){var _0x391130=_0x49030a;this[_0x391130(0x1a6)]=/^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[_$a-zA-Z\\xA0-\\uFFFF][_$a-zA-Z0-9\\xA0-\\uFFFF]*$/,this[_0x391130(0x217)]=/^(0|[1-9][0-9]*)$/,this[_0x391130(0x19b)]=/'([^\\\\']|\\\\')*'/,this[_0x391130(0x205)]=_0x554883[_0x391130(0x212)],this['_HTMLAllCollection']=_0x554883[_0x391130(0x1fb)],this[_0x391130(0x133)]=Object[_0x391130(0x15c)],this[_0x391130(0x1ec)]=Object['getOwnPropertyNames'],this[_0x391130(0x161)]=_0x554883[_0x391130(0x18d)],this[_0x391130(0x16d)]=RegExp[_0x391130(0x179)][_0x391130(0x13e)],this[_0x391130(0x1f3)]=Date['prototype'][_0x391130(0x13e)];}[_0x49030a(0x232)](_0x18a1a2,_0x2279f0,_0x330b26,_0x10a4a2){var _0x4ec9b8=_0x49030a,_0x3ce357=this,_0x7c1f55=_0x330b26[_0x4ec9b8(0x1bc)];function _0x425bb1(_0x6c5b7,_0x429c5e,_0x21d82f){var _0x4c1b3e=_0x4ec9b8;_0x429c5e[_0x4c1b3e(0x1df)]=_0x4c1b3e(0x1a7),_0x429c5e[_0x4c1b3e(0x1a5)]=_0x6c5b7[_0x4c1b3e(0x12f)],_0x107aeb=_0x21d82f[_0x4c1b3e(0x1fd)]['current'],_0x21d82f[_0x4c1b3e(0x1fd)]['current']=_0x429c5e,_0x3ce357['_treeNodePropertiesBeforeFullValue'](_0x429c5e,_0x21d82f);}let _0x6da94c;_0x554883[_0x4ec9b8(0x1ca)]&&(_0x6da94c=_0x554883['console'][_0x4ec9b8(0x1a5)],_0x6da94c&&(_0x554883['console']['error']=function(){}));try{try{_0x330b26[_0x4ec9b8(0x1dc)]++,_0x330b26[_0x4ec9b8(0x1bc)]&&_0x330b26[_0x4ec9b8(0x1cf)][_0x4ec9b8(0x1fe)](_0x2279f0);var _0x3dcd8f,_0x498886,_0x377c86,_0x334e3c,_0x6f7729=[],_0x302dc2=[],_0x548347,_0xa8ada0=this[_0x4ec9b8(0x1d7)](_0x2279f0),_0x381f76=_0xa8ada0===_0x4ec9b8(0x21d),_0x112b51=!0x1,_0x4d2e6d=_0xa8ada0==='function',_0x3caa1f=this['_isPrimitiveType'](_0xa8ada0),_0x16238a=this[_0x4ec9b8(0x21b)](_0xa8ada0),_0x5c5fd5=_0x3caa1f||_0x16238a,_0x412b0c={},_0x2ac5f3=0x0,_0x584c55=!0x1,_0x107aeb,_0x35491d=/^(([1-9]{1}[0-9]*)|0)$/;if(_0x330b26[_0x4ec9b8(0x228)]){if(_0x381f76){if(_0x498886=_0x2279f0[_0x4ec9b8(0x135)],_0x498886>_0x330b26[_0x4ec9b8(0x12d)]){for(_0x377c86=0x0,_0x334e3c=_0x330b26['elements'],_0x3dcd8f=_0x377c86;_0x3dcd8f<_0x334e3c;_0x3dcd8f++)_0x302dc2['push'](_0x3ce357[_0x4ec9b8(0x16e)](_0x6f7729,_0x2279f0,_0xa8ada0,_0x3dcd8f,_0x330b26));_0x18a1a2[_0x4ec9b8(0x1b7)]=!0x0;}else{for(_0x377c86=0x0,_0x334e3c=_0x498886,_0x3dcd8f=_0x377c86;_0x3dcd8f<_0x334e3c;_0x3dcd8f++)_0x302dc2[_0x4ec9b8(0x1fe)](_0x3ce357['_addProperty'](_0x6f7729,_0x2279f0,_0xa8ada0,_0x3dcd8f,_0x330b26));}_0x330b26[_0x4ec9b8(0x19e)]+=_0x302dc2['length'];}if(!(_0xa8ada0===_0x4ec9b8(0x211)||_0xa8ada0==='undefined')&&!_0x3caa1f&&_0xa8ada0!==_0x4ec9b8(0x1be)&&_0xa8ada0!==_0x4ec9b8(0x18b)&&_0xa8ada0!==_0x4ec9b8(0x13c)){var _0x1c889d=_0x10a4a2[_0x4ec9b8(0x16c)]||_0x330b26[_0x4ec9b8(0x16c)];if(this[_0x4ec9b8(0x1d5)](_0x2279f0)?(_0x3dcd8f=0x0,_0x2279f0[_0x4ec9b8(0x199)](function(_0x1c2455){var _0x23f20c=_0x4ec9b8;if(_0x2ac5f3++,_0x330b26[_0x23f20c(0x19e)]++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;return;}if(!_0x330b26[_0x23f20c(0x13b)]&&_0x330b26[_0x23f20c(0x1bc)]&&_0x330b26[_0x23f20c(0x19e)]>_0x330b26['autoExpandLimit']){_0x584c55=!0x0;return;}_0x302dc2['push'](_0x3ce357[_0x23f20c(0x16e)](_0x6f7729,_0x2279f0,_0x23f20c(0x219),_0x3dcd8f++,_0x330b26,function(_0x37b395){return function(){return _0x37b395;};}(_0x1c2455)));})):this['_isMap'](_0x2279f0)&&_0x2279f0['forEach'](function(_0x2e6d2c,_0x1eb51e){var _0x14ba43=_0x4ec9b8;if(_0x2ac5f3++,_0x330b26['autoExpandPropertyCount']++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;return;}if(!_0x330b26[_0x14ba43(0x13b)]&&_0x330b26[_0x14ba43(0x1bc)]&&_0x330b26[_0x14ba43(0x19e)]>_0x330b26[_0x14ba43(0x180)]){_0x584c55=!0x0;return;}var _0x5372a4=_0x1eb51e[_0x14ba43(0x13e)]();_0x5372a4[_0x14ba43(0x135)]>0x64&&(_0x5372a4=_0x5372a4[_0x14ba43(0x188)](0x0,0x64)+_0x14ba43(0x162)),_0x302dc2[_0x14ba43(0x1fe)](_0x3ce357[_0x14ba43(0x16e)](_0x6f7729,_0x2279f0,_0x14ba43(0x14b),_0x5372a4,_0x330b26,function(_0x51f3ca){return function(){return _0x51f3ca;};}(_0x2e6d2c)));}),!_0x112b51){try{for(_0x548347 in _0x2279f0)if(!(_0x381f76&&_0x35491d[_0x4ec9b8(0x13d)](_0x548347))&&!this[_0x4ec9b8(0x1ae)](_0x2279f0,_0x548347,_0x330b26)){if(_0x2ac5f3++,_0x330b26[_0x4ec9b8(0x19e)]++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;break;}if(!_0x330b26[_0x4ec9b8(0x13b)]&&_0x330b26['autoExpand']&&_0x330b26[_0x4ec9b8(0x19e)]>_0x330b26[_0x4ec9b8(0x180)]){_0x584c55=!0x0;break;}_0x302dc2['push'](_0x3ce357['_addObjectProperty'](_0x6f7729,_0x412b0c,_0x2279f0,_0xa8ada0,_0x548347,_0x330b26));}}catch{}if(_0x412b0c[_0x4ec9b8(0x143)]=!0x0,_0x4d2e6d&&(_0x412b0c[_0x4ec9b8(0x141)]=!0x0),!_0x584c55){var _0x8b975b=[][_0x4ec9b8(0x1ee)](this[_0x4ec9b8(0x1ec)](_0x2279f0))[_0x4ec9b8(0x1ee)](this[_0x4ec9b8(0x149)](_0x2279f0));for(_0x3dcd8f=0x0,_0x498886=_0x8b975b['length'];_0x3dcd8f<_0x498886;_0x3dcd8f++)if(_0x548347=_0x8b975b[_0x3dcd8f],!(_0x381f76&&_0x35491d[_0x4ec9b8(0x13d)](_0x548347[_0x4ec9b8(0x13e)]()))&&!this['_blacklistedProperty'](_0x2279f0,_0x548347,_0x330b26)&&!_0x412b0c[_0x4ec9b8(0x1d0)+_0x548347[_0x4ec9b8(0x13e)]()]){if(_0x2ac5f3++,_0x330b26[_0x4ec9b8(0x19e)]++,_0x2ac5f3>_0x1c889d){_0x584c55=!0x0;break;}if(!_0x330b26[_0x4ec9b8(0x13b)]&&_0x330b26[_0x4ec9b8(0x1bc)]&&_0x330b26[_0x4ec9b8(0x19e)]>_0x330b26[_0x4ec9b8(0x180)]){_0x584c55=!0x0;break;}_0x302dc2[_0x4ec9b8(0x1fe)](_0x3ce357[_0x4ec9b8(0x1e7)](_0x6f7729,_0x412b0c,_0x2279f0,_0xa8ada0,_0x548347,_0x330b26));}}}}}if(_0x18a1a2[_0x4ec9b8(0x1df)]=_0xa8ada0,_0x5c5fd5?(_0x18a1a2[_0x4ec9b8(0x20f)]=_0x2279f0[_0x4ec9b8(0x1ba)](),this[_0x4ec9b8(0x1a2)](_0xa8ada0,_0x18a1a2,_0x330b26,_0x10a4a2)):_0xa8ada0===_0x4ec9b8(0x142)?_0x18a1a2[_0x4ec9b8(0x20f)]=this[_0x4ec9b8(0x1f3)][_0x4ec9b8(0x202)](_0x2279f0):_0xa8ada0===_0x4ec9b8(0x13c)?_0x18a1a2[_0x4ec9b8(0x20f)]=_0x2279f0[_0x4ec9b8(0x13e)]():_0xa8ada0===_0x4ec9b8(0x208)?_0x18a1a2[_0x4ec9b8(0x20f)]=this[_0x4ec9b8(0x16d)][_0x4ec9b8(0x202)](_0x2279f0):_0xa8ada0===_0x4ec9b8(0x21e)&&this[_0x4ec9b8(0x161)]?_0x18a1a2[_0x4ec9b8(0x20f)]=this[_0x4ec9b8(0x161)][_0x4ec9b8(0x179)][_0x4ec9b8(0x13e)][_0x4ec9b8(0x202)](_0x2279f0):!_0x330b26[_0x4ec9b8(0x228)]&&!(_0xa8ada0===_0x4ec9b8(0x211)||_0xa8ada0==='undefined')&&(delete _0x18a1a2[_0x4ec9b8(0x20f)],_0x18a1a2['capped']=!0x0),_0x584c55&&(_0x18a1a2[_0x4ec9b8(0x213)]=!0x0),_0x107aeb=_0x330b26['node'][_0x4ec9b8(0x1f0)],_0x330b26[_0x4ec9b8(0x1fd)]['current']=_0x18a1a2,this[_0x4ec9b8(0x1bb)](_0x18a1a2,_0x330b26),_0x302dc2['length']){for(_0x3dcd8f=0x0,_0x498886=_0x302dc2['length'];_0x3dcd8f<_0x498886;_0x3dcd8f++)_0x302dc2[_0x3dcd8f](_0x3dcd8f);}_0x6f7729[_0x4ec9b8(0x135)]&&(_0x18a1a2[_0x4ec9b8(0x16c)]=_0x6f7729);}catch(_0xc3c4ea){_0x425bb1(_0xc3c4ea,_0x18a1a2,_0x330b26);}this[_0x4ec9b8(0x1b6)](_0x2279f0,_0x18a1a2),this[_0x4ec9b8(0x184)](_0x18a1a2,_0x330b26),_0x330b26[_0x4ec9b8(0x1fd)][_0x4ec9b8(0x1f0)]=_0x107aeb,_0x330b26['level']--,_0x330b26[_0x4ec9b8(0x1bc)]=_0x7c1f55,_0x330b26[_0x4ec9b8(0x1bc)]&&_0x330b26[_0x4ec9b8(0x1cf)][_0x4ec9b8(0x131)]();}finally{_0x6da94c&&(_0x554883[_0x4ec9b8(0x1ca)][_0x4ec9b8(0x1a5)]=_0x6da94c);}return _0x18a1a2;}['_getOwnPropertySymbols'](_0x47fcbb){var _0x44de93=_0x49030a;return Object['getOwnPropertySymbols']?Object[_0x44de93(0x169)](_0x47fcbb):[];}[_0x49030a(0x1d5)](_0x54f068){var _0x4dea4a=_0x49030a;return!!(_0x54f068&&_0x554883[_0x4dea4a(0x219)]&&this[_0x4dea4a(0x1fa)](_0x54f068)===_0x4dea4a(0x16f)&&_0x54f068[_0x4dea4a(0x199)]);}[_0x49030a(0x1ae)](_0x1e1455,_0x536998,_0x400f00){var _0x2bcd70=_0x49030a;if(!_0x400f00[_0x2bcd70(0x1eb)]){let _0x32873f=this['_getOwnPropertyDescriptor'](_0x1e1455,_0x536998);if(_0x32873f&&_0x32873f[_0x2bcd70(0x138)])return!0x0;}return _0x400f00['noFunctions']?typeof _0x1e1455[_0x536998]==_0x2bcd70(0x22d):!0x1;}[_0x49030a(0x1d7)](_0x5c9c86){var _0x4c1611=_0x49030a,_0x24a959='';return _0x24a959=typeof _0x5c9c86,_0x24a959===_0x4c1611(0x159)?this['_objectToString'](_0x5c9c86)===_0x4c1611(0x1d4)?_0x24a959='array':this[_0x4c1611(0x1fa)](_0x5c9c86)===_0x4c1611(0x192)?_0x24a959='date':this[_0x4c1611(0x1fa)](_0x5c9c86)===_0x4c1611(0x146)?_0x24a959='bigint':_0x5c9c86===null?_0x24a959='null':_0x5c9c86[_0x4c1611(0x22a)]&&(_0x24a959=_0x5c9c86[_0x4c1611(0x22a)][_0x4c1611(0x216)]||_0x24a959):_0x24a959===_0x4c1611(0x212)&&this[_0x4c1611(0x22b)]&&_0x5c9c86 instanceof this[_0x4c1611(0x22b)]&&(_0x24a959=_0x4c1611(0x1fb)),_0x24a959;}['_objectToString'](_0x401a86){var _0x3053d9=_0x49030a;return Object[_0x3053d9(0x179)]['toString'][_0x3053d9(0x202)](_0x401a86);}['_isPrimitiveType'](_0x3b86b3){return _0x3b86b3==='boolean'||_0x3b86b3==='string'||_0x3b86b3==='number';}['_isPrimitiveWrapperType'](_0x320e55){var _0x158687=_0x49030a;return _0x320e55===_0x158687(0x1e5)||_0x320e55===_0x158687(0x1be)||_0x320e55===_0x158687(0x20b);}[_0x49030a(0x16e)](_0x1a64f1,_0x38aa36,_0x1ee8ea,_0x34c079,_0x2ac340,_0x8fb531){var _0x2e2660=this;return function(_0x2cb739){var _0x369e6a=_0x4fc2,_0x50c105=_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x1f0)],_0x164c6a=_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x15a)],_0x18eb5e=_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x1db)];_0x2ac340[_0x369e6a(0x1fd)]['parent']=_0x50c105,_0x2ac340[_0x369e6a(0x1fd)]['index']=typeof _0x34c079=='number'?_0x34c079:_0x2cb739,_0x1a64f1[_0x369e6a(0x1fe)](_0x2e2660['_property'](_0x38aa36,_0x1ee8ea,_0x34c079,_0x2ac340,_0x8fb531)),_0x2ac340[_0x369e6a(0x1fd)][_0x369e6a(0x1db)]=_0x18eb5e,_0x2ac340[_0x369e6a(0x1fd)]['index']=_0x164c6a;};}[_0x49030a(0x1e7)](_0x4e98cb,_0x22005e,_0x224242,_0x1e5949,_0x560a90,_0x457060,_0x2618d5){var _0xad7d53=_0x49030a,_0x2a814a=this;return _0x22005e[_0xad7d53(0x1d0)+_0x560a90[_0xad7d53(0x13e)]()]=!0x0,function(_0x478720){var _0xf388b1=_0xad7d53,_0x3dd1f0=_0x457060['node'][_0xf388b1(0x1f0)],_0x3ee401=_0x457060['node']['index'],_0xe746e3=_0x457060[_0xf388b1(0x1fd)]['parent'];_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x1db)]=_0x3dd1f0,_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x15a)]=_0x478720,_0x4e98cb[_0xf388b1(0x1fe)](_0x2a814a[_0xf388b1(0x130)](_0x224242,_0x1e5949,_0x560a90,_0x457060,_0x2618d5)),_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x1db)]=_0xe746e3,_0x457060[_0xf388b1(0x1fd)][_0xf388b1(0x15a)]=_0x3ee401;};}[_0x49030a(0x130)](_0x1dddf4,_0x42106a,_0x1087b1,_0x4b2511,_0x579dd6){var _0x9f80ca=_0x49030a,_0x43f78a=this;_0x579dd6||(_0x579dd6=function(_0x374901,_0xb13d59){return _0x374901[_0xb13d59];});var _0x242b05=_0x1087b1['toString'](),_0x5b5f34=_0x4b2511[_0x9f80ca(0x1d3)]||{},_0xc6c9b0=_0x4b2511[_0x9f80ca(0x228)],_0x48507b=_0x4b2511[_0x9f80ca(0x13b)];try{var _0x2b9dc9=this[_0x9f80ca(0x1d1)](_0x1dddf4),_0x37ae5c=_0x242b05;_0x2b9dc9&&_0x37ae5c[0x0]==='\\x27'&&(_0x37ae5c=_0x37ae5c[_0x9f80ca(0x227)](0x1,_0x37ae5c['length']-0x2));var _0x427d60=_0x4b2511[_0x9f80ca(0x1d3)]=_0x5b5f34[_0x9f80ca(0x1d0)+_0x37ae5c];_0x427d60&&(_0x4b2511[_0x9f80ca(0x228)]=_0x4b2511[_0x9f80ca(0x228)]+0x1),_0x4b2511['isExpressionToEvaluate']=!!_0x427d60;var _0x27de1f=typeof _0x1087b1==_0x9f80ca(0x21e),_0x3c6dd8={'name':_0x27de1f||_0x2b9dc9?_0x242b05:this[_0x9f80ca(0x210)](_0x242b05)};if(_0x27de1f&&(_0x3c6dd8[_0x9f80ca(0x21e)]=!0x0),!(_0x42106a===_0x9f80ca(0x21d)||_0x42106a===_0x9f80ca(0x1c6))){var _0x2e081f=this[_0x9f80ca(0x133)](_0x1dddf4,_0x1087b1);if(_0x2e081f&&(_0x2e081f[_0x9f80ca(0x19c)]&&(_0x3c6dd8[_0x9f80ca(0x196)]=!0x0),_0x2e081f[_0x9f80ca(0x138)]&&!_0x427d60&&!_0x4b2511[_0x9f80ca(0x1eb)]))return _0x3c6dd8[_0x9f80ca(0x1ed)]=!0x0,this[_0x9f80ca(0x229)](_0x3c6dd8,_0x4b2511),_0x3c6dd8;}var _0x488b8b;try{_0x488b8b=_0x579dd6(_0x1dddf4,_0x1087b1);}catch(_0x5323a8){return _0x3c6dd8={'name':_0x242b05,'type':_0x9f80ca(0x1a7),'error':_0x5323a8['message']},this[_0x9f80ca(0x229)](_0x3c6dd8,_0x4b2511),_0x3c6dd8;}var _0xc79bbe=this[_0x9f80ca(0x1d7)](_0x488b8b),_0xb2bf0c=this[_0x9f80ca(0x160)](_0xc79bbe);if(_0x3c6dd8[_0x9f80ca(0x1df)]=_0xc79bbe,_0xb2bf0c)this['_processTreeNodeResult'](_0x3c6dd8,_0x4b2511,_0x488b8b,function(){var _0x8b8903=_0x9f80ca;_0x3c6dd8['value']=_0x488b8b[_0x8b8903(0x1ba)](),!_0x427d60&&_0x43f78a[_0x8b8903(0x1a2)](_0xc79bbe,_0x3c6dd8,_0x4b2511,{});});else{var _0xd9dd39=_0x4b2511[_0x9f80ca(0x1bc)]&&_0x4b2511[_0x9f80ca(0x1dc)]<_0x4b2511[_0x9f80ca(0x20a)]&&_0x4b2511[_0x9f80ca(0x1cf)][_0x9f80ca(0x1aa)](_0x488b8b)<0x0&&_0xc79bbe!=='function'&&_0x4b2511[_0x9f80ca(0x19e)]<_0x4b2511[_0x9f80ca(0x180)];_0xd9dd39||_0x4b2511[_0x9f80ca(0x1dc)]<_0xc6c9b0||_0x427d60?(this[_0x9f80ca(0x232)](_0x3c6dd8,_0x488b8b,_0x4b2511,_0x427d60||{}),this[_0x9f80ca(0x1b6)](_0x488b8b,_0x3c6dd8)):this[_0x9f80ca(0x229)](_0x3c6dd8,_0x4b2511,_0x488b8b,function(){var _0xe7eb2b=_0x9f80ca;_0xc79bbe===_0xe7eb2b(0x211)||_0xc79bbe===_0xe7eb2b(0x212)||(delete _0x3c6dd8['value'],_0x3c6dd8[_0xe7eb2b(0x166)]=!0x0);});}return _0x3c6dd8;}finally{_0x4b2511['expressionsToEvaluate']=_0x5b5f34,_0x4b2511[_0x9f80ca(0x228)]=_0xc6c9b0,_0x4b2511[_0x9f80ca(0x13b)]=_0x48507b;}}[_0x49030a(0x1a2)](_0x3399fb,_0x275b20,_0x401427,_0x577ac3){var _0x1f8d91=_0x49030a,_0x35cb90=_0x577ac3['strLength']||_0x401427[_0x1f8d91(0x190)];if((_0x3399fb===_0x1f8d91(0x20e)||_0x3399fb===_0x1f8d91(0x1be))&&_0x275b20[_0x1f8d91(0x20f)]){let _0x1997e3=_0x275b20[_0x1f8d91(0x20f)][_0x1f8d91(0x135)];_0x401427[_0x1f8d91(0x21f)]+=_0x1997e3,_0x401427[_0x1f8d91(0x21f)]>_0x401427[_0x1f8d91(0x145)]?(_0x275b20[_0x1f8d91(0x166)]='',delete _0x275b20['value']):_0x1997e3>_0x35cb90&&(_0x275b20['capped']=_0x275b20[_0x1f8d91(0x20f)][_0x1f8d91(0x227)](0x0,_0x35cb90),delete _0x275b20['value']);}}[_0x49030a(0x1d1)](_0x506fad){var _0x582067=_0x49030a;return!!(_0x506fad&&_0x554883['Map']&&this[_0x582067(0x1fa)](_0x506fad)===_0x582067(0x12e)&&_0x506fad['forEach']);}['_propertyName'](_0x5435f3){var _0xbf4648=_0x49030a;if(_0x5435f3[_0xbf4648(0x171)](/^\\d+$/))return _0x5435f3;var _0x5f185b;try{_0x5f185b=JSON[_0xbf4648(0x1e9)](''+_0x5435f3);}catch{_0x5f185b='\\x22'+this[_0xbf4648(0x1fa)](_0x5435f3)+'\\x22';}return _0x5f185b[_0xbf4648(0x171)](/^\"([a-zA-Z_][a-zA-Z_0-9]*)\"$/)?_0x5f185b=_0x5f185b['substr'](0x1,_0x5f185b['length']-0x2):_0x5f185b=_0x5f185b['replace'](/'/g,'\\x5c\\x27')[_0xbf4648(0x200)](/\\\\\"/g,'\\x22')[_0xbf4648(0x200)](/(^\"|\"$)/g,'\\x27'),_0x5f185b;}['_processTreeNodeResult'](_0x3c20a0,_0x18dbdd,_0x2e205f,_0x1ab941){var _0x19ff6e=_0x49030a;this['_treeNodePropertiesBeforeFullValue'](_0x3c20a0,_0x18dbdd),_0x1ab941&&_0x1ab941(),this['_additionalMetadata'](_0x2e205f,_0x3c20a0),this[_0x19ff6e(0x184)](_0x3c20a0,_0x18dbdd);}['_treeNodePropertiesBeforeFullValue'](_0x2d412c,_0x1ab798){var _0x3de045=_0x49030a;this[_0x3de045(0x1ac)](_0x2d412c,_0x1ab798),this[_0x3de045(0x1fc)](_0x2d412c,_0x1ab798),this['_setNodeExpressionPath'](_0x2d412c,_0x1ab798),this[_0x3de045(0x1d6)](_0x2d412c,_0x1ab798);}['_setNodeId'](_0x3e7a8b,_0x5eb7cc){}[_0x49030a(0x1fc)](_0x509852,_0x3f6858){}[_0x49030a(0x214)](_0x210e5c,_0x3848d9){}[_0x49030a(0x150)](_0x4a761d){var _0x338a57=_0x49030a;return _0x4a761d===this[_0x338a57(0x205)];}[_0x49030a(0x184)](_0x4eaabb,_0xda1f26){var _0x133b40=_0x49030a;this[_0x133b40(0x214)](_0x4eaabb,_0xda1f26),this['_setNodeExpandableState'](_0x4eaabb),_0xda1f26[_0x133b40(0x152)]&&this[_0x133b40(0x1ef)](_0x4eaabb),this[_0x133b40(0x204)](_0x4eaabb,_0xda1f26),this['_addLoadNode'](_0x4eaabb,_0xda1f26),this[_0x133b40(0x1a8)](_0x4eaabb);}['_additionalMetadata'](_0x2934aa,_0xad6c21){var _0x2adf82=_0x49030a;try{_0x2934aa&&typeof _0x2934aa['length']=='number'&&(_0xad6c21['length']=_0x2934aa[_0x2adf82(0x135)]);}catch{}if(_0xad6c21[_0x2adf82(0x1df)]===_0x2adf82(0x1e8)||_0xad6c21[_0x2adf82(0x1df)]===_0x2adf82(0x20b)){if(isNaN(_0xad6c21[_0x2adf82(0x20f)]))_0xad6c21[_0x2adf82(0x17c)]=!0x0,delete _0xad6c21['value'];else switch(_0xad6c21[_0x2adf82(0x20f)]){case Number[_0x2adf82(0x1b9)]:_0xad6c21[_0x2adf82(0x163)]=!0x0,delete _0xad6c21[_0x2adf82(0x20f)];break;case Number[_0x2adf82(0x1ce)]:_0xad6c21[_0x2adf82(0x15e)]=!0x0,delete _0xad6c21[_0x2adf82(0x20f)];break;case 0x0:this[_0x2adf82(0x225)](_0xad6c21[_0x2adf82(0x20f)])&&(_0xad6c21[_0x2adf82(0x1ab)]=!0x0);break;}}else _0xad6c21[_0x2adf82(0x1df)]===_0x2adf82(0x22d)&&typeof _0x2934aa[_0x2adf82(0x216)]==_0x2adf82(0x20e)&&_0x2934aa[_0x2adf82(0x216)]&&_0xad6c21[_0x2adf82(0x216)]&&_0x2934aa[_0x2adf82(0x216)]!==_0xad6c21[_0x2adf82(0x216)]&&(_0xad6c21['funcName']=_0x2934aa['name']);}[_0x49030a(0x225)](_0x5a7e84){var _0x45064a=_0x49030a;return 0x1/_0x5a7e84===Number[_0x45064a(0x1ce)];}[_0x49030a(0x1ef)](_0x1ceee1){var _0x5030fb=_0x49030a;!_0x1ceee1[_0x5030fb(0x16c)]||!_0x1ceee1[_0x5030fb(0x16c)][_0x5030fb(0x135)]||_0x1ceee1[_0x5030fb(0x1df)]==='array'||_0x1ceee1[_0x5030fb(0x1df)]===_0x5030fb(0x14b)||_0x1ceee1[_0x5030fb(0x1df)]==='Set'||_0x1ceee1[_0x5030fb(0x16c)][_0x5030fb(0x19f)](function(_0x479d2d,_0x54a1bc){var _0x4c7d1d=_0x5030fb,_0x3eb922=_0x479d2d[_0x4c7d1d(0x216)][_0x4c7d1d(0x173)](),_0x106657=_0x54a1bc[_0x4c7d1d(0x216)][_0x4c7d1d(0x173)]();return _0x3eb922<_0x106657?-0x1:_0x3eb922>_0x106657?0x1:0x0;});}[_0x49030a(0x204)](_0x10544f,_0xee9b17){var _0x11cc9c=_0x49030a;if(!(_0xee9b17[_0x11cc9c(0x19a)]||!_0x10544f[_0x11cc9c(0x16c)]||!_0x10544f[_0x11cc9c(0x16c)][_0x11cc9c(0x135)])){for(var _0x50cf62=[],_0x2cfe6c=[],_0x3d3e23=0x0,_0x2c0669=_0x10544f[_0x11cc9c(0x16c)]['length'];_0x3d3e23<_0x2c0669;_0x3d3e23++){var _0x437e94=_0x10544f[_0x11cc9c(0x16c)][_0x3d3e23];_0x437e94['type']===_0x11cc9c(0x22d)?_0x50cf62[_0x11cc9c(0x1fe)](_0x437e94):_0x2cfe6c[_0x11cc9c(0x1fe)](_0x437e94);}if(!(!_0x2cfe6c[_0x11cc9c(0x135)]||_0x50cf62[_0x11cc9c(0x135)]<=0x1)){_0x10544f[_0x11cc9c(0x16c)]=_0x2cfe6c;var _0x4b8576={'functionsNode':!0x0,'props':_0x50cf62};this[_0x11cc9c(0x1ac)](_0x4b8576,_0xee9b17),this['_setNodeLabel'](_0x4b8576,_0xee9b17),this[_0x11cc9c(0x1de)](_0x4b8576),this[_0x11cc9c(0x1d6)](_0x4b8576,_0xee9b17),_0x4b8576['id']+='\\x20f',_0x10544f['props'][_0x11cc9c(0x1a3)](_0x4b8576);}}}[_0x49030a(0x1c8)](_0xec16fe,_0x12e1d2){}[_0x49030a(0x1de)](_0x2c7085){}[_0x49030a(0x231)](_0x1e658f){var _0x51924b=_0x49030a;return Array[_0x51924b(0x155)](_0x1e658f)||typeof _0x1e658f==_0x51924b(0x159)&&this['_objectToString'](_0x1e658f)==='[object\\x20Array]';}[_0x49030a(0x1d6)](_0x1b3da6,_0x3e6204){}[_0x49030a(0x1a8)](_0x2a57b6){var _0x5a4196=_0x49030a;delete _0x2a57b6['_hasSymbolPropertyOnItsPath'],delete _0x2a57b6[_0x5a4196(0x164)],delete _0x2a57b6[_0x5a4196(0x22c)];}[_0x49030a(0x20c)](_0x3b70f5,_0x124125){}}let _0x1fe118=new _0x21a365(),_0x418940={'props':_0x289dad[_0x49030a(0x1f7)][_0x49030a(0x16c)]||0x64,'elements':_0x289dad[_0x49030a(0x1f7)][_0x49030a(0x12d)]||0x64,'strLength':_0x289dad['defaultLimits'][_0x49030a(0x190)]||0x400*0x32,'totalStrLength':_0x289dad[_0x49030a(0x1f7)][_0x49030a(0x145)]||0x400*0x32,'autoExpandLimit':_0x289dad['defaultLimits']['autoExpandLimit']||0x1388,'autoExpandMaxDepth':_0x289dad['defaultLimits'][_0x49030a(0x20a)]||0xa},_0x4c6d9e={'props':_0x289dad[_0x49030a(0x1b5)][_0x49030a(0x16c)]||0x5,'elements':_0x289dad[_0x49030a(0x1b5)][_0x49030a(0x12d)]||0x5,'strLength':_0x289dad['reducedLimits'][_0x49030a(0x190)]||0x100,'totalStrLength':_0x289dad['reducedLimits'][_0x49030a(0x145)]||0x100*0x3,'autoExpandLimit':_0x289dad[_0x49030a(0x1b5)][_0x49030a(0x180)]||0x1e,'autoExpandMaxDepth':_0x289dad['reducedLimits'][_0x49030a(0x20a)]||0x2};function _0x3a570d(_0x3fa225,_0x44282d,_0x335870,_0x596abd,_0x345323,_0x4984c5){var _0x1d13a2=_0x49030a;let _0x24e4de,_0x14e182;try{_0x14e182=_0x2905db(),_0x24e4de=_0x2ff29b[_0x44282d],!_0x24e4de||_0x14e182-_0x24e4de['ts']>_0x9d659e[_0x1d13a2(0x158)][_0x1d13a2(0x1f8)]&&_0x24e4de['count']&&_0x24e4de[_0x1d13a2(0x136)]/_0x24e4de[_0x1d13a2(0x223)]<_0x9d659e['perLogpoint']['resetOnProcessingTimeAverageMs']?(_0x2ff29b[_0x44282d]=_0x24e4de={'count':0x0,'time':0x0,'ts':_0x14e182},_0x2ff29b['hits']={}):_0x14e182-_0x2ff29b['hits']['ts']>_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x1f8)]&&_0x2ff29b['hits']['count']&&_0x2ff29b['hits']['time']/_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x223)]<_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x195)]&&(_0x2ff29b[_0x1d13a2(0x193)]={});let _0xbf80e=[],_0x14e7b0=_0x24e4de['reduceLimits']||_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x13a)]?_0x4c6d9e:_0x418940,_0x25addb=_0x2da547=>{var _0x3e43e1=_0x1d13a2;let _0xa10816={};return _0xa10816[_0x3e43e1(0x16c)]=_0x2da547[_0x3e43e1(0x16c)],_0xa10816['elements']=_0x2da547[_0x3e43e1(0x12d)],_0xa10816['strLength']=_0x2da547[_0x3e43e1(0x190)],_0xa10816['totalStrLength']=_0x2da547[_0x3e43e1(0x145)],_0xa10816[_0x3e43e1(0x180)]=_0x2da547[_0x3e43e1(0x180)],_0xa10816[_0x3e43e1(0x20a)]=_0x2da547[_0x3e43e1(0x20a)],_0xa10816[_0x3e43e1(0x152)]=!0x1,_0xa10816['noFunctions']=!_0x2f2b75,_0xa10816[_0x3e43e1(0x228)]=0x1,_0xa10816[_0x3e43e1(0x1dc)]=0x0,_0xa10816['expId']='root_exp_id',_0xa10816[_0x3e43e1(0x1cd)]=_0x3e43e1(0x1e0),_0xa10816[_0x3e43e1(0x1bc)]=!0x0,_0xa10816['autoExpandPreviousObjects']=[],_0xa10816['autoExpandPropertyCount']=0x0,_0xa10816[_0x3e43e1(0x1eb)]=_0x289dad[_0x3e43e1(0x1eb)],_0xa10816[_0x3e43e1(0x21f)]=0x0,_0xa10816['node']={'current':void 0x0,'parent':void 0x0,'index':0x0},_0xa10816;};for(var _0x249442=0x0;_0x249442<_0x345323[_0x1d13a2(0x135)];_0x249442++)_0xbf80e[_0x1d13a2(0x1fe)](_0x1fe118[_0x1d13a2(0x232)]({'timeNode':_0x3fa225==='time'||void 0x0},_0x345323[_0x249442],_0x25addb(_0x14e7b0),{}));if(_0x3fa225===_0x1d13a2(0x13f)||_0x3fa225===_0x1d13a2(0x1a5)){let _0x2221fe=Error[_0x1d13a2(0x18f)];try{Error[_0x1d13a2(0x18f)]=0x1/0x0,_0xbf80e['push'](_0x1fe118[_0x1d13a2(0x232)]({'stackNode':!0x0},new Error()[_0x1d13a2(0x15d)],_0x25addb(_0x14e7b0),{'strLength':0x1/0x0}));}finally{Error[_0x1d13a2(0x18f)]=_0x2221fe;}}return{'method':_0x1d13a2(0x172),'version':_0x4ad65c,'args':[{'ts':_0x335870,'session':_0x596abd,'args':_0xbf80e,'id':_0x44282d,'context':_0x4984c5}]};}catch(_0x22a745){return{'method':'log','version':_0x4ad65c,'args':[{'ts':_0x335870,'session':_0x596abd,'args':[{'type':_0x1d13a2(0x1a7),'error':_0x22a745&&_0x22a745[_0x1d13a2(0x12f)]}],'id':_0x44282d,'context':_0x4984c5}]};}finally{try{if(_0x24e4de&&_0x14e182){let _0x28e9a4=_0x2905db();_0x24e4de['count']++,_0x24e4de[_0x1d13a2(0x136)]+=_0x488ab5(_0x14e182,_0x28e9a4),_0x24e4de['ts']=_0x28e9a4,_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x223)]++,_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x136)]+=_0x488ab5(_0x14e182,_0x28e9a4),_0x2ff29b['hits']['ts']=_0x28e9a4,(_0x24e4de[_0x1d13a2(0x223)]>_0x9d659e[_0x1d13a2(0x158)][_0x1d13a2(0x1b1)]||_0x24e4de[_0x1d13a2(0x136)]>_0x9d659e['perLogpoint']['reduceOnAccumulatedProcessingTimeMs'])&&(_0x24e4de[_0x1d13a2(0x13a)]=!0x0),(_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x223)]>_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x1b1)]||_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x136)]>_0x9d659e[_0x1d13a2(0x148)][_0x1d13a2(0x1a4)])&&(_0x2ff29b[_0x1d13a2(0x193)][_0x1d13a2(0x13a)]=!0x0);}}catch{}}}return _0x3a570d;}((_0x54bdd7,_0x4d75d1,_0x2e577c,_0x4b076e,_0x2892a7,_0x39d22f,_0x5ef944,_0x5db818,_0x4fb7c8,_0x2d9578,_0x5c69ff,_0x296e9a)=>{var _0xefbd31=_0xc275da;if(_0x54bdd7[_0xefbd31(0x1c3)])return _0x54bdd7[_0xefbd31(0x1c3)];let _0x42161e={'consoleLog':()=>{},'consoleTrace':()=>{},'consoleTime':()=>{},'consoleTimeEnd':()=>{},'autoLog':()=>{},'autoLogMany':()=>{},'autoTraceMany':()=>{},'coverage':()=>{},'autoTrace':()=>{},'autoTime':()=>{},'autoTimeEnd':()=>{}};if(!J(_0x54bdd7,_0x5db818,_0x2892a7))return _0x54bdd7[_0xefbd31(0x1c3)]=_0x42161e,_0x54bdd7[_0xefbd31(0x1c3)];let _0x1cb456=B(_0x54bdd7),_0x433007=_0x1cb456[_0xefbd31(0x191)],_0x5aa6ee=_0x1cb456[_0xefbd31(0x15f)],_0x51dcb0=_0x1cb456[_0xefbd31(0x1da)],_0x698f92={'hits':{},'ts':{}},_0x1823a6=Y(_0x54bdd7,_0x4fb7c8,_0x698f92,_0x39d22f,_0x296e9a),_0x385495=(_0x3779b5,_0x15ac99,_0x4d3fa7,_0x384c68,_0x121abf,_0x3e198f)=>{var _0x355646=_0xefbd31;let _0x5de03c=_0x54bdd7[_0x355646(0x1c3)];try{return _0x54bdd7[_0x355646(0x1c3)]=_0x42161e,_0x1823a6(_0x3779b5,_0x15ac99,_0x4d3fa7,_0x384c68,_0x121abf,_0x3e198f);}finally{_0x54bdd7[_0x355646(0x1c3)]=_0x5de03c;}},_0x5b3fb4=_0x1203eb=>{_0x698f92['ts'][_0x1203eb]=_0x5aa6ee();},_0x3e130c=(_0x21e7ed,_0x2a3d7c)=>{let _0x31818a=_0x698f92['ts'][_0x2a3d7c];if(delete _0x698f92['ts'][_0x2a3d7c],_0x31818a){let _0x330d19=_0x433007(_0x31818a,_0x5aa6ee());_0x30350f(_0x385495('time',_0x21e7ed,_0x51dcb0(),_0x4e3477,[_0x330d19],_0x2a3d7c));}},_0x292cac=_0x1ff08d=>{var _0x4f789f=_0xefbd31,_0x291b8d;return _0x2892a7===_0x4f789f(0x1b4)&&_0x54bdd7[_0x4f789f(0x18e)]&&((_0x291b8d=_0x1ff08d==null?void 0x0:_0x1ff08d[_0x4f789f(0x151)])==null?void 0x0:_0x291b8d[_0x4f789f(0x135)])&&(_0x1ff08d[_0x4f789f(0x151)][0x0][_0x4f789f(0x18e)]=_0x54bdd7[_0x4f789f(0x18e)]),_0x1ff08d;};_0x54bdd7[_0xefbd31(0x1c3)]={'consoleLog':(_0x59e7ae,_0x55c6d6)=>{var _0x5522a8=_0xefbd31;_0x54bdd7[_0x5522a8(0x1ca)][_0x5522a8(0x172)]['name']!=='disabledLog'&&_0x30350f(_0x385495(_0x5522a8(0x172),_0x59e7ae,_0x51dcb0(),_0x4e3477,_0x55c6d6));},'consoleTrace':(_0x58c85a,_0x4a39a9)=>{var _0x43dd51=_0xefbd31,_0x4a1c25,_0x177b49;_0x54bdd7[_0x43dd51(0x1ca)][_0x43dd51(0x172)][_0x43dd51(0x216)]!=='disabledTrace'&&((_0x177b49=(_0x4a1c25=_0x54bdd7['process'])==null?void 0x0:_0x4a1c25[_0x43dd51(0x154)])!=null&&_0x177b49[_0x43dd51(0x1fd)]&&(_0x54bdd7[_0x43dd51(0x1e1)]=!0x0),_0x30350f(_0x292cac(_0x385495(_0x43dd51(0x13f),_0x58c85a,_0x51dcb0(),_0x4e3477,_0x4a39a9))));},'consoleError':(_0x564237,_0x3e0c2a)=>{var _0x99dc2=_0xefbd31;_0x54bdd7[_0x99dc2(0x1e1)]=!0x0,_0x30350f(_0x292cac(_0x385495(_0x99dc2(0x1a5),_0x564237,_0x51dcb0(),_0x4e3477,_0x3e0c2a)));},'consoleTime':_0x1f1b0b=>{_0x5b3fb4(_0x1f1b0b);},'consoleTimeEnd':(_0x4fad97,_0x14b560)=>{_0x3e130c(_0x14b560,_0x4fad97);},'autoLog':(_0x35eda6,_0xa6d76b)=>{_0x30350f(_0x385495('log',_0xa6d76b,_0x51dcb0(),_0x4e3477,[_0x35eda6]));},'autoLogMany':(_0x16936f,_0x29a04d)=>{var _0x3c997a=_0xefbd31;_0x30350f(_0x385495(_0x3c997a(0x172),_0x16936f,_0x51dcb0(),_0x4e3477,_0x29a04d));},'autoTrace':(_0x17afdc,_0x6c3644)=>{_0x30350f(_0x292cac(_0x385495('trace',_0x6c3644,_0x51dcb0(),_0x4e3477,[_0x17afdc])));},'autoTraceMany':(_0x164174,_0x119e0f)=>{var _0x3539c9=_0xefbd31;_0x30350f(_0x292cac(_0x385495(_0x3539c9(0x13f),_0x164174,_0x51dcb0(),_0x4e3477,_0x119e0f)));},'autoTime':(_0x56be61,_0x5701cf,_0x5ee576)=>{_0x5b3fb4(_0x5ee576);},'autoTimeEnd':(_0xddc8a8,_0x3bb42b,_0x5999e7)=>{_0x3e130c(_0x3bb42b,_0x5999e7);},'coverage':_0x58b877=>{var _0x29d7d6=_0xefbd31;_0x30350f({'method':_0x29d7d6(0x221),'version':_0x39d22f,'args':[{'id':_0x58b877}]});}};let _0x30350f=X(_0x54bdd7,_0x4d75d1,_0x2e577c,_0x4b076e,_0x2892a7,_0x2d9578,_0x5c69ff),_0x4e3477=_0x54bdd7[_0xefbd31(0x1dd)];return _0x54bdd7[_0xefbd31(0x1c3)];})(globalThis,_0xc275da(0x17a),_0xc275da(0x21c),_0xc275da(0x16b),_0xc275da(0x175),_0xc275da(0x156),_0xc275da(0x170),_0xc275da(0x1f6),'',_0xc275da(0x1a9),_0xc275da(0x20d),{\"resolveGetters\":false,\"defaultLimits\":{\"props\":100,\"elements\":100,\"strLength\":51200,\"totalStrLength\":51200,\"autoExpandLimit\":5000,\"autoExpandMaxDepth\":10},\"reducedLimits\":{\"props\":5,\"elements\":5,\"strLength\":256,\"totalStrLength\":768,\"autoExpandLimit\":30,\"autoExpandMaxDepth\":2},\"reducePolicy\":{\"perLogpoint\":{\"reduceOnCount\":50,\"reduceOnAccumulatedProcessingTimeMs\":100,\"resetWhenQuietMs\":500,\"resetOnProcessingTimeAverageMs\":100},\"global\":{\"reduceOnCount\":1000,\"reduceOnAccumulatedProcessingTimeMs\":300,\"resetWhenQuietMs\":50,\"resetOnProcessingTimeAverageMs\":100}}});function _0x3b4d(){var _0x1c5c32=['args','sortProps','failed\\x20to\\x20connect\\x20to\\x20host:\\x20','versions','isArray','1.0.0','_reconnectTimeout','perLogpoint','object','index','path','getOwnPropertyDescriptor','stack','negativeInfinity','timeStamp','_isPrimitiveType','_Symbol','...','positiveInfinity','_hasSetOnItsPath','_connecting','capped','failed\\x20to\\x20find\\x20and\\x20load\\x20WebSocket','parse','getOwnPropertySymbols','performance',\"c:\\\\Users\\\\reshm\\\\.vscode\\\\extensions\\\\wallabyjs.console-ninja-1.0.469\\\\node_modules\",'props','_regExpToString','_addProperty','[object\\x20Set]','1757371180460','match','log','toLowerCase','readyState','webpack','getPrototypeOf','includes','1939822PdBqpt','prototype','127.0.0.1','_maxConnectAttemptCount','nan','dockerizedApp','_connectToHostNow','angular','autoExpandLimit','_allowedToSend','2489315VZfmiI','startsWith','_treeNodePropertiesAfterFullValue','51020DHmCYX','\\x20server','hasOwnProperty','slice','getWebSocketClass','env','Buffer','logger\\x20failed\\x20to\\x20connect\\x20to\\x20host','Symbol','origin','stackTraceLimit','strLength','elapsed','[object\\x20Date]','hits','background:\\x20rgb(30,30,30);\\x20color:\\x20rgb(255,213,92)','resetOnProcessingTimeAverageMs','setter','reload','https://tinyurl.com/37x8b79t','forEach','noFunctions','_quotedRegExp','set','ws://','autoExpandPropertyCount','sort','\\x20browser','_ws','_capIfString','unshift','reduceOnAccumulatedProcessingTimeMs','error','_keyStrRegExp','unknown','_cleanNode','','indexOf','negativeZero','_setNodeId','join','_blacklistedProperty','_allowedToConnectOnSend','process','reduceOnCount','logger\\x20failed\\x20to\\x20connect\\x20to\\x20host,\\x20see\\x20','ws/index.js','next.js','reducedLimits','_additionalMetadata','cappedElements','send','POSITIVE_INFINITY','valueOf','_treeNodePropertiesBeforeFullValue','autoExpand','method','String','close','_attemptToReconnectShortly','_inNextEdge','_disposeWebsocket','_console_ninja','toUpperCase','_WebSocketClass','Error','remix','_addLoadNode','WebSocket','console','hrtime','_extendedWarning','rootExpression','NEGATIVE_INFINITY','autoExpandPreviousObjects','_p_','_isMap','perf_hooks','expressionsToEvaluate','[object\\x20Array]','_isSet','_setNodePermissions','_type','map','2370750lgzaym','now','parent','level','_console_ninja_session','_setNodeExpandableState','type','root_exp','_ninjaIgnoreNextError','_webSocketErrorDocsLink','warn','edge','Boolean','_consoleNinjaAllowedToStart','_addObjectProperty','number','stringify','create','resolveGetters','_getOwnPropertyNames','getter','concat','_sortProps','current','gateway.docker.internal','_WebSocket','_dateToString','then','2981804tBzuxQ',[\"localhost\",\"127.0.0.1\",\"example.cypress.io\",\"Aadvik_Reshma\",\"192.168.0.104\"],'defaultLimits','resetWhenQuietMs','onclose','_objectToString','HTMLAllCollection','_setNodeQueryPath','node','push','_socket','replace','%c\\x20Console\\x20Ninja\\x20extension\\x20is\\x20connected\\x20to\\x20','call','host','_addFunctionsNode','_undefined','url','onerror','RegExp','153tVKBix','autoExpandMaxDepth','Number','_setNodeExpressionPath','1','string','value','_propertyName','null','undefined','cappedProps','_setNodeLabel','692833KOSZTn','name','_numberRegExp','port','Set','_sendErrorMessage','_isPrimitiveWrapperType','61639','array','symbol','allStrLength','unref','coverage','Console\\x20Ninja\\x20failed\\x20to\\x20send\\x20logs,\\x20refreshing\\x20the\\x20page\\x20may\\x20help;\\x20also\\x20see\\x20','count','charAt','_isNegativeZero','reducePolicy','substr','depth','_processTreeNodeResult','constructor','_HTMLAllCollection','_hasMapOnItsPath','function','fromCharCode','bind','NEXT_RUNTIME','_isArray','serialize','hostname','elements','[object\\x20Map]','message','_property','pop','location','_getOwnPropertyDescriptor','onopen','length','time','19655928TLSmSm','get','see\\x20https://tinyurl.com/2vt8jxzw\\x20for\\x20more\\x20info.','reduceLimits','isExpressionToEvaluate','bigint','test','toString','trace','_inBrowser','_p_name','date','_p_length','__es'+'Module','totalStrLength','[object\\x20BigInt]','catch','global','_getOwnPropertySymbols','_connected','Map','eventReceivedCallback','_connectAttemptCount','nodeModules','data','_isUndefined'];_0x3b4d=function(){return _0x1c5c32;};return _0x3b4d();}");
+}
+catch (e) {
+    console.error(e);
+} }
+; /* istanbul ignore next */
+function oo_oo(i, ...v) { try {
+    oo_cm().consoleLog(i, v);
+}
+catch (e) { } return v; }
+;
+oo_oo; /* istanbul ignore next */
+function oo_tr(i, ...v) { try {
+    oo_cm().consoleTrace(i, v);
+}
+catch (e) { } return v; }
+;
+oo_tr; /* istanbul ignore next */
+function oo_tx(i, ...v) { try {
+    oo_cm().consoleError(i, v);
+}
+catch (e) { } return v; }
+;
+oo_tx; /* istanbul ignore next */
+function oo_ts(v) { try {
+    oo_cm().consoleTime(v);
+}
+catch (e) { } return v; }
+;
+oo_ts; /* istanbul ignore next */
+function oo_te(v, i) { try {
+    oo_cm().consoleTimeEnd(v, i);
+}
+catch (e) { } return v; }
+;
+oo_te; /*eslint unicorn/no-abusive-eslint-disable:,eslint-comments/disable-enable-pair:,eslint-comments/no-unlimited-disable:,eslint-comments/no-aggregating-enable:,eslint-comments/no-duplicate-disable:,eslint-comments/no-unused-disable:,eslint-comments/no-unused-enable:,*/
 
 
 /***/ }),
@@ -53232,7 +53076,6 @@ function setAuthStorageItem(key, value) {
         return;
     const storage = getStorage(key);
     storage.setItem(key, value);
-    console.log(`🔐 Stored data in sessionStorage:`, key);
 }
 /**
  * Get item from appropriate storage
@@ -53251,7 +53094,6 @@ function removeAuthStorageItem(key) {
         return;
     const storage = getStorage(key);
     storage.removeItem(key);
-    console.log(`🗑️ Removed data from sessionStorage:`, key);
 }
 /**
  * Clear all data (sessionStorage only now)
@@ -53275,7 +53117,6 @@ function clearAuthData() {
     //     keysToRemove.push(key);
     //   }
     // });
-    console.log('🧹 Cleared all data from sessionStorage:', keysToRemove);
 }
 /**
  * COMMENTED OUT: Clear all app data (localStorage) but preserve auth data
@@ -53294,7 +53135,6 @@ function clearAppData() {
     //     keysToRemove.push(key);
     //   }
     // }
-    console.log('🧹 clearAppData: All data now in sessionStorage, no localStorage to clear');
 }
 /**
  * Clear all data (sessionStorage only now)
@@ -53304,7 +53144,6 @@ function clearAllData() {
         return;
     // COMMENTED OUT: localStorage.clear();
     sessionStorage.clear();
-    console.log('🧹 Cleared all data from sessionStorage');
 }
 /**
  * Get authentication data from sessionStorage
@@ -53317,7 +53156,6 @@ function getAuthData() {
         return JSON.parse(authData);
     }
     catch (error) {
-        console.error('Error parsing auth data:', error);
         return null;
     }
 }
@@ -53338,7 +53176,6 @@ function getSiteInfo() {
         return JSON.parse(siteInfo);
     }
     catch (error) {
-        console.error('Error parsing site info:', error);
         return null;
     }
 }
@@ -53365,15 +53202,12 @@ function isAuthenticated() {
 function migrateAuthDataToSessionStorage() {
     if (typeof window === 'undefined')
         return;
-    console.log('🔄 [DEBUG] Migration function called');
     const migrationStartTime = performance.now();
     // Check if migration has already been completed in this session
     const migrationCompleted = sessionStorage.getItem('migration_completed');
     if (migrationCompleted) {
-        console.log('🔄 [DEBUG] Migration already completed, skipping');
         return; // Migration already done, skip expensive operations
     }
-    console.log('🔄 [DEBUG] Migrating essential data from localStorage to sessionStorage...');
     // Only migrate essential keys to avoid expensive operations
     const essentialKeys = ['consentbit-userinfo', 'siteInfo', 'explicitly_logged_out'];
     let migratedCount = 0;
@@ -53383,12 +53217,10 @@ function migrateAuthDataToSessionStorage() {
             sessionStorage.setItem(key, value);
             localStorage.removeItem(key);
             migratedCount++;
-            console.log(`✅ [DEBUG] Migrated ${key} to sessionStorage`);
         }
     });
     // Mark migration as completed for this session
     sessionStorage.setItem('migration_completed', 'true');
-    console.log(`✅ [DEBUG] Migration completed - migrated ${migratedCount} essential keys to sessionStorage in ${performance.now() - migrationStartTime}ms`);
 }
 /**
  * Debug function to show current storage state
@@ -53396,14 +53228,8 @@ function migrateAuthDataToSessionStorage() {
 function debugStorageState() {
     if (typeof window === 'undefined')
         return;
-    console.log('🔍 Current Storage State:');
-    // COMMENTED OUT: console.log('📦 localStorage keys:', Object.keys(localStorage));
-    console.log('🔐 sessionStorage keys:', Object.keys(sessionStorage));
     const authData = getAuthData();
     const siteInfo = getSiteInfo();
-    console.log('👤 Auth data:', authData);
-    console.log('🏢 Site info:', siteInfo);
-    console.log('✅ Is authenticated:', isAuthenticated());
 }
 
 

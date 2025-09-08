@@ -80,21 +80,16 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   // Track if we've already set activeTab from API to prevent conflicts
   const [hasSetActiveTabFromApi, setHasSetActiveTabFromApi] = useState(false);
   
-  // Debug activeTab changes and validate tab
+  // Validate that activeTab is one of the valid tabs
   useEffect(() => {
-    console.log('🔄 activeTab state changed to:', activeTab);
-    
-    // Validate that activeTab is one of the valid tabs
     const validTabs = ["Settings", "Customization", "Script"];
     if (!validTabs.includes(activeTab)) {
-      console.log('⚠️ Invalid activeTab detected:', activeTab, 'falling back to Settings');
       setActiveTab("Settings");
     }
   }, [activeTab]);
   
   // Wrapper function to set activeTab and track that it was set by user interaction
   const handleSetActiveTab = (newTab: string) => {
-    console.log('🔄 User clicked tab, setting activeTab to:', newTab);
     setActiveTab(newTab);
     setHasSetActiveTabFromApi(true); // Mark that user has interacted with tabs
   };
@@ -102,19 +97,11 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   // Override activeTab with initialActiveTab prop when provided (only on mount)
   useEffect(() => {
     if (initialActiveTab && initialActiveTab !== activeTab && !hasSetActiveTabFromApi) {
-      console.log('🔄 Setting activeTab from initialActiveTab prop:', initialActiveTab);
       setActiveTab(initialActiveTab);
     }
   }, [initialActiveTab, activeTab, hasSetActiveTabFromApi]);
   
-  // Debug component mount and initial values
-  useEffect(() => {
-    console.log('🚀 CustomizationTab mounted with:', {
-      initialActiveTab,
-      currentActiveTab: activeTab,
-      hasSetActiveTabFromApi
-    });
-  }, []); // Only run on mount
+ // Only run on mount
   const [expires, setExpires] = usePersistentState("expires", "");
   const [size, setSize] = usePersistentState("size", "12");
   const [isActive, setIsActive] = usePersistentState("isActive", false);
@@ -128,13 +115,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [showPopup, setShowPopup] = useState(false);
   const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["GDPR", "U.S. State Laws"]);
 
-  // Ensure default state is properly set on component mount
+  // Ensure at least one option is always selected
   useEffect(() => {
-    // Force set default values if not already set
-    if (selectedOptions.length === 0 || !selectedOptions.includes("GDPR") || !selectedOptions.includes("U.S. State Laws")) {
-      setSelectedOptions(["GDPR", "U.S. State Laws"]);
+    if (selectedOptions.length === 0) {
+      setSelectedOptions(["GDPR"]);
     }
-  }, [selectedOptions, setSelectedOptions]);
+  }, []);
   const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
   const [accessToken, setAccessToken] = usePersistentState<string>("accessToken", '');
   const [pages, setPages] = usePersistentState("pages", []);
@@ -151,6 +137,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     setShowLoadingPopup(false);
     setIsExporting(false);
     setIsCSVButtonLoading(false);
+    // Ensure button text starts as "Scan Project" on initial load
+    setButtonText("Scan Project");
   }, []);
 
   const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -158,6 +146,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [showLoadingPopup, setShowLoadingPopup] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [cookieExpiration, setCookieExpiration] = usePersistentState("cookieExpiration", "120");
+  const [privacyUrl, setPrivacyUrl] = usePersistentState("privacyUrl", "");
   const [showTooltip, setShowTooltip] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
   // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
@@ -384,6 +373,11 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         ? prev.filter((item) => item !== option) // Remove if already selected
         : [...prev, option]; // Add if not selected
 
+      // Ensure at least one option is always selected
+      if (updatedOptions.length === 0) {
+        return ["GDPR"]; // Default to GDPR if none selected
+      }
+
       // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
       setAuthStorageItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
       return updatedOptions;
@@ -460,53 +454,25 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         if (token) {
           const response = await customCodeApi.getBannerStyles(token);
 
-          // Print complete banner settings API response
-          console.log('🔍 BANNER SETTINGS API RESPONSE:');
-          console.log('Full response object:', response);
-          console.log('Response type:', typeof response);
-          console.log('Response keys:', response ? Object.keys(response) : 'No response');
-          
           if (response) {
-            console.log('📊 Banner Settings Details:');
-            console.log('bgColor:', response.bgColor);
-            console.log('btnColor:', response.btnColor);
-            console.log('paraColor:', response.paraColor);
-            console.log('headColor:', response.headColor);
-            console.log('secondcolor:', response.secondcolor);
-            console.log('primaryButtonText:', response.primaryButtonText);
-            console.log('secondbuttontext:', response.secondbuttontext);
-            console.log('Font:', response.Font);
-            console.log('style:', response.style);
-            console.log('activeTab:', response.activeTab);
-            console.log('cookieExpiration:', response.cookieExpiration);
-            console.log('selectedtext:', response.selectedtext);
-            console.log('fetchScripts:', response.fetchScripts);
-            
-            // Log the complete response as JSON
-            console.log('📄 Complete JSON Response:', JSON.stringify(response, null, 2));
 
             // Set all the values with proper checks
             if (response.cookieExpiration !== undefined) setCookieExpiration(response.cookieExpiration);
+            if (response.privacyUrl !== undefined) setPrivacyUrl(response.privacyUrl);
             if (response.bgColor !== undefined) setBgColor(response.bgColor);
                 if (response.activeTab !== undefined) {
-                  console.log('🔄 API wants to set activeTab to:', response.activeTab, 'current activeTab:', activeTab);
-                  
                   // Map API tab names to component tab names
                   let mappedTab = response.activeTab;
                   if (response.activeTab === "general") {
                     mappedTab = "Settings";
-                    console.log('🔄 Mapping API "general" tab to "Settings"');
                   }
                   
                   // Don't override activeTab if user is currently in Script tab (to prevent API from switching away from Script tab during rescan)
                   if (activeTab === "Script") {
-                    console.log('🔄 Skipping activeTab update from API - user is actively using Script tab');
+                    // Skip activeTab update from API - user is actively using Script tab
                   } else if (!hasSetActiveTabFromApi || mappedTab !== activeTab) {
-                    console.log('🔄 Setting activeTab from API response:', mappedTab);
                     setActiveTab(mappedTab);
                     setHasSetActiveTabFromApi(true);
-                  } else {
-                    console.log('🔄 Skipping activeTab update from API - already set or same value');
                   }
                 }
                          // Removed activeMode setting - no longer needed
@@ -528,7 +494,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             if (response.animation !== undefined) setAnimation(response.animation);
             if (response.easing !== undefined) setEasing(response.easing);
             if (response.language !== undefined) setLanguage(response.language);
-            if (response.buttonText !== undefined) setButtonText(response.buttonText);
+            if (response.buttonText !== undefined) {
+              // Only set buttonText from API if it's not empty, otherwise keep default "Scan Project"
+              if (response.buttonText && response.buttonText.trim() !== "") {
+                setButtonText(response.buttonText);
+              }
+            }
             if (response.isBannerAdded !== undefined) setIsBannerAdded(response.isBannerAdded);
             if (response.color !== undefined && response.color !== "#000000") setColor(response.color);
 
@@ -546,35 +517,6 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     fetchbannerdetails();
   }, []);
 
-  // Debug: Add function to manually fetch and print banner settings
-  (window as any).printBannerSettings = async () => {
-    console.log('🔄 Manually fetching banner settings...');
-    try {
-      const token = getSessionTokenFromLocalStorage();
-      
-      if (!token) {
-        console.error('❌ No session token found');
-        return;
-      }
-      
-      console.log('🔑 Using token:', token.substring(0, 50) + '...');
-      
-      const response = await customCodeApi.getBannerStyles(token);
-      
-      console.log('🔍 MANUAL BANNER SETTINGS RESPONSE:');
-      console.log('Full response:', JSON.stringify(response, null, 2));
-      
-      if (response) {
-        console.log('📊 Individual Settings:');
-        Object.keys(response).forEach(key => {
-          console.log(`${key}:`, response[key]);
-        });
-      }
-      
-    } catch (error) {
-      console.error('❌ Error fetching banner settings:', error);
-    }
-  };
 
   //main function for adding custom code to the head
   const fetchAnalyticsBlockingsScripts = async () => {
@@ -1020,7 +962,11 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         }
 
                  if (tempParagraph.setTextContent) {
-           await tempParagraph.setTextContent(translations[language as keyof typeof translations].ccpa.description);
+           const descriptionText = translations[language as keyof typeof translations].ccpa.description;
+           const textWithPrivacyLink = privacyUrl 
+             ? `${descriptionText} <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color: ${paraColor}; text-decoration: underline;">More info</a>`
+             : descriptionText;
+           await tempParagraph.setTextContent(textWithPrivacyLink);
          }
 
         const buttonContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
@@ -1495,7 +1441,11 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         }
 
                  if (tempParagraph.setTextContent) {
-           await tempParagraph.setTextContent(translations[language as keyof typeof translations].description);
+           const descriptionText = translations[language as keyof typeof translations].description;
+           const textWithPrivacyLink = privacyUrl 
+             ? `${descriptionText} <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" style="color: ${paraColor}; text-decoration: underline;">More info</a>`
+             : descriptionText;
+           await tempParagraph.setTextContent(textWithPrivacyLink);
          }
 
         const buttonContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
@@ -1599,6 +1549,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     setCookieExpiration(e.target.value);
   };
 
+  const handlePrivacyUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Remove spaces from the input value
+    const valueWithoutSpaces = e.target.value.replace(/\s/g, '');
+    setPrivacyUrl(valueWithoutSpaces);
+  };
+
   //banner details
   const saveBannerDetails = async () => {
     try {
@@ -1615,11 +1571,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         return;
       }
              const bannerData = {
-         cookieExpiration: cookieExpiration,
-         bgColor: bgColor,
-         activeTab: activeTab,
-         activeMode: "Advanced", // Add back to satisfy type requirement
-         selectedtext: selectedtext,
+        cookieExpiration: cookieExpiration,
+        privacyUrl: privacyUrl,
+        bgColor: bgColor,
+        activeTab: activeTab,
+        activeMode: "Advanced", // Add back to satisfy type requirement
+        selectedtext: selectedtext,
         fetchScripts: fetchScripts,
         btnColor: btnColor,
         paraColor: paraColor,
@@ -2138,12 +2095,31 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
               <div style={{ position: "relative", display: "inline-block" }}>
                 <button
                   className="publish-button"
-                  onClick={() => {
-                    // Navigate to Script tab when clicking Scan Project button
-                    handleSetActiveTab("Script");
+                  onClick={async () => {
+                    const isUserValid = await isAuthenticatedForCurrentSite();
+                    try {
+                      const selectedElement = await webflow.getSelectedElement() as { type?: string };
+
+                      const isInvalidElement = !selectedElement || selectedElement.type === "Body";
+
+                      if (isUserValid && !isInvalidElement) {
+                        setShowTooltip(false);
+                        setShowPopup(true);
+                      } else {
+                        setShowPopup(false);
+                        if (!isUserValid) {
+                          setShowTooltip(false);
+                          setShowAuthPopup(true);
+                        } else if (isInvalidElement) {
+                          setShowTooltip(true);
+                        }
+                      }
+                                         } catch (error) {
+                       setShowTooltip(false);
+                     }
                   }}
                 >
-                  Scan Project
+                  {isBannerAdded ? "Publish your changes" : "Create Component"}
                 </button>
 
               </div>
@@ -2163,8 +2139,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                     // Use setTimeout to ensure the state change is processed
                     setTimeout(() => {
                       setFetchScripts(true);
+                      // Only change to "Rescan Project" after the scan is initiated
+                      setButtonText("Rescan Project");
                     }, 10);
-                    setButtonText("Rescan Project");
                   } else {
                     setShowAuthPopup(true);
                   }
@@ -2280,10 +2257,6 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       <div className="container">
         {/* Settings Panel */}
         <div className="settings-panel">
-          {(() => {
-            console.log('🎯 [DEBUG] Rendering tab content for activeTab:', activeTab);
-            return null;
-          })()}
                      {activeTab === "Settings" && (
             <div className="general">
               <div className="width-cust">
@@ -2303,6 +2276,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                     onChange={handleExpirationChange}
                   />
                 </div>
+
 
                 {/* <div className="settings-group">
                   <div className="flex">
@@ -2376,6 +2350,23 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                 {renderDropdown("easing", "Easing", easing, easingOptions, setEasing)}                
                 {renderDropdown("language", "Languages", language, languageOptions, setLanguage)}
 
+                <div className="settings-group">
+                  <div className="flex">
+                    <label htmlFor="privacyUrl">Privacy URL</label>
+                    <div className="tooltip-container">
+                      <img src={questionmark} alt="info" className="tooltip-icon" />
+                      <span className="tooltip-text1">Link to your privacy policy page.</span>
+                    </div>
+                  </div>
+                  <input
+                    type="url"
+                    id="privacyUrl"
+                    placeholder="https://example.com/privacy-policy"
+                    value={privacyUrl}
+                    onChange={handlePrivacyUrlChange}
+                  />
+                </div>
+
                 <div className="compliance-container">
                   <label className="compliance">
                     <span className="compliance">Compliance</span>
@@ -2389,15 +2380,15 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                     {["U.S. State Laws", "GDPR"].map((option) => { //U.S. State Laws
                                              const isChecked = selectedOptions.includes(option);
                        return (
-                        <label key={option} className="custom-checkboxs">
+                        <label key={option} className="cookie-category">
                           <input
                             type="checkbox"
                             value={option}
                             checked={isChecked}
                             onChange={() => handleToggles(option)}
                           />
-                          <span className="checkbox-box"></span>
-                          {option}
+                          <span className="custom-checkbox"> {isChecked && <img src={tickmark} alt="checked" className="tick-icon" />}</span>
+                          <span className="category-name">{option}</span>
                         </label>
                       );
                     })}
@@ -2651,6 +2642,23 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
                         {translations[language as keyof typeof translations]?.description || "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you."}
                       </span>
+                      {privacyUrl && (
+                        <span>
+                          {" "}
+                          <a 
+                            href={privacyUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ 
+                              color: paraColor, 
+                              textDecoration: "underline",
+                              fontSize: `${typeof size === 'number' ? size - 2 : 12}px`
+                            }}
+                          >
+                            More info
+                          </a>
+                        </span>
+                      )}
                     </div>
                     <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : undefined, }}>
                       <button className="btn-preferences" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: btnColor, color: secondbuttontext, fontFamily: Font }} >{translations[language as keyof typeof translations]?.preferences || "Preferences"}</button>

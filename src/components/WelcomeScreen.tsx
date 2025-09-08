@@ -32,32 +32,25 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
   const [authStartTime, setAuthStartTime] = useState<number | null>(null);
   const [scanButtonShowTime, setScanButtonShowTime] = useState<number | null>(null);
 
-  console.log('🎨 [DEBUG] WelcomeScreen render - externalIsCheckingAuth:', externalIsCheckingAuth, 'authenticated:', authenticated, 'isBannerAdded:', isBannerAdded);
 
   useEffect(() => {
-    console.log('🎨 [DEBUG] WelcomeScreen useEffect - checking user data...');
     // Check for user authentication data and update hasUserData
     // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
     const userinfo = getAuthStorageItem("consentbit-userinfo");
     const hasData = userinfo && userinfo !== "null" && userinfo !== "undefined";
-    console.log('🎨 [DEBUG] WelcomeScreen - userinfo found:', hasData, 'authenticated prop:', authenticated);
     setHasUserData(authenticated || !!hasData);
-    console.log('🎨 [DEBUG] WelcomeScreen - setHasUserData to:', authenticated || !!hasData);
   }, [authenticated]);
 
 
   // Separate useEffect to handle authentication changes
   useEffect(() => {
-    console.log('🎨 [DEBUG] WelcomeScreen auth change effect - authenticated:', authenticated);
     if (authenticated) {
-      console.log('🎨 [DEBUG] WelcomeScreen - setting hasUserData to true');
       setHasUserData(true);
       setIsAuthorizing(false);
       
       // Track when authentication completes
       if (authStartTime) {
         const authDuration = performance.now() - authStartTime;
-        console.log('⏱️ [TIMING] Authentication completed in:', authDuration.toFixed(2), 'ms');
       }
     }
   }, [authenticated, authStartTime]);
@@ -69,11 +62,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
     // Check if scan button should be visible (hasUserData && !externalIsCheckingAuth && !isBannerAdded)
     if (hasUserData && !externalIsCheckingAuth && !isBannerAdded && !scanButtonShowTime) {
       setScanButtonShowTime(currentTime);
-      console.log('⏱️ [TIMING] Scan Project button became visible at:', currentTime.toFixed(2), 'ms');
       
       if (authStartTime) {
         const totalTime = currentTime - authStartTime;
-        console.log('⏱️ [TIMING] Total time from auth start to scan button visible:', totalTime.toFixed(2), 'ms');
       }
     }
   }, [hasUserData, externalIsCheckingAuth, isBannerAdded, authStartTime, scanButtonShowTime]);
@@ -82,7 +73,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
     const startTime = performance.now();
     setAuthStartTime(startTime);
     setIsAuthorizing(true);
-    console.log('⏱️ [TIMING] Authorization started at:', startTime.toFixed(2), 'ms');
     onAuthorize();
   };
 
@@ -105,24 +95,20 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
             <span className="welcome-title-highlight">Consentbit</span>
           </h1>
           {(() => {
-            console.log('🎨 [DEBUG] WelcomeScreen render logic - externalIsCheckingAuth:', externalIsCheckingAuth, 'isAuthorizing:', isAuthorizing, 'hasUserData:', hasUserData, 'isBannerAdded:', isBannerAdded);
             
             if (externalIsCheckingAuth) {
-              console.log('🎨 [DEBUG] Showing loading message');
               return (
                 <p className="welcome-instructions">
                   Checking your authentication status...
                 </p>
               );
             } else if (isAuthorizing) {
-              console.log('🎨 [DEBUG] Showing authorizing message');
               return (
                 <p className="welcome-instructions">
                   Please complete the authorization process in the popup window...
                 </p>
               );
             } else if (hasUserData) {
-              console.log('🎨 [DEBUG] Showing user data message, isBannerAdded:', isBannerAdded);
               return (
                 <p className="welcome-instructions">
                   {isBannerAdded 
@@ -132,7 +118,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
                 </p>
               );
             } else {
-              console.log('🎨 [DEBUG] Showing incomplete auth message');
               return (
                 <p className="welcome-instructions">
                   The authorization process appears to be incomplete. To continue with the next step, please ensure that all necessary authorization steps have been successfully carried out.
@@ -223,3 +208,4 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
 };
 
 export default WelcomeScreen;
+

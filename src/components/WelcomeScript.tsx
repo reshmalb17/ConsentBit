@@ -126,10 +126,7 @@ useEffect(() => {
                 userData.siteId = currentSiteId;
                 // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
                 setAuthStorageItem("consentbit-userinfo", JSON.stringify(userData));
-                console.log('🔄 Updated stored site ID from', oldSiteId, 'to', currentSiteId);
-                console.log('🎯 This should fix the backend authentication issue');
             } else {
-                console.log('✅ Stored site ID matches current site ID:', currentSiteId);
             }
 
             // Get the backend data
@@ -150,12 +147,6 @@ useEffect(() => {
             const scriptsResponse = result.data.analyticsScripts ?? [];
             
             // Debug: Log the current site ID and any scripts with site IDs
-            console.log('Current Site ID:', currentSiteId);
-            console.log('Scripts from API:', scriptsResponse.map(s => ({ 
-                identifier: s.identifier, 
-                siteId: s.siteId,
-                hasSiteId: !!s.siteId 
-            })));
             
             // Filter scripts to only include those for the current site
             const validScripts = scriptsResponse.filter(script => {
@@ -163,7 +154,6 @@ useEffect(() => {
                 
                 // Check if script has siteId and matches current site
                 if (script.siteId && script.siteId !== currentSiteId) {
-                    console.log('Filtering out script from different site:', script.siteId, 'vs current:', currentSiteId);
                     return false;
                 }
                 
@@ -172,7 +162,6 @@ useEffect(() => {
                 return true;
             });
             
-            console.log('Valid scripts after filtering:', validScripts.length);
 
             const formattedScripts = validScripts.map(script => {
                 // Add or update type attribute in the script tag
@@ -960,3 +949,4 @@ useEffect(() => {
 };
 
 export default WelcomeScipt;
+

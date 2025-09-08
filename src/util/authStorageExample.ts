@@ -25,7 +25,6 @@ export function exampleSetAuth() {
   };
   
   setAuthData(authData);
-  console.log('✅ Authentication data stored in sessionStorage');
 }
 
 // Example: Setting site information
@@ -37,19 +36,15 @@ export function exampleSetSiteInfo() {
   };
   
   setSiteInfo(siteInfo);
-  console.log('✅ Site info stored in sessionStorage');
 }
 
 // Example: Checking authentication status
 export function exampleCheckAuth() {
   const isAuth = isAuthenticated();
-  console.log('🔐 User is authenticated:', isAuth);
   
   if (isAuth) {
     const authData = getAuthData();
     const siteInfo = getSiteInfo();
-    console.log('👤 User data:', authData);
-    console.log('🏢 Site info:', siteInfo);
   }
   
   return isAuth;
@@ -58,7 +53,6 @@ export function exampleCheckAuth() {
 // Example: Clearing authentication data
 export function exampleLogout() {
   clearAuthData();
-  console.log('🚪 User logged out - auth data cleared from sessionStorage');
 }
 
 // Example: Debug current storage state
@@ -69,16 +63,13 @@ export function exampleDebugStorage() {
 // Example: Manual migration (usually done automatically)
 export function exampleMigration() {
   migrateAuthDataToSessionStorage();
-  console.log('🔄 Migration completed');
 }
 
 // Example: Complete authentication flow
 export function exampleAuthFlow() {
-  console.log('🚀 Starting authentication flow example...');
   
   // 1. Check if already authenticated
   if (isAuthenticated()) {
-    console.log('✅ Already authenticated');
     return;
   }
   
@@ -90,9 +81,7 @@ export function exampleAuthFlow() {
   const isAuth = exampleCheckAuth();
   
   if (isAuth) {
-    console.log('🎉 Authentication flow completed successfully!');
   } else {
-    console.log('❌ Authentication failed');
   }
   
   // 4. Debug storage state
@@ -111,5 +100,5 @@ if (typeof window !== 'undefined') {
     authFlow: exampleAuthFlow
   };
   
-  console.log('🔧 Auth examples available globally as window.authExamples');
 }
+

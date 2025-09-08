@@ -215,7 +215,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "height": "55px",
       "width": "55px",
       "border-radius": "50%",
-      "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png')",
+      "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png') !important",
       "background-size": "cover",
       // "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
       "position": "fixed",

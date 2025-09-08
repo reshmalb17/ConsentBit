@@ -209,22 +209,20 @@ export const customCodeApi = {
         ? `${base_url}/api/analytics?siteId=${siteId}`
         : `${base_url}/api/analytics`;
 
-      console.log('🔗 API Call URL:', url);
-      console.log('🎯 Site ID being sent to backend:', siteId);
       
       // Debug: Check what's in the session token
       try {
         const tokenParts = token.split('.');
         if (tokenParts.length === 3) {
           const payload = JSON.parse(atob(tokenParts[1]));
-          console.log('🔍 Session token payload:', {
+          console.log('Token payload:', {
             siteId: payload.siteId,
             exp: payload.exp,
             email: payload.email
           });
         }
       } catch (error) {
-        console.log('❌ Could not decode session token');
+        // Silent error handling
       }
 
       const response = await fetch(url, {
@@ -241,7 +239,7 @@ export const customCodeApi = {
       }
 
       const data = await response.json();
-      console.log('📊 Backend response data:', {
+      console.log('Analytics response:', {
         hasData: !!data.data,
         hasAnalyticsScripts: !!data.data?.analyticsScripts,
         scriptCount: data.data?.analyticsScripts?.length || 0,
@@ -255,7 +253,7 @@ export const customCodeApi = {
       return {
         success: true,
         ...data
-      }
+      };
 
     } catch (error) {
       return {
