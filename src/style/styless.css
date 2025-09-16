@@ -1352,7 +1352,7 @@ select option:checked {
   padding: 25px;
     gap: 25px;
     width: 100%;
-    border: none;
+    
 
 }
 .message-text {
