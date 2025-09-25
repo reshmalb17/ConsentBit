@@ -239,7 +239,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
                  <span><a style={{textDecoration:"none",color:"rgba(255, 255, 255, 0.6)"}} href="https://www.consentbit.com/help-document" target="_blank">Need help?</a></span>
                   </div>
                   <div className="setup-card-youtube-thumbnail">
-                    <a href="https://vimeo.com/1112446810?share=copy" target="_blank"><img src={youtubethumbnail} alt="Tutorial Video" className="setup-video-thumbnail" /></a>
+                    <a href="https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s" target="_blank"><img src={youtubethumbnail} alt="Tutorial Video" className="setup-video-thumbnail" /></a>
                   </div>
 
 

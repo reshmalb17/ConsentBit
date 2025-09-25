@@ -232,20 +232,20 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
               <button className="go-back-btn" onClick={onGoBack}><img className="whitearrow" src={whitearrow} alt="" /> Go back</button>
 
               <div className="payment-box">
-                {/* Coupon Section */}
+                
                 <div className="coupon-box">
                   <div className="coupon-container">
                     <p className="coupon-header">
                       Complete payment to publish cookie widget to the Live site
                     </p>
 
-                    <div className="coupon-strip">
+                    {/* <div className="coupon-strip">
                       <div style={{ display: "flex", flexDirection: "column", padding: "10px" }}>
                         <span>Get the app free for one year</span>
                         <span>coupon code - CONSENTBIT100</span>
                       </div>
 
-                      <img
+                       <img
                         src={iconSrc}   // ✅ use state here
                         alt="Copy"
                         className="copy-icon"
@@ -269,8 +269,8 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                             });
                         }}
                         title="Copy"
-                      />
-                    </div>
+                      /> 
+                    </div>  */}
                   </div>
 
                   <div style={{ width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" }}><div className="pay-container"> <a href="https://billing.stripe.com/p/login/00gbIJclf5nz4Hm8ww" target="_blank" onClick={(e) => {

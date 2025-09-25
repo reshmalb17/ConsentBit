@@ -44607,7 +44607,6 @@ const ChoosePlan = ({ onClose }) => {
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Simple pricing, complete access\u2014go monthly for flexibility or save big with a yearly subscription. All features, always available")),
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "plan-big-card" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "choose-plan-card" },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Celebrate our launch with a free year of Consentbit - CONSENTBIT100"),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "choose-plan-price" },
                         "$",
                         price),
@@ -44839,29 +44838,7 @@ const ConfirmPublish = ({ onGoBack, handleConfirmPublish, handleCustomize }) => 
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "payment-box" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "coupon-box" },
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "coupon-container" },
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "coupon-header" }, "Complete payment to publish cookie widget to the Live site"),
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "coupon-strip" },
-                                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { display: "flex", flexDirection: "column", padding: "10px" } },
-                                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Get the app free for one year"),
-                                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "coupon code - CONSENTBIT100")),
-                                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: iconSrc, alt: "Copy", className: "copy-icon", onClick: () => {
-                                                navigator.clipboard.writeText("CONSENTBIT100")
-                                                    .then(() => {
-                                                    setIconSrc(tickSVG); // show tick
-                                                    setTimeout(() => setIconSrc(CopyContent), 500); // revert after 0.5s
-                                                })
-                                                    .catch(() => {
-                                                    // fallback copy
-                                                    const textArea = document.createElement("textarea");
-                                                    textArea.value = "CONSENTBIT100";
-                                                    document.body.appendChild(textArea);
-                                                    textArea.select();
-                                                    document.execCommand("copy");
-                                                    document.body.removeChild(textArea);
-                                                    setIconSrc(tickSVG);
-                                                    setTimeout(() => setIconSrc(CopyContent), 500);
-                                                });
-                                            }, title: "Copy" }))),
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "coupon-header" }, "Complete payment to publish cookie widget to the Live site")),
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" } },
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "pay-container" },
                                         " ",
@@ -45069,6 +45046,8 @@ const Customization = ({ animation, setAnimation, easing, setEasing, language, s
                 setColor(newColor.hexString);
             });
         }
+        else {
+        }
     }, []);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         if (isOpen && pickerInstance.current) {
@@ -45235,7 +45214,9 @@ const Customization = ({ animation, setAnimation, easing, setEasing, language, s
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Banner Background"),
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "color-picker-dropdown", ref: dropdownRef },
-                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "color-picker-button", onClick: () => setIsOpen(!isOpen) },
+                                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "color-picker-button", onClick: () => {
+                                            setIsOpen(!isOpen);
+                                        } },
                                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "color-text" }, color),
                                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "color-preview", style: { backgroundColor: color } })),
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { ref: colorPickerRef, className: `color-picker-container ${isOpen ? "visible" : "hidden"}` }))),
@@ -45551,7 +45532,13 @@ window.debugBannerScriptRegistration = () => {
 const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
     var _a, _b, _c, _d, _e, _f;
     const [color, setColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_11__.usePersistentState)("color", "#ffffff");
+    // Debug: Monitor color state changes
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    }, [color]);
     const [bgColor, setBgColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_11__.usePersistentState)("bgColor", "#ffffff");
+    // Debug: Monitor bgColor state changes
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    }, [bgColor]);
     const [btnColor, setBtnColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_11__.usePersistentState)("btnColor", "#C9C9C9");
     const [paraColor, setParaColor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_11__.usePersistentState)("paraColor", "#4C4A66");
     const [secondcolor, setSecondcolor] = (0,_hooks_usePersistentState__WEBPACK_IMPORTED_MODULE_11__.usePersistentState)("secondcolor", "#000000");
@@ -45909,8 +45896,9 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         // Set all the values with proper checks
                         if (response.cookieExpiration !== undefined)
                             setCookieExpiration(response.cookieExpiration);
-                        if (response.bgColor !== undefined)
+                        if (response.bgColor !== undefined) {
                             setBgColor(response.bgColor);
+                        }
                         if (response.activeTab !== undefined) {
                             // Map API tab names to component tab names
                             let mappedTab = response.activeTab;
@@ -45966,8 +45954,9 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                         if (response.isBannerAdded !== undefined) {
                             setIsBannerAdded(response.isBannerAdded);
                         }
-                        if (response.color !== undefined && response.color !== "#000000")
+                        if (response.color !== undefined) {
                             setColor(response.color);
+                        }
                     }
                     else {
                         openAuthScreen();
@@ -46137,7 +46126,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             };
             const animationAttribute = animationAttributeMap[animation] || "";
             const divPropertyMap = {
-                "background-color": bgColor,
+                "background-color": color,
                 "position": "fixed",
                 "z-index": "99999",
                 "padding-top": "20px",
@@ -46247,6 +46236,15 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 "margin-right": "5px",
                 "min-width": "80px",
             };
+            const linktextPropertyMap = {
+                "border-radius": "48px",
+                "cursor": "pointer",
+                "background-color": "transparent !important",
+                "color": "rgba(72, 57, 153, 1)",
+                "margin-left": "5px",
+                "margin-right": "5px",
+                "min-width": "80px",
+            };
             const headingPropertyMap = {
                 "color": headColor,
                 "font-size": "20px",
@@ -46297,7 +46295,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             yield divStyle.setProperties(responsivePropertyMap, responsiveOptions);
             yield paragraphStyle.setProperties(paragraphPropertyMap);
             yield buttonContainerStyle.setProperties(buttonContainerPropertyMap);
-            yield Linktext.setProperties(declineButtonPropertyMap);
+            yield Linktext.setProperties(linktextPropertyMap);
             yield headingStyle.setProperties(headingPropertyMap);
             yield innerDivStyle.setProperties(innerdivPropertyMap);
             yield secondBackgroundStyle.setProperties(secondbackgroundPropertyMap);
@@ -46551,7 +46549,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
             };
             const animationAttribute = animationAttributeMap[animation] || "";
             const divPropertyMap = {
-                "background-color": bgColor,
+                "background-color": color,
                 "position": "fixed",
                 "z-index": "99999",
                 "padding-top": "20px",
@@ -46677,6 +46675,18 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 "border-radius": `${buttonRadius}px`,
                 "cursor": "pointer",
                 "background-color": btnColor,
+                "color": secondbuttontext,
+                "margin-left": "5px",
+                "margin-right": "5px",
+                "min-width": "80px",
+                "text-align": "center",
+                "display": "flex",
+                "justify-content": "center",
+            };
+            const linktextPropertyMap = {
+                "border-radius": `${buttonRadius}px`,
+                "cursor": "pointer",
+                "background-color": "transparent !important",
                 "color": secondbuttontext,
                 "margin-left": "5px",
                 "margin-right": "5px",
@@ -46935,7 +46945,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 siteId: siteIdinfo === null || siteIdinfo === void 0 ? void 0 : siteIdinfo.siteId,
                 cookieExpiration: cookieExpiration,
                 privacyUrl: privacyUrl,
-                bgColor: bgColor,
+                bgColor: color,
                 activeTab: activeTab,
                 activeMode: "Advanced", // Add back to satisfy type requirement
                 selectedtext: selectedtext,
@@ -47367,8 +47377,12 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "gap" },
                     selectedOptions.includes("GDPR") && selectedOptions.includes("U.S. State Laws") ?
                         (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "confirm-button", onClick: handleBothBanners }, "Confirm")) : selectedOptions.includes("GDPR") ?
-                        (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `confirm-button ${isLoading ? "loading" : ""}`, onClick: () => gdpr() }, isLoading ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "wait...")) : ("Confirm"))) : selectedOptions.includes("U.S. State Laws") ?
-                        (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "confirm-button", onClick: ccpabanner }, "Confirm")) : react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "confirm-button1" }, " Nothing Selected"),
+                        (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: `confirm-button ${isLoading ? "loading" : ""}`, onClick: () => {
+                                gdpr();
+                            } }, isLoading ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "wait...")) : ("Confirm"))) : selectedOptions.includes("U.S. State Laws") ?
+                        (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "confirm-button", onClick: () => {
+                                ccpabanner();
+                            } }, "Confirm")) : react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "confirm-button1" }, " Nothing Selected"),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "cancel-btn", onClick: () => setShowPopup(false) }, "Cancel"))))),
         showLoadingPopup && isLoading && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "popup-loading-content" },
@@ -47509,7 +47523,7 @@ const CustomizationTab = ({ onAuth, initialActiveTab = "Settings", isAuthenticat
                                     // transform: selected === "center" ? "translateX(-50%)" : "none",
                                 })), { 
                                     // transform: selected === "center" ? "translateX(-50%)" : "none",
-                                    fontFamily: Font, textAlign: selectedtext, alignItems: style === "centeralign" ? "center" : undefined, fontWeight: weight, width: previewDimensions.width, height: previewDimensions.minHeight, borderRadius: `${borderRadius}px`, backgroundColor: bgColor, fontSize: `${size}px` }) },
+                                    fontFamily: Font, textAlign: selectedtext, alignItems: style === "centeralign" ? "center" : undefined, fontWeight: weight, width: previewDimensions.width, height: previewDimensions.minHeight, borderRadius: `${borderRadius}px`, backgroundColor: color, fontSize: `${size}px` }) },
                                 style === "alignstyle" && react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "secondclass", style: { backgroundColor: bgColors, borderBottomRightRadius: `${borderRadius}px`, borderTopRightRadius: `${borderRadius}px` } }),
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "space", style: { color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between" } },
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h4", { style: { textAlign: selectedtext, fontFamily: Font } }, ((_a = translations[language]) === null || _a === void 0 ? void 0 : _a.heading) || "Cookie Settings"),
@@ -47565,7 +47579,7 @@ const NeedHelp = () => {
     const dropdownRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
     const buttonRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
     const helpItems = [
-        { label: 'Watch tutorial', href: 'https://vimeo.com/1090979483/99f46cddbf', icon: watch },
+        { label: 'Watch tutorial', href: 'https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s', icon: watch },
         { label: 'Check docs', href: 'https://www.consentbit.com/help-document', icon: book },
         { label: 'Get support', href: 'https://www.consentbit.com/contact', icon: users },
         { label: 'Send feedback', href: 'https://www.consentbit.com/contact', icon: doc },
@@ -48546,7 +48560,7 @@ const SetupStep = ({ onGoBack, handleSetUpStep }) => {
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null,
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { style: { textDecoration: "none", color: "rgba(255, 255, 255, 0.6)" }, href: "https://www.consentbit.com/help-document", target: "_blank" }, "Need help?"))),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-youtube-thumbnail" },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://vimeo.com/1112446810?share=copy", target: "_blank" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s", target: "_blank" },
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: youtubethumbnail, alt: "Tutorial Video", className: "setup-video-thumbnail" }))))),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-logo" },
@@ -48791,7 +48805,7 @@ const WelcomeScreen = ({ onAuthorize, onNeedHelp, authenticated, handleWelcomeSc
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null,
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { style: { textDecoration: "none", color: "rgba(255, 255, 255, 0.6)" }, href: "https://www.consentbit.com/help-document", target: "_blank" }, "Need help?"))),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-youtube-thumbnail" },
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://vimeo.com/1112446810?share=copy", target: "_blank" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s", target: "_blank" },
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: youtubethumbnail, alt: "Tutorial Video", className: "setup-video-thumbnail" }))))),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "setup-card-info-logo" },
@@ -49381,7 +49395,7 @@ const WelcomeScipt = ({ isWFetchWelcomeScripts: isFetchScript, handleWelcomeScip
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", { className: "ws-card-title" }, "Facing any issues?"),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "ws-card-desc" }, "Check our tutorial video to help yourself")),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://vimeo.com/1112446810?share=copy", target: "_blank" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { href: "https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s", target: "_blank" },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: thumbnail, alt: "Tutorial Video", className: "ws-thumbnail" })))),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-card-footer" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "ws-help-link" },
@@ -49640,9 +49654,9 @@ const DonotShare = ({ onClose, toggleStates, handleToggle }) => {
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { width: "242px", justifyContent: "left", display: "flex", flexDirection: "column" } },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { style: { marginBottom: "12px", fontSize: "12px", color: "#ffffffff" } }, "Watch tutorial"),
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
-                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { target: "_blank", href: "https://vimeo.com/1107523507" },
+                                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { target: "_blank", href: "https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s" },
                                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { style: { marginBottom: "5px", width: "118px", height: "70px" }, src: thumb, alt: "" }))),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { style: { textDecoration: "none", color: "#A0A0B0", fontSize: "12px", display: "flex" }, target: "_blank", href: "https://vimeo.com/1107523507" },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", { style: { textDecoration: "none", color: "#A0A0B0", fontSize: "12px", display: "flex" }, target: "_blank", href: "https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s" },
                                 "How to enable do not share link",
                                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: uparrow, alt: "" }),
                                 " ")))),
@@ -49725,6 +49739,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 // import { aw } from 'framer-motion/dist/types.d-6pKw1mTI';
 
+const consentLogo = new URL(/* asset import */ __webpack_require__(/*! ../assets/consent_logo.png */ "./src/assets/consent_logo.png"), __webpack_require__.b).href;
+const logo = new URL(/* asset import */ __webpack_require__(/*! ../assets/consent_logo.png */ "./src/assets/consent_logo.png"), __webpack_require__.b).href;
 const ccpaTranslations = {
     English: {
         heading: "Opt-out Preference",
@@ -49824,6 +49840,7 @@ const createCookieccpaPreferences = (...args_1) => __awaiter(void 0, [...args_1]
             headingStyleName: `consebit-ccpa-prefrence-heading`,
             checkboxContainerStyleName: `consentbit-toggle`,
             // changepreference: `consentbit-ccpa-checkbox`,
+            changepre: `consentbit-change-preference`, // Use a new name
             closebutton: 'consent-close'
         };
         const styles = yield Promise.all(Object.values(styleNames).map((name) => __awaiter(void 0, void 0, void 0, function* () {
@@ -49970,10 +49987,10 @@ const createCookieccpaPreferences = (...args_1) => __awaiter(void 0, [...args_1]
             "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png')",
             "background-size": "cover",
             // "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-            "position": "fixed",
+            "position": "fixed !important",
             "z-index": "999",
-            "bottom": "3%",
-            "left": "2%",
+            "bottom": "3% !important",
+            "left": "2% !important",
             "cursor": "pointer",
             "background-position-x": "50%",
             "background-position-y": "50%"
@@ -50253,6 +50270,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
+const logo = new URL(/* asset import */ __webpack_require__(/*! ../assets/consent_logo.png */ "./src/assets/consent_logo.png"), __webpack_require__.b).href;
 const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(void 0, [selectedPreferences_1, ...args_1], void 0, function* (selectedPreferences, language = "English", color = "#ffffff", btnColor = "#F1F1F1", headColor = "#483999", paraColor = "#1F1D40", secondcolor = "secondcolor", buttonRadius, animation, customToggle, primaryButtonText = "#ffffff", secondbuttontext = "#4C4A66", skipCommonDiv = false, disableScroll, closebutton = false, borderRadius, font, privacyUrl = "") {
     try {
         const translation = (0,_util_translation_utils__WEBPACK_IMPORTED_MODULE_1__.getTranslation)(language);
@@ -50280,7 +50298,7 @@ const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(
             DeclinebuttonStyleName: `consentbit-prefrence-decline`,
             headingStyleName: `consebit-prefrence-heading`,
             checkboxContainerStyleName: `consentbit-toggle`,
-            changepreference: `consentbit-change-preference`,
+            changepre: `consentbit-change-preference`,
             closebutton: `consentbit-close`,
             maindiv: 'consentbit-preference'
         };
@@ -50429,13 +50447,13 @@ const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(
             "height": "55px",
             "width": "55px",
             "border-radius": "50%",
-            "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png') !important",
+            "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png')",
             "background-size": "cover",
             // "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-            "position": "fixed",
+            "position": "fixed !important",
             "z-index": "999",
-            "bottom": "3%",
-            "left": "2%",
+            "bottom": "3% !important",
+            "left": "2% !important",
             "cursor": "pointer",
             "background-position-x": "50%",
             "background-position-y": "50%"
@@ -50660,20 +50678,7 @@ const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(
                 throw new Error("Failed to create button container");
             }
             yield prefrenceContainerinner.setStyles([prefrenceDiv]);
-            if (!skipCommonDiv) {
-                const mainDivBlock = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_0__["default"].elementPresets.DivBlock);
-                yield mainDivBlock.setStyles([changepre]);
-                if (!mainDivBlock) {
-                    throw new Error("Failed to create main div block");
-                }
-                if (mainDivBlock.setDomId) {
-                    yield mainDivBlock.setCustomAttribute("scroll-control", "true");
-                    yield mainDivBlock.setDomId("toggle-consent-btn");
-                }
-                else {
-                }
-            }
-            ////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////
             // Conditionally add close button only if closebutton parameter is true
             let Closebuttons = null;
             if (closebutton) {
@@ -50744,6 +50749,18 @@ const createCookiePreferences = (selectedPreferences_1, ...args_1) => __awaiter(
                 }
             }
             else {
+            }
+            // Only create the common div if not skipped
+            if (!skipCommonDiv) {
+                const mainDivBlock = yield selectedElement.before(_types_webflowtypes__WEBPACK_IMPORTED_MODULE_0__["default"].elementPresets.DivBlock);
+                yield mainDivBlock.setStyles([changepre]);
+                if (!mainDivBlock) {
+                    throw new Error("Failed to create main div block");
+                }
+                if (mainDivBlock.setDomId) {
+                    yield mainDivBlock.setCustomAttribute("scroll-control", "true");
+                    yield mainDivBlock.setDomId("toggle-consent-btn");
+                }
             }
             // Set bannerAdded to true in sessionStorage
             // COMMENTED OUT: localStorage.setItem('bannerAdded', 'true');
@@ -51110,7 +51127,7 @@ const useBannerCreation = () => {
             };
             // Debug: Log banner styles before creating property map
             const divPropertyMap = {
-                "background-color": `${bannerStyles.bgColor}`,
+                "background-color": `${config.color}`,
                 "position": "fixed",
                 "z-index": "99999",
                 "padding-top": "20px",
@@ -51123,7 +51140,7 @@ const useBannerCreation = () => {
                 "align-items": "center",
                 "justify-content": "center",
                 "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-                "font-family": `${bannerStyles.Font}`,
+                "font-family": `${config.Font}`,
                 "right": "3%",
                 "transform": "translate3d(0px, 0, 0)",
                 "left": "auto",
@@ -51185,7 +51202,20 @@ const useBannerCreation = () => {
             const responsivebuttonOptions = { breakpoint: "small" };
             const declineButtonPropertyMap = {
                 "border-radius": "2px",
-                "background-color": "rgb(201, 201, 201)",
+                "background-color": "#C9C9C9",
+                "color": "rgb(0, 0, 0)",
+                "font-family": "Montserrat",
+                "cursor": "pointer",
+                "margin-left": "5px",
+                "margin-right": "5px",
+                "min-width": "80px",
+                "text-align": "center",
+                "display": "flex",
+                "justify-content": "center",
+            };
+            const linktextPropertyMap = {
+                "border-radius": "2px",
+                "background-color": "transparent !important",
                 "color": "rgb(0, 0, 0)",
                 "font-family": "Montserrat",
                 "cursor": "pointer",
@@ -51197,7 +51227,7 @@ const useBannerCreation = () => {
                 "justify-content": "center",
             };
             const headingPropertyMap = {
-                "color": `${bannerStyles.headColor}`,
+                "color": `${config.headColor}`,
                 "font-size": "20px",
                 "font-weight": "400px",
                 "text-align": "left",
@@ -51212,7 +51242,7 @@ const useBannerCreation = () => {
             };
             const secondbackgroundPropertyMap = {
                 "position": "absolute",
-                "background-color": `${bannerStyles.bgColor}`,
+                "background-color": `${config.color}`,
                 "width": "35%",
                 "right": "0px",
                 "height": "100%",
@@ -51389,7 +51419,7 @@ const useBannerCreation = () => {
             };
             const animationAttribute = "fade";
             const divPropertyMap = {
-                "background-color": `${bannerStyles.bgColor}`,
+                "background-color": `${config.color}`,
                 "position": "fixed",
                 "z-index": "99999",
                 "padding-top": "20px",
@@ -51402,7 +51432,7 @@ const useBannerCreation = () => {
                 "align-items": "center",
                 "justify-content": "center",
                 "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-                "font-family": `${bannerStyles.Font}`,
+                "font-family": `${config.Font}`,
                 "right": "3%",
                 "transform": "translate3d(0px, 0, 0)",
                 "left": "auto",
@@ -51425,7 +51455,7 @@ const useBannerCreation = () => {
             };
             const responsiveOptions = { breakpoint: "small" };
             const paragraphPropertyMap = {
-                "color": `${bannerStyles.paraColor}`,
+                "color": `${config.paraColor}`,
                 "font-size": "16px",
                 "font-weight": "400",
                 "line-height": "1.5",
@@ -51452,8 +51482,17 @@ const useBannerCreation = () => {
                 "margin-right": "5px",
                 "min-width": "80px",
             };
+            const linktextPropertyMap = {
+                "border-radius": "48px",
+                "cursor": "pointer",
+                "background-color": "transparent !important",
+                "color": "rgba(72, 57, 153, 1)",
+                "margin-left": "5px",
+                "margin-right": "5px",
+                "min-width": "80px",
+            };
             const headingPropertyMap = {
-                "color": `${bannerStyles.headColor}`,
+                "color": `${config.headColor}`,
                 "font-size": "20px",
                 "font-weight": "500",
                 "text-align": "left",
@@ -51468,7 +51507,7 @@ const useBannerCreation = () => {
             };
             const secondbackgroundPropertyMap = {
                 "position": "absolute",
-                "background-color": `${bannerStyles.bgColor}`,
+                "background-color": `${config.color}`,
                 "width": "35%",
                 "right": "0px",
                 "height": "100%",
@@ -51497,7 +51536,7 @@ const useBannerCreation = () => {
             yield divStyle.setProperties(responsivePropertyMap, responsiveOptions);
             yield paragraphStyle.setProperties(paragraphPropertyMap);
             yield buttonContainerStyle.setProperties(buttonContainerPropertyMap);
-            yield Linktext.setProperties(declineButtonPropertyMap);
+            yield Linktext.setProperties(linktextPropertyMap);
             yield headingStyle.setProperties(headingPropertyMap);
             yield innerDivStyle.setProperties(innerdivPropertyMap);
             yield secondBackgroundStyle.setProperties(secondbackgroundPropertyMap);
@@ -54219,6 +54258,16 @@ module.exports = __webpack_require__.p + "f30fbed760140791c63f.svg";
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 module.exports = __webpack_require__.p + "1940bcbd16575d610f1f.svg";
+
+/***/ }),
+
+/***/ "./src/assets/consent_logo.png":
+/*!*************************************!*\
+  !*** ./src/assets/consent_logo.png ***!
+  \*************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+module.exports = __webpack_require__.p + "dfca91fc5040563c853c.png";
 
 /***/ }),
 

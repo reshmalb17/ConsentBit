@@ -296,6 +296,7 @@ const Customization: React.FC<CustomizationProps> = ({
       pickerInstance.current.on("color:change", (newColor: any) => {
         setColor(newColor.hexString);
       });
+    } else {
     }
   }, []);
 
@@ -541,7 +542,9 @@ const Customization: React.FC<CustomizationProps> = ({
                 <div>
                   <span>Banner Background</span>
                   <div className="color-picker-dropdown" ref={dropdownRef}>
-                    <button className="color-picker-button" onClick={() => setIsOpen(!isOpen)}>
+                    <button className="color-picker-button" onClick={() => {
+                      setIsOpen(!isOpen);
+                    }}>
                       <span className="color-text">{color}</span>
                       <div className="color-preview" style={{ backgroundColor: color }}></div>
                     </button>

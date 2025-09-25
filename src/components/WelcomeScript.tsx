@@ -694,7 +694,7 @@ useEffect(() => {
               <p className="ws-card-desc">Check our tutorial video to help yourself</p>
             </div>
             <div>
-               <a href="https://vimeo.com/1112446810?share=copy" target="_blank"><img src={thumbnail} alt="Tutorial Video" className="ws-thumbnail" /></a>
+               <a href="https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s" target="_blank"><img src={thumbnail} alt="Tutorial Video" className="ws-thumbnail" /></a>
             </div>
           </div>
           <div className="ws-card-footer">

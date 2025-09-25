@@ -1,5 +1,7 @@
 // import { aw } from 'framer-motion/dist/types.d-6pKw1mTI';
 import webflow, { WebflowAPI } from '../types/webflowtypes';
+const consentLogo = new URL("../assets/consent_logo.png", import.meta.url).href;
+const logo = new URL("../assets/consent_logo.png", import.meta.url).href;
 
 
 const ccpaTranslations = {
@@ -117,6 +119,7 @@ const createCookieccpaPreferences = async (language: string = "English", color: 
             headingStyleName: `consebit-ccpa-prefrence-heading`,
             checkboxContainerStyleName: `consentbit-toggle`,
             // changepreference: `consentbit-ccpa-checkbox`,
+            changepre: `consentbit-change-preference`, // Use a new name
             closebutton: 'consent-close'
         };
 
@@ -284,14 +287,15 @@ const createCookieccpaPreferences = async (language: string = "English", color: 
             "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png')",
             "background-size": "cover",
             // "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-            "position": "fixed",
+            "position": "fixed !important",
             "z-index": "999",
-            "bottom": "3%",
-            "left": "2%",
+            "bottom": "3% !important",
+            "left": "2% !important",
             "cursor": "pointer",
             "background-position-x": "50%",
             "background-position-y": "50%"
         };
+
 
         const checkboxStyleMap: Record<string, string> = {
             "appearance": "none", // Removes default checkbox styling
@@ -561,6 +565,7 @@ const createCookieccpaPreferences = async (language: string = "English", color: 
                 }
             }
 
+    
             // Only create the common div if not skipped
             if (!skipCommonDiv) {
                 const mainDivBlock = await selectedElement.before(webflow.elementPresets.DivBlock);
@@ -595,5 +600,9 @@ const createCookieccpaPreferences = async (language: string = "English", color: 
          clearTimeout(overallTimeout);
      }
 };
+
+
+
+    
 
 export default createCookieccpaPreferences

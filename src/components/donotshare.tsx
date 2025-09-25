@@ -202,9 +202,9 @@ const DonotShare: React.FC<ChoosePlanProps> = ({ onClose, toggleStates, handleTo
                   <div style={{ width: "242px", justifyContent: "left", display: "flex", flexDirection: "column" }}>
                     <p style={{ marginBottom: "12px", fontSize: "12px", color: "#ffffffff" }}>Watch tutorial</p>
                     <div>
-                      <a target="_blank" href="https://vimeo.com/1107523507"><img style={{ marginBottom: "5px", width: "118px", height: "70px" }} src={thumb} alt="" /></a>
+                      <a target="_blank" href="https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s"><img style={{ marginBottom: "5px", width: "118px", height: "70px" }} src={thumb} alt="" /></a>
                     </div>
-                    <a style={{ textDecoration: "none", color: "#A0A0B0", fontSize: "12px", display: "flex" }} target="_blank" href="https://vimeo.com/1107523507">How to enable do not share link<img src={uparrow} alt="" /> </a>
+                    <a style={{ textDecoration: "none", color: "#A0A0B0", fontSize: "12px", display: "flex" }} target="_blank" href="https://www.youtube.com/watch?v=JdUFb1R2WWY&t=9s">How to enable do not share link<img src={uparrow} alt="" /> </a>
                   </div>
                 </div>
               </div>

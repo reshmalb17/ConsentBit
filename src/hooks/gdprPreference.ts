@@ -1,11 +1,15 @@
 import exp from 'constants';
 import webflow, { WebflowAPI } from '../types/webflowtypes';
 import { getTranslation } from '../util/translation-utils';
+const logo = new URL("../assets/consent_logo.png", import.meta.url).href;
+
+
 
 type BreakpointAndPseudo = {
   breakpoint: string;
   pseudoClass: string;
 };
+
 
 const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false, borderRadius: number, font: string, privacyUrl: string = "") => {
   
@@ -41,7 +45,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       DeclinebuttonStyleName: `consentbit-prefrence-decline`,
       headingStyleName: `consebit-prefrence-heading`,
       checkboxContainerStyleName: `consentbit-toggle`,
-      changepreference: `consentbit-change-preference`,
+      changepre: `consentbit-change-preference`,
       closebutton: `consentbit-close`,
       maindiv: 'consentbit-preference'
 
@@ -210,22 +214,22 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "font-size": "18px",
       "font-weight": "500",
     };
-
     const changepreferencePropertyMap: Record<string, string> = {
       "height": "55px",
       "width": "55px",
       "border-radius": "50%",
-      "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png') !important",
+      "background-image": "url('https://cdn.prod.website-files.com/63d5330e6841081487be0bd6/67ebf5ee639d12979361f2bc_consent.png')",
       "background-size": "cover",
       // "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-      "position": "fixed",
+      "position": "fixed !important",
+      
       "z-index": "999",
-      "bottom": "3%",
-      "left": "2%",
+      "bottom": "3% !important",
+      "left": "2% !important",
       "cursor": "pointer",
       "background-position-x": "50%",
       "background-position-y": "50%"
-    };
+  };
 
 
     const formPropertyMap: Record<string, string> = {
@@ -514,23 +518,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         throw new Error("Failed to create button container");
       }
       await prefrenceContainerinner.setStyles([prefrenceDiv]);
-
-      if (!skipCommonDiv) {
-        const mainDivBlock = await selectedElement.before(webflow.elementPresets.DivBlock);
-        await mainDivBlock.setStyles([changepre]);
-
-        if (!mainDivBlock) {
-          throw new Error("Failed to create main div block");
-        }
-
-        if ((mainDivBlock as any).setDomId) {
-          await mainDivBlock.setCustomAttribute("scroll-control", "true");
-          await (mainDivBlock as any).setDomId("toggle-consent-btn");
-        } else {
-        }
-      }
-
-      ////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
       // Conditionally add close button only if closebutton parameter is true
       let Closebuttons = null;
@@ -609,6 +597,21 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         }
       } else {
       }
+      
+            // Only create the common div if not skipped
+            if (!skipCommonDiv) {
+              const mainDivBlock = await selectedElement.before(webflow.elementPresets.DivBlock);
+              await mainDivBlock.setStyles([changepre]);
+
+              if (!mainDivBlock) {
+                  throw new Error("Failed to create main div block");
+              }
+
+              if ((mainDivBlock as any).setDomId) {
+                  await mainDivBlock.setCustomAttribute("scroll-control", "true");
+                  await (mainDivBlock as any).setDomId("toggle-consent-btn");
+              }
+          }
 
       // Set bannerAdded to true in sessionStorage
       // COMMENTED OUT: localStorage.setItem('bannerAdded', 'true');

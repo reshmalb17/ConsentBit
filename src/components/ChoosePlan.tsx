@@ -41,7 +41,7 @@ const ChoosePlan: React.FC<ChoosePlanProps> = ({ onClose }) => {
 
         <div className="plan-big-card">
           <div className="choose-plan-card">
-            <p>Celebrate our launch with a free year of Consentbit - CONSENTBIT100</p>
+            {/* <p>Celebrate our launch with a free year of Consentbit - CONSENTBIT100</p> */}
             <div className="choose-plan-price">
               ${price}
             </div>
