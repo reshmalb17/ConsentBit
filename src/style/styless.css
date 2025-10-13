@@ -475,11 +475,14 @@ img {
 
 .settings-panel input,
 .settings-panel select {
-  width: 138px;
+  width:63px;
   padding: 8px;
-  border: 1px solid rgba(46, 43, 69, 1);
+  /* border: 1px solid rgba(46, 43, 69, 1); */
+  border:none;
   border-radius: 3px;
-  background: rgba(217, 217, 217, 0.02);
+  /* background: rgba(217, 217, 217, 0.02); */
+  background: transparent;
+  color:rgba(255, 255, 255, 0.6);;
 
 }
 
@@ -555,7 +558,7 @@ input[type="number"] {
 }
 
 input[type="text"] {
-  color: white;
+  color:rgba(255, 255, 255, 0.6);
   outline: none;
 }
 input[type="url"] {
@@ -652,6 +655,34 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .settings-group-preview {
   padding-top: 10px;
+}
+
+.preview-tabs {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 8px;
+}
+
+.preview-tab {
+  appearance: none;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 0;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.preview-tab:hover {
+  color: #ffffff;
+}
+
+.preview-tab.active {
+  color: #ffffff;
+  border-bottom-color: #8C79FF;
 }
 
 
@@ -1352,7 +1383,7 @@ select option:checked {
   padding: 25px;
     gap: 25px;
     width: 100%;
-    
+    border: none;
 
 }
 .message-text {
@@ -1773,6 +1804,38 @@ input:checked+.toggle::before {
   flex-grow: 1;
 }
 
+/* Always selected GDPR checkbox styling */
+.cookie-category.always-selected {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.cookie-category.always-selected input:disabled {
+  cursor: not-allowed;
+}
+
+.cookie-category.always-selected .custom-checkbox {
+  background-color: rgba(140, 121, 255, 0.2);
+  border-color: rgba(140, 121, 255, 0.6);
+  cursor: not-allowed;
+}
+
+.cookie-category.always-selected .category-name {
+  color: rgba(196, 194, 240, 0.9);
+  font-weight: 500;
+}
+
+.cookie-category.always-selected .custom-checkbox {
+  background-color: rgba(140, 121, 255, 0.2);
+  border-color: rgba(140, 121, 255, 0.6);
+  cursor: not-allowed;
+}
+
+.cookie-category.always-selected .category-name {
+  color: rgba(196, 194, 240, 0.9);
+  font-weight: 500;
+}
+
 .category-label {
   display: flex;
   align-items: center;
@@ -1846,6 +1909,67 @@ input:checked+.toggle::before {
   display: block;
   /* Show when dropdown is open */
 }
+
+/* Custom unified color picker button design */
+.color-picker-button {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 6px;
+  background: rgba(46, 43, 69, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+.color-picker-button:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(46, 43, 69, 0.9);
+}
+
+.hex-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  padding: 0;
+  margin-right: 12px;
+  font-weight: 400;
+}
+
+.hex-input-field::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.hex-input-field:focus {
+  color: #ffffff;
+}
+
+.color-preview-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-preview-circle:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+
 
 /* //dismiss button */
 
@@ -2117,6 +2241,48 @@ input:checked+.toggle::before {
   line-height: 157%;
   backdrop-filter: blur(30.7px);
   font-family: 'DM Sans', sans-serif;
+}
+
+/* Popup buttons container */
+.popup-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+/* Authorize button styling */
+.authorize-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.authorize-btn:hover {
+  background: #0056b3;
+}
+
+/* Cancel button styling */
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.cancel-btn:hover {
+  background: #545b62;
 }
 
 .success-popup button {

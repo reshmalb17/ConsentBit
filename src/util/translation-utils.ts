@@ -56,7 +56,7 @@ export const translations: Record<string, TranslationKeys> = {
   es: {
     heading: "Preferencias de Cookies",
     description: "Al hacer clic, acepta el almacenamiento de cookies en su dispositivo para mejorar la navegación del sitio, analizar el uso del sitio y ayudar en nuestros esfuerzos de marketing como se describe en nuestro.",
-    acceptAll: "Aceptar Todo",
+    acceptAll: "Guardar preferencias",
     reject: "Rechazar",
     changePreference: "Cambiar Preferencias",
     moreInfo: "Más Información",
@@ -83,7 +83,7 @@ export const translations: Record<string, TranslationKeys> = {
     heading: "Préférences des Cookies",
     description: "Ces cookies sont nécessaires au bon fonctionnement du site web. Ils ne stockent aucune information personnelle.",
     reject: "Refuser",
-    acceptAll: "Aceptar Todo",
+    acceptAll: "Enregistrer les préférences",
     changePreference: "Modifier les Préférences",
     moreInfo: "Plus d'Informations",
     sections: {

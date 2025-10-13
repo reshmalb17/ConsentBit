@@ -332,14 +332,18 @@ const Customization: React.FC<CustomizationProps> = ({
       case "bigstyle":
         return { width: "250px", minHeight: "151px" };
       case "fullwidth":
-        return { width: "448px", dislay: "flex" };
+        return { width: "445px", dislay: "flex" };
       case "centeralign":
         return { width: "303px" };
       default:
-        return { width: "318px" };
+        return { width: "318px" }; // Default
     }
   }, [style]);
   // ---
+  // Preview tabs: GDPR or US State Law
+  const [previewMode, setPreviewMode] = useState<'gdpr' | 'ccpa'>("gdpr");
+
+  // Preview shows both GDPR and US State Law banners by default
 
   useEffect(() => {
     // Initialize all color pickers
@@ -542,20 +546,11 @@ const Customization: React.FC<CustomizationProps> = ({
                 <div>
                   <span>Banner Background</span>
                   <div className="color-picker-dropdown" ref={dropdownRef}>
-                    <button className="color-picker-button" onClick={() => {
+                    <div className="color-picker-button" onClick={() => {
                       setIsOpen(!isOpen);
                     }}>
-                      <span className="color-text">{color}</span>
-                      <div className="color-preview" style={{ backgroundColor: color }}></div>
-                    </button>
-
-                    <div
-                      ref={colorPickerRef}
-                      className={`color-picker-container ${isOpen ? "visible" : "hidden"}`}
-                    >
                       <input
                         type="text"
-                        className="hex-input"
                         value={color}
                         onChange={(e) => {
                           const hexValue = e.target.value;
@@ -566,25 +561,31 @@ const Customization: React.FC<CustomizationProps> = ({
                             }
                           }
                         }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
                         placeholder="#ffffff"
                         maxLength={7}
                       />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: color }}
+                        onClick={() => setIsOpen(!isOpen)}
+                      ></div>
                     </div>
+
+                    <div
+                      ref={colorPickerRef}
+                      className={`color-picker-container ${isOpen ? "visible" : "hidden"}`}
+                    ></div>
                   </div>
                 </div>
-
 
                 <div>
                   <span>Second Background</span>
                   <div className="color-picker-dropdown" ref={secondbgDropdownRef}>
-                    <button className="color-picker-button" onClick={() => setSecondbgopen(!secondbgOpen)}>
-                      <span className="color-text">{bgColors}</span>
-                      <div className="color-preview" style={{ backgroundColor: bgColors }}></div>
-                    </button>
-                    <div ref={secondbgPickerRef} className={`color-picker-container ${secondbgOpen ? "visible" : "hidden"}`}>
+                    <div className="color-picker-button" onClick={() => setSecondbgopen(!secondbgOpen)}>
                       <input
                         type="text"
-                        className="hex-input"
                         value={bgColors}
                         onChange={(e) => {
                           const hexValue = e.target.value;
@@ -595,33 +596,80 @@ const Customization: React.FC<CustomizationProps> = ({
                             }
                           }
                         }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
                         placeholder="#798EFF"
                         maxLength={7}
                       />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: bgColors }}
+                        onClick={() => setSecondbgopen(!secondbgOpen)}
+                      ></div>
                     </div>
+                    <div ref={secondbgPickerRef} className={`color-picker-container ${secondbgOpen ? "visible" : "hidden"}`}></div>
                   </div>
                 </div>
-
               </div>
 
               <div className="customs">
                 <div>
                   <span>Body Text Color</span>
                   <div className="color-picker-dropdown" ref={paraDropdownRef}>
-                    <button className="color-picker-button" onClick={() => setParaOpen(!paraOpen)}>
-                      <span className="color-text">{paraColor}</span>
-                      <div className="color-preview" style={{ backgroundColor: paraColor }}></div>
-                    </button>
+                    <div className="color-picker-button" onClick={() => setParaOpen(!paraOpen)}>
+                      <input
+                        type="text"
+                        value={paraColor}
+                        onChange={(e) => {
+                          const hexValue = e.target.value;
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                            setParaColor(hexValue);
+                            if (paraPickerInstance.current && hexValue.length === 7) {
+                              paraPickerInstance.current.color.set(hexValue);
+                            }
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
+                        placeholder="#ffffff"
+                        maxLength={7}
+                      />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: paraColor }}
+                        onClick={() => setParaOpen(!paraOpen)}
+                      ></div>
+                    </div>
                     <div ref={paraPickerRef} className={`color-picker-container ${paraOpen ? "visible" : "hidden"}`}></div>
                   </div>
                 </div>
                 <div>
                   <span>Title Text Color</span>
                   <div className="color-picker-dropdown" ref={headDropdownRef}>
-                    <button className="color-picker-button" onClick={() => setHeadOpen(!headOpen)}>
-                      <span className="color-text">{headColor}</span>
-                      <div className="color-preview" style={{ backgroundColor: headColor }}></div>
-                    </button>
+                    <div className="color-picker-button" onClick={() => setHeadOpen(!headOpen)}>
+                      <input
+                        type="text"
+                        value={headColor}
+                        onChange={(e) => {
+                          const hexValue = e.target.value;
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                            setHeadColor(hexValue);
+                            if (headPickerInstance.current && hexValue.length === 7) {
+                              headPickerInstance.current.color.set(hexValue);
+                            }
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
+                        placeholder="#ffffff"
+                        maxLength={7}
+                      />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: headColor }}
+                        onClick={() => setHeadOpen(!headOpen)}
+                      ></div>
+                    </div>
                     <div ref={headPickerRef} className={`color-picker-container ${headOpen ? "visible" : "hidden"}`}></div>
                   </div>
                 </div>
@@ -639,10 +687,30 @@ const Customization: React.FC<CustomizationProps> = ({
                 <div>
                   <span>Background Color</span>
                   <div className="color-picker-dropdown" ref={secondbtnDropdownRef}>
-                    <button className="color-picker-button" onClick={() => setSecondButtonOpen(!secondbuttonOpen)}>
-                      <span className="color-text">{secondcolor}</span>
-                      <div className="color-preview" style={{ backgroundColor: secondcolor }}></div>
-                    </button>
+                    <div className="color-picker-button" onClick={() => setSecondButtonOpen(!secondbuttonOpen)}>
+                      <input
+                        type="text"
+                        value={secondcolor}
+                        onChange={(e) => {
+                          const hexValue = e.target.value;
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                            setSecondcolor(hexValue);
+                            if (secondbtnPickerInstance.current && hexValue.length === 7) {
+                              secondbtnPickerInstance.current.color.set(hexValue);
+                            }
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
+                        placeholder="#ffffff"
+                        maxLength={7}
+                      />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: secondcolor }}
+                        onClick={() => setSecondButtonOpen(!secondbuttonOpen)}
+                      ></div>
+                    </div>
                     <div ref={secondbtnPickerRef} className={`color-picker-container ${secondbuttonOpen ? "visible" : "hidden"}`}></div>
                   </div>
                 </div>
@@ -650,10 +718,30 @@ const Customization: React.FC<CustomizationProps> = ({
                 <div>
                   <span>Text Color</span>
                   <div className="color-picker-dropdown" ref={primaryButtonTextDropdownRef}>
-                    <button className="color-picker-button" onClick={() => setPrimaryButtonTextOpen(!primaryButtonTextOpen)}>
-                      <span className="color-text">{primaryButtonText}</span>
-                      <div className="color-preview" style={{ backgroundColor: primaryButtonText }}></div>
-                    </button>
+                    <div className="color-picker-button" onClick={() => setPrimaryButtonTextOpen(!primaryButtonTextOpen)}>
+                      <input
+                        type="text"
+                        value={primaryButtonText}
+                        onChange={(e) => {
+                          const hexValue = e.target.value;
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                            setPrimaryButtonText(hexValue);
+                            if (primaryButtonTextInstance.current && hexValue.length === 7) {
+                              primaryButtonTextInstance.current.color.set(hexValue);
+                            }
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
+                        placeholder="#ffffff"
+                        maxLength={7}
+                      />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: primaryButtonText }}
+                        onClick={() => setPrimaryButtonTextOpen(!primaryButtonTextOpen)}
+                      ></div>
+                    </div>
                     <div ref={primaryButtonTextPickerRef} className={`color-picker-container ${primaryButtonTextOpen ? "visible" : "hidden"}`}></div>
                   </div>
                 </div>
@@ -672,10 +760,30 @@ const Customization: React.FC<CustomizationProps> = ({
                 <div>
                   <span>Background Color</span>
                   <div className="color-picker-dropdown" ref={btnDropdownRef}>
-                    <button className="color-picker-button" onClick={() => setBtnOpen(!btnOpen)}>
-                      <span className="color-text">{btnColor}</span>
-                      <div className="color-preview" style={{ backgroundColor: btnColor }}></div>
-                    </button>
+                    <div className="color-picker-button" onClick={() => setBtnOpen(!btnOpen)}>
+                      <input
+                        type="text"
+                        value={btnColor}
+                        onChange={(e) => {
+                          const hexValue = e.target.value;
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                            setBtnColor(hexValue);
+                            if (btnPickerInstance.current && hexValue.length === 7) {
+                              btnPickerInstance.current.color.set(hexValue);
+                            }
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
+                        placeholder="#ffffff"
+                        maxLength={7}
+                      />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: btnColor }}
+                        onClick={() => setBtnOpen(!btnOpen)}
+                      ></div>
+                    </div>
                     <div ref={btnPickerRef} className={`color-picker-container ${btnOpen ? "visible" : "hidden"}`}></div>
                   </div>
                 </div>
@@ -683,10 +791,30 @@ const Customization: React.FC<CustomizationProps> = ({
                 <div>
                   <span>Text Color</span>
                   <div className="color-picker-dropdown" ref={secondbuttonDropdownRef}>
-                    <button className="color-picker-button" onClick={() => setSecondbuttonTextOpen(!SecondbuttonTextOpen)}>
-                      <span className="color-text">{secondbuttontext}</span>
-                      <div className="color-preview" style={{ backgroundColor: secondbuttontext }}></div>
-                    </button>
+                    <div className="color-picker-button" onClick={() => setSecondbuttonTextOpen(!SecondbuttonTextOpen)}>
+                      <input
+                        type="text"
+                        value={secondbuttontext}
+                        onChange={(e) => {
+                          const hexValue = e.target.value;
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                            setsecondbuttontext(hexValue);
+                            if (SecondbuttonTextInstance.current && hexValue.length === 7) {
+                              SecondbuttonTextInstance.current.color.set(hexValue);
+                            }
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hex-input-field"
+                        placeholder="#ffffff"
+                        maxLength={7}
+                      />
+                      <div 
+                        className="color-preview-circle" 
+                        style={{ backgroundColor: secondbuttontext }}
+                        onClick={() => setSecondbuttonTextOpen(!SecondbuttonTextOpen)}
+                      ></div>
+                    </div>
                     <div ref={SecondbuttonTextPickerRef} className={`color-picker-container ${SecondbuttonTextOpen ? "visible" : "hidden"}`}></div>
                   </div>
                 </div>
@@ -742,6 +870,22 @@ const Customization: React.FC<CustomizationProps> = ({
 
         <div className="settings-group-preview">
           <h3>Preview</h3>
+          <div className="preview-tabs">
+            <button
+              type="button"
+              className={`preview-tab ${previewMode === 'gdpr' ? 'active' : ''}`}
+              onClick={() => setPreviewMode('gdpr')}
+            >
+              GDPR
+            </button>
+            <button
+              type="button"
+              className={`preview-tab ${previewMode === 'ccpa' ? 'active' : ''}`}
+              onClick={() => setPreviewMode('ccpa')}
+            >
+              US State Law
+            </button>
+          </div>
           <div className="preview-area">
             <div className="topbar">
               <img src={dots} alt="dots" className="threedots" />
@@ -749,7 +893,8 @@ const Customization: React.FC<CustomizationProps> = ({
             <div className="consentbit-logo">
               <img src={logo} alt="logo" />
             </div>
-            {/* gdpr */}
+            {/* GDPR Preview */}
+            {previewMode === 'gdpr' && (
             <div
               className={`cookie-banner ${animation} ${isActive ? "active" : ""}`}
               style={{
@@ -767,7 +912,6 @@ const Customization: React.FC<CustomizationProps> = ({
                 fontWeight: weight,
                 fontSize: `${size}px`,
                 width: previewDimensions.width,
-                height: previewDimensions.minHeight,
                 borderRadius: `${borderRadius}px`,
                 backgroundColor: color,
               }}
@@ -942,6 +1086,144 @@ const Customization: React.FC<CustomizationProps> = ({
                 </button>
               </div>
             </div>
+            )}
+            
+
+            {/* CCPA / US State Preview */}
+            {previewMode === 'ccpa' && (
+            <div
+              className={`cookie-banner ccpa-banner ${animation} ${isActive ? "active" : ""}`}
+              style={{
+                transition: `transform 0.5s ${easing}, opacity 0.5s ${easing}`,
+                position: "absolute",
+                ...(style !== "fullwidth" && {
+                  bottom: "16px",
+                  left: selected === "left" ? "16px" : selected === "center" ? "17%" : "auto",
+                  right: selected === "right" ? "16px" : "auto",
+                }),
+                fontFamily: Font,
+                textAlign: selectedtext,
+                alignItems: style === "centeralign" ? "center" : undefined,
+                fontWeight: weight,
+                fontSize: `${size}px`,
+                width: previewDimensions.width,
+                borderRadius: `${borderRadius}px`,
+                backgroundColor: color,
+              }}
+            >
+              {style === "alignstyle" && (
+                <div
+                  className="secondclass"
+                  style={{
+                    backgroundColor: bgColors,
+                    borderBottomRightRadius: `${borderRadius}px`,
+                    borderTopRightRadius: `${borderRadius}px`,
+                  }}
+                ></div>
+              )}
+              <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between", fontFamily: Font }}>
+                <h4 style={{ fontFamily: Font }}>
+                  {language === "English"
+                    ? "We value your privacy"
+                    : language === "Spanish"
+                      ? "Valoramos su privacidad"
+                      : language === "French"
+                        ? "Nous valorisons votre vie privée"
+                        : language === "German"
+                          ? "Wir schätzen Ihre Privatsphäre"
+                          : language === "Swedish"
+                            ? "Vi värdesätter din integritet"
+                            : language === "Dutch"
+                              ? "We waarderen uw privacy"
+                              : language === "Portuguese"
+                                ? "Valorizamos sua privacidade"
+                                : language === "Italian"
+                                  ? "Valorizziamo la tua privacy"
+                                  : language === "Polish"
+                                    ? "Cenimy Twoją prywatność"
+                                    : "We value your privacy"}
+                </h4>
+                {closebutton ? <p className="closebutton">X</p> : ""}
+              </div>
+
+              <div className="padding" style={{ color: paraColor, alignItems: style === "centeralign" ? "center" : undefined }}>
+                <span style={{ alignItems: style === "centeralign" ? "center" : undefined }}>
+                  {language === "English"
+                    ? "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you."
+                    : language === "Spanish"
+                      ? "Utilizamos cookies para brindarle la mejor experiencia posible. También nos permiten analizar el comportamiento del usuario para mejorar constantemente el sitio web para usted."
+                      : language === "French"
+                        ? "Nous utilisons des cookies pour vous offrir la meilleure expérience possible. Ils nous permettent également d'analyser le comportement des utilisateurs afin d'améliorer constamment le site Web pour vous."
+                        : language === "German"
+                          ? "Wir verwenden Cookies, um Ihnen das bestmögliche Erlebnis zu bieten. Sie helfen uns auch, das Nutzerverhalten zu analysieren, um die Website kontinuierlich für Sie zu verbessern."
+                          : language === "Swedish"
+                            ? "Vi använder cookies för att ge dig den bästa möjliga upplevelsen. De låter oss också analysera användarbeteende för att ständigt förbättra webbplatsen för dig."
+                            : language === "Dutch"
+                              ? "We gebruiken cookies om u de best mogelijke ervaring te bieden. Ze stellen ons ook in staat om gebruikersgedrag te analyseren om de website voortdurend voor u te verbeteren."
+                              : language === "Portuguese"
+                                ? "Utilizamos cookies para oferecer a melhor experiência possível. Eles também nos permitem analisar o comportamento dos usuários para melhorar continuamente o site para você."
+                                : language === "Italian"
+                                  ? "Utilizziamo i cookie per offrirti la migliore esperienza possibile. Ci permettono anche di analizzare il comportamento degli utenti per migliorare costantemente il sito web per te."
+                                  : language === "Polish"
+                                    ? "Używamy plików cookie, aby zapewnić Ci najlepsze możliwe doświadczenie. Pozwalają nam również analizować zachowanie użytkowników, aby stale ulepszać stronę internetową dla Ciebie."
+                                    : "We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you."}
+                </span>
+                {privacyUrl && (
+                  <span>
+                    {" "}
+                    <a
+                      href={privacyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: paraColor,
+                        textDecoration: "none",
+                        fontSize: `${typeof size === 'number' ? size - 2 : 12}px`
+                      }}
+                      onMouseEnter={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "underline"}
+                      onMouseLeave={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "none"}
+                    >
+                      {language === "English" ? "More Info" :
+                        language === "Polish" ? "Więcej informacji" :
+                        language === "Spanish" ? "Más Información" :
+                        language === "French" ? "Plus d'infos" :
+                        language === "German" ? "Mehr Info" :
+                        language === "Swedish" ? "Mer info" :
+                        language === "Dutch" ? "Meer info" :
+                        language === "Portuguese" ? "Mais info" :
+                        language === "Italian" ? "Più info" : "More Info"}
+                    </a>
+                  </span>
+                )}
+              </div>
+              <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : undefined, fontFamily: Font }}>
+                <a
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                  style={{
+                    color: paraColor,
+                    textDecoration: "none",
+                    fontFamily: Font,
+                    fontSize: `${typeof size === 'number' ? size : size}px`
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+                  onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+                >
+                  {language === "English" ? "Do not share my personal info" :
+                    language === "Spanish" ? "No compartir mi información personal" :
+                    language === "French" ? "Ne pas partager mes informations personnelles" :
+                    language === "German" ? "Meine persönlichen Daten nicht teilen" :
+                    language === "Polish" ? "Nie udostępniaj moich danych osobowych" :
+                    language === "Swedish" ? "Dela inte min personliga information" :
+                    language === "Dutch" ? "Deel mijn persoonlijke gegevens niet" :
+                    language === "Portuguese" ? "Não compartilhar minhas informações pessoais" :
+                    language === "Italian" ? "Non condividere le mie informazioni personali" :
+                    "Do not share my personal info"}
+                </a>
+              </div>
+            </div>
+            )}
+            
           </div>
           <div>
             <div className="preference-banner">

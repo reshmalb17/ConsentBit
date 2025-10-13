@@ -39,6 +39,7 @@ import pkg from '../../package.json';
 const appVersion = pkg.version;
 import { getSessionTokenFromLocalStorage } from '../util/Session'; 
 import DonotShare from "./donotshare";
+import { skip } from "node:test";
 
 
 
@@ -103,6 +104,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [secondbuttontext, setsecondbuttontext] = usePersistentState("secondbuttontext", "#000000");
   const [primaryButtonText, setPrimaryButtonText] = usePersistentState("primaryButtonText", "#FFFFFF");
   const [activeTab, setActiveTab] = usePersistentState("activeTab", initialActiveTab);
+   const [previewMode, setPreviewMode] = useState<'gdpr' | 'ccpa'>('gdpr');
+
+
   
   // Track if we've already set activeTab from API to prevent conflicts
   const [hasSetActiveTabFromApi, setHasSetActiveTabFromApi] = useState(false);
@@ -140,14 +144,16 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [selectedOption, setSelectedOption] = usePersistentState("selectedOption", "U.S. State Laws");
   const [weight, setWeight] = usePersistentState("weight", "Regular");
   const [showPopup, setShowPopup] = useState(false);
-  const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["GDPR", "U.S. State Laws"]);
+  const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["GDPR"]);
+
 
   // Ensure at least one option is always selected
-  useEffect(() => {
-    if (selectedOptions.length === 0) {
-      setSelectedOptions(["GDPR"]);
-    }
-  }, []);
+ useEffect(() => {
+  if (!selectedOptions.includes("GDPR")) {
+    setSelectedOptions(["GDPR", ...selectedOptions]);
+  }
+}, []);
+
   const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
   const [accessToken, setAccessToken] = usePersistentState<string>("accessToken", '');
   const [pages, setPages] = usePersistentState("pages", []);
@@ -432,22 +438,32 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
 
-  const handleToggles = (option) => {
-    setSelectedOptions((prev) => {
-      const updatedOptions = prev.includes(option)
-        ? prev.filter((item) => item !== option) // Remove if already selected
-        : [...prev, option]; // Add if not selected
+const handleToggles = (option) => {
+  // Prevent user from toggling GDPR
+  if (option === "GDPR") return;
 
-      // Ensure at least one option is always selected
-      if (updatedOptions.length === 0) {
-        return ["GDPR"]; // Default to GDPR if none selected
-      }
+  setSelectedOptions((prev) => {
+    let updatedOptions;
 
-      // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
-      setAuthStorageItem("selectedOptions", JSON.stringify(updatedOptions)); // Save immediately
-      return updatedOptions;
-    });
-  };
+    if (prev.includes(option)) {
+      // Remove selected option (but always keep GDPR)
+      updatedOptions = prev.filter((item) => item !== option);
+    } else {
+      // Add new option
+      updatedOptions = [...prev, option];
+    }
+
+    // Always ensure GDPR is in the list
+    if (!updatedOptions.includes("GDPR")) {
+      updatedOptions.push("GDPR");
+    }
+
+    // Save to storage
+    setAuthStorageItem("selectedOptions", JSON.stringify(updatedOptions));
+    return updatedOptions;
+  });
+};
+
 
   useEffect(() => {
     // COMMENTED OUT: localStorage.setItem("selectedOptions", JSON.stringify(selectedOptions));
@@ -526,21 +542,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             if (response.bgColor !== undefined) {
               setBgColor(response.bgColor);
             }
-                if (response.activeTab !== undefined) {
-                  // Map API tab names to component tab names
-                  let mappedTab = response.activeTab;
-                  if (response.activeTab === "general") {
-                    mappedTab = "Settings";
-                  }
-                  
-                  // Don't override activeTab if user is currently in Script tab (to prevent API from switching away from Script tab during rescan)
-                  if (activeTab === "Script") {
-                    // Skip activeTab update from API - user is actively using Script tab
-                  } else if (!hasSetActiveTabFromApi || mappedTab !== activeTab) {
-                    setActiveTab(mappedTab);
-                    setHasSetActiveTabFromApi(true);
-                  }
-                }
+              
                          // Removed activeMode setting - no longer needed
             if (response.selectedtext !== undefined) settextSelected(response.selectedtext);
             // fetchScripts is now only set by user action (scan button), not from API
@@ -1190,7 +1192,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
   //gdpr banner
-  const gdpr = async (skipCommonDiv: boolean = false) => {
+  const gdpr = async (skipCommonDiv: boolean = false, bothbanners:boolean=false) => {
     setShowPopup(false);
     setShowLoadingPopup(true);
     setIsLoading(true);
@@ -1199,7 +1201,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     try {
 
       const allElements = await webflow.getAllElements();
-      const idsToCheck = ["consent-banner", "main-banner", "toggle-consent-btn"];
+      const idsToCheck = ["consent-banner", "main-banner", "toggle-consent-btn","initial-consent-banner","main-consent-banner"];
 
 
       // Run domId checks in parallel
@@ -1523,6 +1525,12 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         await newDiv.setCustomAttribute("data-animation", animationAttribute);
         await newDiv.setCustomAttribute("data-cookie-banner", toggleStates.disableScroll ? "true" : "false");
       }
+      if(bothbanners=== true){
+        await newDiv.setCustomAttribute("data-all-banners", "true");
+      }
+      else if(bothbanners=== false){
+        await newDiv.setCustomAttribute("data-all-banners", "false");
+      }
       try {
         let SecondDiv;
         if (style === "alignstyle") {
@@ -1666,7 +1674,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
           await innerdiv.append(buttonContainer);
           
 
-                     if (buttonContainer.append && prefrenceButton && declineButton && acceptButton) {
+         if (buttonContainer.append && prefrenceButton && declineButton && acceptButton) {
              await buttonContainer.append(prefrenceButton)
              await buttonContainer.append(declineButton);
              await buttonContainer.append(acceptButton);
@@ -1710,7 +1718,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
   //both banners
   const handleBothBanners = async () => {
-    await gdpr(true);
+    await gdpr(true,true);
     await ccpabanner();
   };
 
@@ -2390,7 +2398,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                   (<button
                     className={`confirm-button ${isLoading ? "loading" : ""}`}
                     onClick={() => {
-                      gdpr();
+                      gdpr(false,false);
                     }}
                   >
                     {isLoading ? (
@@ -2560,23 +2568,29 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                     </span>
                   </label>
 
-                  <div className="checkbox-group">
-                    {["U.S. State Laws", "GDPR"].map((option) => { //U.S. State Laws
-                                             const isChecked = selectedOptions.includes(option);
-                       return (
-                        <label key={option} className="cookie-category">
-                          <input
-                            type="checkbox"
-                            value={option}
-                            checked={isChecked}
-                            onChange={() => handleToggles(option)}
-                          />
-                          <span className="custom-checkbox"> {isChecked && <img src={tickmark} alt="checked" className="tick-icon" />}</span>
-                          <span className="category-name">{option}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                 <div className="checkbox-group">
+  {["U.S. State Laws", "GDPR"].map((option) => {
+    const isChecked = selectedOptions.includes(option);
+    const isDisabled = option === "GDPR";
+
+    return (
+      <label key={option} className="cookie-category">
+        <input
+          type="checkbox"
+          value={option}
+          checked={isChecked}
+          disabled={isDisabled}
+          onChange={() => handleToggles(option)}
+        />
+        <span className="custom-checkbox">
+          {isChecked && <img src={tickmark} alt="checked" className="tick-icon" />}
+        </span>
+        <span className="category-name">{option}</span>
+      </label>
+    );
+  })}
+</div> 
+
                 </div>
 
                                  {/* Cookie Settings */}
@@ -2778,10 +2792,27 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                    : null}
               </div>
 
-
-
+            
+          
               <div className="settings-group-preview">
                 <h3>Preview</h3>
+                {/* Tabs: GDPR / US State Law */}
+                <div className="preview-tabs">
+                  <button
+                    type="button"
+                    className={`preview-tab ${previewMode === 'gdpr' ? 'active' : ''}`}
+                    onClick={() => setPreviewMode('gdpr')}
+                  >
+                    GDPR
+                  </button>
+                  <button
+                    type="button"
+                    className={`preview-tab ${previewMode === 'ccpa' ? 'active' : ''}`}
+                    onClick={() => setPreviewMode('ccpa')}
+                  >
+                    US State Law
+                  </button>
+                </div>
                 <div className="preview-area">
                   <div className="topbar">
                     <img src={dots} alt="dots" className="threedots" />
@@ -2789,6 +2820,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                   <div className="consentbit-logo">
                     <img src={logo} alt="dots" />
                   </div>
+                  {/* GDPR banner */}
+                  {previewMode === 'gdpr' && (
                   <div
                     className={`cookie-banner ${animation} ${isActive ? "active" : ""}`}
                     style={{
@@ -2852,6 +2885,88 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                       <button className="btn-accept" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: secondcolor, color: primaryButtonText, fontFamily: Font }} >{translations[language as keyof typeof translations]?.accept || "Accept"}</button>
                     </div>
                   </div>
+                  )}
+                {/* US State Law (CCPA) preview */}
+                 {previewMode === 'ccpa' && (
+                <div
+                  className={`cookie-banner ccpa-banner ${animation} ${isActive ? "active" : ""}`}
+                  style={{
+                    transition: `transform 0.5s ${easing}, opacity 0.5s ${easing}`,
+                    position: "absolute",
+                    ...(style !== "fullwidth" && {
+                      bottom: "16px",
+                      left: selected === "left" ? "16px" : selected === "center" ? "17%" : "auto",
+                      right: selected === "right" ? "16px" : "auto",
+                    }),
+                    fontFamily: Font,
+                    textAlign: selectedtext as "left" | "center" | "right",
+                    alignItems: style === "centeralign" ? "center" : undefined,
+                    fontWeight: weight,
+                    width: previewDimensions.width,
+                    height: previewDimensions.minHeight,
+                    borderRadius: `${borderRadius}px`,
+                    backgroundColor: color,
+                    fontSize: `${size}px`,
+                  }}
+                >
+                  {style === "alignstyle" && (
+                    <div
+                      className="secondclass"
+                      style={{
+                        backgroundColor: bgColors,
+                        borderBottomRightRadius: `${borderRadius}px`,
+                        borderTopRightRadius: `${borderRadius}px`,
+                      }}
+                    ></div>
+                  )}
+                  <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between" }}>
+                    <h4 style={{ textAlign: selectedtext as "left" | "center" | "right", fontFamily: Font }}>
+                      {translations[language as keyof typeof translations]?.ccpa?.heading || "Privacy Choices"}
+                    </h4>
+                    {toggleStates.closebutton ? <p className="closebutton">X</p> : ""}
+                  </div>
+                  <div className="padding" style={{ color: paraColor }}>
+                    <span>
+                      {translations[language as keyof typeof translations]?.ccpa?.description || "Under US state laws, you can opt out of the sale or sharing of personal data and manage category-level choices."}
+                    </span>
+                    {privacyUrl && (
+                      <span>
+                        {" "}
+                        <a 
+                          href={privacyUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ 
+                            color: paraColor, 
+                            textDecoration: "none",
+                            fontSize: `${typeof size === 'number' ? size - 2 : 12}px`
+                          }}
+                          onMouseEnter={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "underline"}
+                          onMouseLeave={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "none"}
+                        >
+                          {translations[language as keyof typeof translations]?.moreInfo || "More Info"}
+                        </a>
+                      </span>
+                    )}
+                  </div>
+                  <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : undefined }}>
+                    <a
+                      href="#"
+                      onClick={(e) => e.preventDefault()}
+                      style={{
+                        color: paraColor,
+                        textDecoration: "none",
+                        fontFamily: Font,
+                        fontSize: `${typeof size === 'number' ? size : size}px`
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+                      onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+                    >
+                      {translations[language as keyof typeof translations]?.ccpa?.doNotShare || "Do not share my personal info"}
+                    </a>
+                  </div>
+                </div>
+                )}
                   <div>
                   </div>
                 </div>

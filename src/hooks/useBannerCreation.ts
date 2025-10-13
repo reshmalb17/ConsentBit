@@ -758,8 +758,7 @@ export const useBannerCreation = () => {
         openAuthScreen();
         return;
       }
-
-      // FORCE register scripts during banner creation - no session storage checks
+2
 
       const siteIdinfo = await webflow.getSiteInfo();
       setSiteInfo(siteIdinfo);
@@ -855,17 +854,17 @@ export const useBannerCreation = () => {
       try {
         await createSimpleGDPRBanner(selectedElement, config, animationAttribute);
         await createGDPRPreferencesWithExistingFunction(selectedElement, config);
-        await createSimpleCCPABanner(selectedElement, config, animationAttribute);
+       // await createSimpleCCPABanner(selectedElement, config, animationAttribute);
       } catch (bannerCreationError) {
         // Continue with the process even if banner creation fails
       }
 
-      // Create preference modals
-      try {
-        await createCCPAPreferencesWithExistingFunction(selectedElement, config);
-      } catch (ccpaError) {
-        // Continue with the process even if CCPA creation fails
-      }
+      // // Create preference modals
+      // try {
+      //   await createCCPAPreferencesWithExistingFunction(selectedElement, config);
+      // } catch (ccpaError) {
+      //   // Continue with the process even if CCPA creation fails
+      // }
       
       await fetchAnalyticsBlockingsScriptsV2();
       setIsCreating(false);
