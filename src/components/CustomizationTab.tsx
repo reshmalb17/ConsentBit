@@ -86,7 +86,15 @@ interface CustomizationTabProps {
 
 const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
   const [color, setColor] = usePersistentState("color", "#ffffff");
+  
+  // Debug: Monitor color state changes
+  useEffect(() => {
+  }, [color]);
   const [bgColor, setBgColor] = usePersistentState("bgColor", "#ffffff");
+  
+  // Debug: Monitor bgColor state changes
+  useEffect(() => {
+  }, [bgColor]);
   const [btnColor, setBtnColor] = usePersistentState("btnColor", "#C9C9C9");
   const [paraColor, setParaColor] = usePersistentState("paraColor", "#4C4A66");
   const [secondcolor, setSecondcolor] = usePersistentState("secondcolor", "#000000");
@@ -358,7 +366,20 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         description: "Usamos cookies para fornecer a melhor experiência possível. Eles também nos permitem analisar o comportamento do usuário para melhorar constantemente o site para você. ",
         doNotShare: "Não Compartilhar Minhas Informações Pessoais"
       }
-    }
+    },
+    Polish: {
+  heading: "Ustawienia plików cookie",
+  description: "Używamy plików cookie, aby zapewnić najlepsze możliwe doświadczenie. Pozwalają nam również analizować zachowanie użytkowników, aby stale ulepszać stronę dla Ciebie.",
+  accept: "Akceptuj",
+  reject: "Odrzuć",
+  preferences: "Preferencje",
+  moreInfo: "Więcej informacji",
+  ccpa: {
+    heading: "Cenimy Twoją prywatność",
+    description: "Używamy plików cookie, aby zapewnić najlepsze możliwe doświadczenie. Pozwalają nam również analizować zachowanie użytkowników, aby stale ulepszać stronę dla Ciebie.",
+    doNotShare: "Nie udostępniaj moich danych osobowych"
+  }
+}
 
   };
 
@@ -502,7 +523,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
             // Set all the values with proper checks
             if (response.cookieExpiration !== undefined) setCookieExpiration(response.cookieExpiration);
-            if (response.bgColor !== undefined) setBgColor(response.bgColor);
+            if (response.bgColor !== undefined) {
+              setBgColor(response.bgColor);
+            }
                 if (response.activeTab !== undefined) {
                   // Map API tab names to component tab names
                   let mappedTab = response.activeTab;
@@ -541,7 +564,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
             if (response.isBannerAdded !== undefined) {
               setIsBannerAdded(response.isBannerAdded);
             }
-            if (response.color !== undefined && response.color !== "#000000") setColor(response.color);
+            if (response.color !== undefined) {
+              setColor(response.color);
+            }
 
           } else {
             openAuthScreen();
@@ -763,7 +788,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       const animationAttribute = animationAttributeMap[animation] || "";
 
       const divPropertyMap: Record<string, string> = {
-        "background-color": bgColor,
+        "background-color": color,
         "position": "fixed",
         "z-index": "99999",
         "padding-top": "20px",
@@ -883,6 +908,16 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         "min-width": "80px",
       };
 
+      const linktextPropertyMap: Record<string, string> = {
+        "border-radius": "48px",
+        "cursor": "pointer",
+        "background-color": "transparent !important",
+        "color": "rgba(72, 57, 153, 1)",
+        "margin-left": "5px",
+        "margin-right": "5px",
+        "min-width": "80px",
+      };
+
 
       const headingPropertyMap: Record<string, string> = {
         "color": headColor,
@@ -938,7 +973,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       await divStyle.setProperties(responsivePropertyMap, responsiveOptions);
       await paragraphStyle.setProperties(paragraphPropertyMap);
       await buttonContainerStyle.setProperties(buttonContainerPropertyMap);
-      await Linktext.setProperties(declineButtonPropertyMap);
+      await Linktext.setProperties(linktextPropertyMap);
       await headingStyle.setProperties(headingPropertyMap);
       await innerDivStyle.setProperties(innerdivPropertyMap);
       await secondBackgroundStyle.setProperties(secondbackgroundPropertyMap);
@@ -1254,7 +1289,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       const animationAttribute = animationAttributeMap[animation] || "";
 
       const divPropertyMap: Record<string, string> = {
-        "background-color": bgColor,
+        "background-color": color,
         "position": "fixed",
         "z-index": "99999",
         "padding-top": "20px",
@@ -1393,6 +1428,19 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         "border-radius": `${buttonRadius}px`,
         "cursor": "pointer",
         "background-color": btnColor,
+        "color": secondbuttontext,
+        "margin-left": "5px",
+        "margin-right": "5px",
+        "min-width": "80px",
+        "text-align": "center",
+        "display": "flex",
+        "justify-content": "center",
+      };
+
+      const linktextPropertyMap: Record<string, string> = {
+        "border-radius": `${buttonRadius}px`,
+        "cursor": "pointer",
+        "background-color": "transparent !important",
         "color": secondbuttontext,
         "margin-left": "5px",
         "margin-right": "5px",
@@ -1698,7 +1746,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         siteId: siteIdinfo?.siteId,
         cookieExpiration: cookieExpiration,
         privacyUrl: privacyUrl,
-        bgColor: bgColor,
+        bgColor: color,
         activeTab: activeTab,
         activeMode: "Advanced", // Add back to satisfy type requirement
         selectedtext: selectedtext,
@@ -2046,6 +2094,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     "French",
     "German",
     "Italian",
+    "Polish",
     "Portuguese",
     "Spanish",
     "Swedish",
@@ -2340,7 +2389,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                 </button>) : selectedOptions.includes("GDPR") ?
                   (<button
                     className={`confirm-button ${isLoading ? "loading" : ""}`}
-                    onClick={() => gdpr()}
+                    onClick={() => {
+                      gdpr();
+                    }}
                   >
                     {isLoading ? (
                       <span>wait...</span>
@@ -2350,7 +2401,9 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                   </button>) : selectedOptions.includes("U.S. State Laws") ?
                     (<button
                       className="confirm-button"
-                      onClick={ccpabanner}
+                      onClick={() => {
+                        ccpabanner();
+                      }}
                     >
                       Confirm
                     </button>) : <div className="confirm-button1"> Nothing Selected</div>
@@ -2755,7 +2808,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
                       width: previewDimensions.width,
                       height: previewDimensions.minHeight,
                       borderRadius: `${borderRadius}px`,
-                      backgroundColor: bgColor,
+                      backgroundColor: color,
                       fontSize: `${size}px`,
                     }}
                   >

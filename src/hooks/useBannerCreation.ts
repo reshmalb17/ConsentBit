@@ -119,7 +119,7 @@ export const useBannerCreation = () => {
       // Debug: Log banner styles before creating property map
 
       const divPropertyMap: Record<string, string> = {
-        "background-color": `${bannerStyles.bgColor}`,
+        "background-color": `${config.color}`,
         "position": "fixed",
         "z-index": "99999",
         "padding-top": "20px",
@@ -132,7 +132,7 @@ export const useBannerCreation = () => {
         "align-items": "center",
         "justify-content": "center",
         "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-        "font-family": `${bannerStyles.Font}`,
+        "font-family": `${config.Font}`,
         "right": "3%",
         "transform": "translate3d(0px, 0, 0)",
         "left": "auto",
@@ -203,7 +203,22 @@ export const useBannerCreation = () => {
 
       const declineButtonPropertyMap: Record<string, string> = {
         "border-radius": "2px",
-        "background-color": "rgb(201, 201, 201)",
+        "background-color": "#C9C9C9",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "Montserrat",
+        "cursor": "pointer",
+        "margin-left": "5px",
+        "margin-right": "5px",
+        "min-width": "80px",
+        "text-align": "center",
+        "display": "flex",
+        "justify-content": "center",
+
+      };
+
+      const linktextPropertyMap: Record<string, string> = {
+        "border-radius": "2px",
+        "background-color": "transparent !important",
         "color": "rgb(0, 0, 0)",
         "font-family": "Montserrat",
         "cursor": "pointer",
@@ -219,7 +234,7 @@ export const useBannerCreation = () => {
 
 
       const headingPropertyMap: Record<string, string> = {
-        "color": `${bannerStyles.headColor}`,
+        "color": `${config.headColor}`,
         "font-size": "20px",
         "font-weight": "400px",
         "text-align": "left",
@@ -235,7 +250,7 @@ export const useBannerCreation = () => {
 
       const secondbackgroundPropertyMap: Record<string, string> = {
         "position": "absolute",
-        "background-color": `${bannerStyles.bgColor}`,
+        "background-color": `${config.color}`,
         "width": "35%",
         "right": "0px",
         "height": "100%",
@@ -471,7 +486,7 @@ export const useBannerCreation = () => {
       const animationAttribute = "fade";
       
       const divPropertyMap: Record<string, string> = {
-        "background-color": `${bannerStyles.bgColor}`,
+        "background-color": `${config.color}`,
         "position": "fixed",
         "z-index": "99999",
         "padding-top": "20px",
@@ -484,7 +499,7 @@ export const useBannerCreation = () => {
         "align-items": "center",
         "justify-content": "center",
         "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-        "font-family": `${bannerStyles.Font}`,
+        "font-family": `${config.Font}`,
         "right": "3%",
         "transform": "translate3d(0px, 0, 0)",
         "left": "auto",
@@ -511,7 +526,7 @@ export const useBannerCreation = () => {
       const responsiveOptions = { breakpoint: "small" } as BreakpointAndPseudo;
 
       const paragraphPropertyMap: Record<string, string> = {
-        "color": `${bannerStyles.paraColor}`,
+        "color": `${config.paraColor}`,
         "font-size": "16px",
         "font-weight": "400",
         "line-height": "1.5",
@@ -540,8 +555,18 @@ export const useBannerCreation = () => {
         "margin-right": "5px",
         "min-width": "80px",
       };
+
+      const linktextPropertyMap: Record<string, string> = {
+        "border-radius": "48px",
+        "cursor": "pointer",
+        "background-color": "transparent !important",
+        "color": "rgba(72, 57, 153, 1)",
+        "margin-left": "5px",
+        "margin-right": "5px",
+        "min-width": "80px",
+      };
       const headingPropertyMap: Record<string, string> = {
-        "color": `${bannerStyles.headColor}`,
+        "color": `${config.headColor}`,
         "font-size": "20px",
         "font-weight": "500",
         "text-align": "left",
@@ -556,7 +581,7 @@ export const useBannerCreation = () => {
       };
       const secondbackgroundPropertyMap: Record<string, string> = {
         "position": "absolute",
-        "background-color": `${bannerStyles.bgColor}`,
+        "background-color": `${config.color}`,
         "width": "35%",
         "right": "0px",
         "height": "100%",
@@ -587,7 +612,7 @@ export const useBannerCreation = () => {
       await divStyle.setProperties(responsivePropertyMap, responsiveOptions);
       await paragraphStyle.setProperties(paragraphPropertyMap);
       await buttonContainerStyle.setProperties(buttonContainerPropertyMap);
-      await Linktext.setProperties(declineButtonPropertyMap);
+      await Linktext.setProperties(linktextPropertyMap);
       await headingStyle.setProperties(headingPropertyMap);
       await innerDivStyle.setProperties(innerdivPropertyMap);
       await secondBackgroundStyle.setProperties(secondbackgroundPropertyMap);
