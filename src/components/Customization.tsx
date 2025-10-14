@@ -883,7 +883,7 @@ const Customization: React.FC<CustomizationProps> = ({
               className={`preview-tab ${previewMode === 'ccpa' ? 'active' : ''}`}
               onClick={() => setPreviewMode('ccpa')}
             >
-              US State Law
+              U.S. State Laws
             </button>
           </div>
           <div className="preview-area">

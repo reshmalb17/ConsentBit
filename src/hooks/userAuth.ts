@@ -306,8 +306,8 @@ export function useAuth() {
         throw new Error('No session token received from server');
       }
 
-      // 🔧 IMPROVED: Validate that backend returned correct site
-      if (data.siteId && data.siteId !== siteInfo.siteId) {
+     // 🔧 IMPROVED: Validate that backend returned correct site
+      if (data.siteId && data.siteId !== siteInfo.siteId ) {
       }
 
       // Store in localStorage
@@ -315,7 +315,7 @@ export function useAuth() {
         sessionToken: data.sessionToken,
         firstName: data.firstName,
         email: data.email,
-        siteId: data.siteId || siteInfo.siteId, // Use backend's siteId or fallback to requested siteId
+        siteId: siteInfo.siteId, // Use backend's siteId or fallback to requested siteId
         exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
       };
 

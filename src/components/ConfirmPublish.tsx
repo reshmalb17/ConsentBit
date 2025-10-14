@@ -66,7 +66,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
     bannerLanguages,
     localStorage: localStorageData
   } = useAppState();
-  const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite } = useAuth();
+  const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite, openAuthScreen } = useAuth();
   const { createCompleteBannerStructureWithExistingFunctions, isCreating } = useBannerCreation();
 
 
@@ -173,7 +173,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
         if (!isUserValid) {
 
           tooltips.setShowTooltip(false);
-          popups.setShowAuthPopup(true);
+          openAuthScreen(); // Open OAuth window instead of popup
         } else if (isInvalidElement) {
 
           tooltips.setShowTooltip(true);

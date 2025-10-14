@@ -188,6 +188,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [sessionTokenFromLocalStorage, setSessionToken] = useState(getSessionTokenFromLocalStorage());
   const [showChoosePlan, setShowChoosePlan] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
   const [isBannerAdded, setIsBannerAdded] = usePersistentState("isBannerAdded", false);
   
   // Update button text based on whether scripts have been fetched
@@ -629,7 +630,7 @@ const handleToggles = (option) => {
   }
 
   // const { user } = useAuth();
-  const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite, openAuthScreen: openAuthScreenHook } = useAuth();
+  const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite, openAuthScreen: openAuthScreenHook, attemptSilentAuth } = useAuth();
 
 
 
@@ -1130,6 +1131,10 @@ const handleToggles = (option) => {
           const response = await saveBannerDetails(true);
           if (response && response.ok) {
             setIsBannerAdded(true);
+            // Set sessionStorage for cross-component communication
+            sessionStorage.setItem('bannerAdded', 'true');
+            // Dispatch custom event to notify other components
+            window.dispatchEvent(new CustomEvent('bannerAddedChanged'));
           }
         }, 40000);
 
@@ -1700,6 +1705,10 @@ const handleToggles = (option) => {
           const response = await saveBannerDetails(true); // Pass true directly
           if (response && response.ok) {
             setIsBannerAdded(true);
+            // Set sessionStorage for cross-component communication
+            sessionStorage.setItem('bannerAdded', 'true');
+            // Dispatch custom event to notify other components
+            window.dispatchEvent(new CustomEvent('bannerAddedChanged'));
           }
         }, 45000);
 
@@ -1945,7 +1954,15 @@ const handleToggles = (option) => {
 
   async function checkSubscription(accessToken: string) {
     try {
-      const response = await fetch('https://cb-server.web-8fb.workers.dev/api/payment/subscription', {
+      // Get current site ID for the API call
+      const siteInfo = await webflow.getSiteInfo();
+      const siteId = siteInfo?.siteId;
+      
+      if (!siteId) {
+        throw new Error('No site ID available');
+      }
+
+      const response = await fetch(`https://cb-server.web-8fb.workers.dev/api/payment/subscription?siteId=${siteId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -1967,22 +1984,19 @@ const handleToggles = (option) => {
 
 
   useEffect(() => {
+    // Clear subscription cache on app reload to ensure fresh data
+    sessionStorage.removeItem('subscription_status');
+    
     const accessToken = getSessionTokenFromLocalStorage();
     const fetchSubscription = async () => {
       try {
         if (!accessToken) {
+          setSubscriptionChecked(true);
           openAuthScreen();
           return;
         }
         
-        // Check if subscription status is already cached in sessionStorage
-        const cachedSubscription = sessionStorage.getItem('subscription_status');
-        if (cachedSubscription) {
-          const hasSubscription = JSON.parse(cachedSubscription);
-          setIsSubscribed(Boolean(hasSubscription));
-          return; // Use cached data, no API call needed
-        }
-        
+        // Always check subscription fresh on app reload
         const result = await checkSubscription(accessToken);
 
         // Check if any domain has isSubscribed === true
@@ -1992,10 +2006,14 @@ const handleToggles = (option) => {
 
         setIsSubscribed(Boolean(hasSubscription));
         
-        // Cache subscription status in sessionStorage
+        // Cache subscription status in sessionStorage for current session
         sessionStorage.setItem('subscription_status', JSON.stringify(hasSubscription));
        } catch (error) {
          // Error handling
+         console.error('Subscription check failed:', error);
+       } finally {
+         // Always mark subscription as checked when done
+         setSubscriptionChecked(true);
        }
     };
 
@@ -2258,7 +2276,10 @@ const handleToggles = (option) => {
              </div>
            </div>
         <div className="component-width">
-          {!isSubscribed ? (
+          {!subscriptionChecked ? (
+            <div className="subscribe">
+            </div>
+          ) : !isSubscribed ? (
             <div className="subscribe">
               <a className="link" href="#" onClick={(e) => {
                 e.preventDefault();
@@ -2273,27 +2294,43 @@ const handleToggles = (option) => {
                 <button
                   className="publish-button"
                   onClick={async () => {
-                    const isUserValid = await isAuthenticatedForCurrentSite();
                     try {
                       const selectedElement = await webflow.getSelectedElement() as { type?: string };
-
                       const isInvalidElement = !selectedElement || selectedElement.type === "Body";
 
-                      if (isUserValid && !isInvalidElement) {
+                      if (isInvalidElement) {
+                        setShowTooltip(true);
+                        setShowPopup(false);
+                        return;
+                      }
+
+                      // Try authentication check with fallback
+                      let isUserValid = false;
+                      try {
+                        isUserValid = await isAuthenticatedForCurrentSite();
+                      } catch (authError) {
+                        // If auth check fails, try silent auth first
+                        try {
+                          await attemptSilentAuth();
+                          isUserValid = await isAuthenticatedForCurrentSite();
+                        } catch (silentAuthError) {
+                          // If silent auth fails, open OAuth window
+                          openAuthScreen();
+                          return;
+                        }
+                      }
+
+                      if (isUserValid) {
                         setShowTooltip(false);
                         setShowPopup(true);
                       } else {
-                        setShowPopup(false);
-                        if (!isUserValid) {
-                          setShowTooltip(false);
-                          setShowAuthPopup(true);
-                        } else if (isInvalidElement) {
-                          setShowTooltip(true);
-                        }
+                        setShowTooltip(false);
+                        openAuthScreen();
                       }
-                                         } catch (error) {
-                       setShowTooltip(false);
-                     }
+                    } catch (error) {
+                      setShowTooltip(false);
+                      openAuthScreen(); // Fallback to OAuth on any error
+                    }
                   }}
                 >
                   Publish your changes
@@ -2309,12 +2346,31 @@ const handleToggles = (option) => {
               <button
                 className="publish-buttons"
                 onClick={async () => {
-                  const isUserValid = await isAuthenticatedForCurrentSite();
-                  if (isUserValid) {
-                    // Trigger script scanning
-                    setTriggerScan(true);
-                  } else {
-                    setShowAuthPopup(true);
+                  try {
+                    // Try authentication check with fallback
+                    let isUserValid = false;
+                    try {
+                      isUserValid = await isAuthenticatedForCurrentSite();
+                    } catch (authError) {
+                      // If auth check fails, try silent auth first
+                      try {
+                        await attemptSilentAuth();
+                        isUserValid = await isAuthenticatedForCurrentSite();
+                      } catch (silentAuthError) {
+                        // If silent auth fails, open OAuth window
+                        openAuthScreen();
+                        return;
+                      }
+                    }
+
+                    if (isUserValid) {
+                      // Trigger script scanning
+                      setTriggerScan(true);
+                    } else {
+                      openAuthScreen();
+                    }
+                  } catch (error) {
+                    openAuthScreen(); // Fallback to OAuth on any error
                   }
                 }}
               >
@@ -2810,7 +2866,7 @@ const handleToggles = (option) => {
                     className={`preview-tab ${previewMode === 'ccpa' ? 'active' : ''}`}
                     onClick={() => setPreviewMode('ccpa')}
                   >
-                    US State Law
+                    U.S. State Laws
                   </button>
                 </div>
                 <div className="preview-area">

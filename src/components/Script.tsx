@@ -41,6 +41,7 @@ const Script: React.FC<{
     const [isLoading, setIsLoading] = useState(false);
     const [showAuthPopup, setShowAuthPopup] = useState(false);
     const [copiedScriptIndex, setCopiedScriptIndex] = useState<number | null>(null);
+    const [hasScanned, setHasScanned] = useState(false);
     const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
 
     // Fetch site info when component mounts
@@ -585,14 +586,14 @@ const Script: React.FC<{
                 }
                 
                 setIsLoading(false);
+                setHasScanned(true); // Mark scan as completed after successful fetch
                 return finalScripts;
             });
         } catch (error) {
-            setSaveStatus({
-                success: false,
-                message: error instanceof Error ? error.message : "Failed to fetch scripts",
-            });
+            // Don't show error popup for fetch failures - just set empty scripts
+            setScripts([]);
             setIsLoading(false);
+            setHasScanned(true); // Mark scan as completed even if it failed
         }
     }, [setScripts, getScriptIdentifier, siteInfo]);
 
@@ -936,7 +937,7 @@ const Script: React.FC<{
             ) : scripts.length === 0 ? (
                 <div className="sections">
                     <img src={search} alt="search" />
-                    <p>Click 'Scan Project' to analyze your project.</p>
+                    <p>{hasScanned ? "No analytics scripts found in your project." : "Click 'Scan Project' to analyze your project."}</p>
                 </div>
             ) : (
                 (() => {

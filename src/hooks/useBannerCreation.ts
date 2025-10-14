@@ -303,6 +303,7 @@ export const useBannerCreation = () => {
         await newDiv.setCustomAttribute("data-animation", bannerAnimation.animation);
         await newDiv.setCustomAttribute("data-cookie-banner", bannerToggleStates.toggleStates.disableScroll ? "true" : "false");
       }
+      await newDiv.setCustomAttribute("data-all-banners","false");
      
       // Step 5: Create inner div exactly like GDPR function
       const innerdiv = await selectedElement.before(webflow.elementPresets.DivBlock);
@@ -626,6 +627,7 @@ export const useBannerCreation = () => {
          await newDiv.setCustomAttribute("data-animation", "fade");
          await newDiv.setCustomAttribute("data-cookie-banner", "false");
        }
+       await newDiv.setCustomAttribute("data-all-banners","false");
 
       const innerdiv = await selectedElement.before(webflow.elementPresets.DivBlock);
       await innerdiv.setStyles([innerDivStyle]);
