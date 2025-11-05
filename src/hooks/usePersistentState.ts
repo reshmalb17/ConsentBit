@@ -27,6 +27,15 @@ function migrateOldData(): void {
   setAuthStorageItem(migrationKey, 'true');
 }
 
+// Banner settings keys that should be site-specific
+const BANNER_SETTINGS_KEYS = [
+  'color', 'bgColor', 'btnColor', 'paraColor', 'secondcolor', 'bgColors', 'headColor',
+  'secondbuttontext', 'primaryButtonText', 'activeTab', 'size', 'Font', 'selectedtext',
+  'style', 'selected', 'selectedOption', 'selectedOptions', 'weight', 'borderRadius',
+  'buttonRadius', 'cookieExpiration', 'toggleStates', 'animation', 'easing', 'language',
+  'privacyUrl', 'cookiePreferences'
+];
+
 // Function to get key with site-specific storage for certain keys
 function getSiteSpecificKey(key: string): string {
   // For siteInfo, we need site-specific storage to handle multiple sites
@@ -37,6 +46,16 @@ function getSiteSpecificKey(key: string): string {
     }
     // Fallback to old key for backward compatibility
     return 'siteInfo';
+  }
+  
+  // For banner settings, use site-specific keys
+  if (BANNER_SETTINGS_KEYS.includes(key)) {
+    const currentSiteId = getAuthStorageItem('currentSiteId');
+    if (currentSiteId) {
+      return `${key}_${currentSiteId}`;
+    }
+    // Fallback to old key for backward compatibility
+    return key;
   }
   
   // For other keys, use simple approach
@@ -725,7 +744,7 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
           }
         }
       } else {
-        // Read from separate key (for consentbit-userinfo, siteInfo, etc.)
+        // Read from separate key (for consentbit-userinfo, siteInfo, banner settings, etc.)
         savedState = getAuthStorageItem(siteSpecificKey);
         
         // Handle migration for wf_hybrid_user -> consentbit-userinfo
@@ -734,6 +753,21 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
           if (savedState) {
             setAuthStorageItem(siteSpecificKey, savedState);
             removeAuthStorageItem('wf_hybrid_user');
+          }
+        }
+        
+        // For banner settings, check consolidated storage as fallback (for migration)
+        if (!savedState && BANNER_SETTINGS_KEYS.includes(key)) {
+          const appData = getConsolidatedAppData();
+          if (appData[key] !== undefined) {
+            savedState = JSON.stringify(appData[key]);
+            // Migrate to site-specific storage
+            const currentSiteId = getAuthStorageItem('currentSiteId');
+            if (currentSiteId) {
+              setAuthStorageItem(`${key}_${currentSiteId}`, savedState);
+              delete appData[key];
+              saveConsolidatedAppData(appData);
+            }
           }
         }
       }
@@ -803,12 +837,14 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
           appData[key] = state;
           saveConsolidatedAppData(appData);
         } else {
-          // Save to separate key (for consentbit-userinfo, siteInfo, etc.)
-          setAuthStorageItem(siteSpecificKey, JSON.stringify(state));
+          // Recalculate siteSpecificKey to ensure we use current currentSiteId
+          const currentSiteSpecificKey = getSiteSpecificKey(key);
+          // Save to separate key (for consentbit-userinfo, siteInfo, banner settings, etc.)
+          setAuthStorageItem(currentSiteSpecificKey, JSON.stringify(state));
         }
       }
     }
-  }, [siteSpecificKey, state, key, useConsolidated]);
+  }, [state, key, useConsolidated]);
 
   return [state, authorizedSetState];
 }

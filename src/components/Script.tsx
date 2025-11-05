@@ -44,23 +44,24 @@ const Script: React.FC<{
     const [hasScanned, setHasScanned] = useState(false);
     const [siteInfo, setSiteInfo] = usePersistentState<{ siteId: string; siteName: string; shortName: string } | null>("siteInfo", null);
 
-    // Fetch site info when component mounts
+    // Fetch site info when component mounts - always update currentSiteId immediately
     useEffect(() => {
         const fetchSiteInfo = async () => {
             try {
-                const siteInfo = await webflow.getSiteInfo();
-                if (siteInfo?.siteId) {
-                    setCurrentSiteId(siteInfo.siteId);
+                const currentSiteInfo = await webflow.getSiteInfo();
+                if (currentSiteInfo?.siteId) {
+                    // Always update currentSiteId immediately so site-specific keys work correctly
+                    setCurrentSiteId(currentSiteInfo.siteId);
+                    // Always overwrite siteInfo to ensure fresh data on app reload
+                    setSiteInfo(currentSiteInfo);
                 }
-                setSiteInfo(siteInfo);
             } catch (error) {
             }
         };
 
-        if (!siteInfo) {
-            fetchSiteInfo();
-        }
-    }, [siteInfo, setSiteInfo]);
+        // Always fetch to ensure fresh site data on app reload
+        fetchSiteInfo();
+    }, [setSiteInfo]);
 
     // Site change detection - clear scripts when site changes
     useEffect(() => {
@@ -69,24 +70,36 @@ const Script: React.FC<{
                 const currentSiteInfo = await webflow.getSiteInfo();
                 const newSiteId = currentSiteInfo?.siteId;
                 
-                if (newSiteId && siteInfo?.siteId && newSiteId !== siteInfo.siteId) {
-                    
-                    // Clear scripts immediately
-                    setScripts([]);
-                    // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
-                    removeAuthStorageItem('scriptContext_scripts');
-                    
-                    // Update current site ID for site-specific storage
+                // Always update currentSiteId on first load or when site changes
+                if (newSiteId) {
+                    // Update current site ID immediately for site-specific storage
                     setCurrentSiteId(newSiteId);
                     
-                    // Update site info
-                    setSiteInfo(currentSiteInfo);
+                    // Always overwrite siteInfo when site changes or on first load
+                    // This ensures fresh site data for each site, even in the same workspace
+                    if (siteInfo?.siteId && newSiteId !== siteInfo.siteId) {
+                        // Site has changed - clear scripts and old site-specific data
+                        setScripts([]);
+                        removeAuthStorageItem('scriptContext_scripts');
+                        
+                        // Clear old site's siteInfo from storage (site-specific key)
+                        // Note: Banner settings are kept separate per site, so we don't clear them
+                        const oldSiteKey = `siteInfo_${siteInfo.siteId}`;
+                        removeAuthStorageItem(oldSiteKey);
+                        
+                        // Set new site info (will overwrite any existing data)
+                        setSiteInfo(currentSiteInfo);
+                    } else {
+                        // First load or same site - always overwrite to ensure fresh data
+                        setSiteInfo(currentSiteInfo);
+                    }
                 }
             } catch (error) {
             }
         };
 
-        // Check for site changes every 2 seconds
+        // Check immediately on mount, then every 2 seconds
+        detectSiteChange();
         const interval = setInterval(detectSiteChange, 2000);
         
         return () => clearInterval(interval);
@@ -690,7 +703,11 @@ const Script: React.FC<{
     // ... existing code ...
 
     const handleToggle = useCallback((category: string, scriptIndex: number) => {
-        // Remove the Essential restriction - allow Essential to be toggled like other categories
+        // Prevent toggling Essential category - it must always be enabled
+        if (category === "Essential") {
+            return; // Do nothing if trying to toggle Essential
+        }
+        
         setScripts(prevScripts =>
             prevScripts.map((script, index) => {
                 if (index === scriptIndex && script.identifier) {
@@ -1025,21 +1042,28 @@ const Script: React.FC<{
                                                         <div className="category">
                                                             <span>Category:</span>
                                                             {categories.map((category) => {
-                                                                const isChecked = script.selectedCategories.includes(category);
+                                                                const isEssential = category === "Essential";
+                                                                // Essential should always appear checked, even if not in selectedCategories
+                                                                const isChecked = isEssential ? true : script.selectedCategories.includes(category);
                                                                 
                                                                 return (
-                                                                    <label key={category} className="toggle-switch">
+                                                                    <label key={category} className={`toggle-switch ${isEssential ? 'essential-disabled' : ''}`}>
                                                                         <input
                                                                             type="checkbox"
                                                                             value={category}
                                                                             checked={isChecked}
+                                                                            disabled={isEssential}
                                                                             onChange={() => handleToggle(category, index)}
                                                                         />
                                                                         <span className="slider"></span>
                                                                         <span className="category-label">{category}</span>
                                                                         <div className="tooltip-containers">
                                                                             <img src={questionmark} alt="info" className="tooltip-icon" />
-                                                                            <span className="tooltip-text">Categorize this script based on its purpose.</span>
+                                                                            <span className="tooltip-text">
+                                                                                {isEssential 
+                                                                                    ? "Essential category is always enabled and cannot be changed."
+                                                                                    : "Categorize this script based on its purpose."}
+                                                                            </span>
                                                                         </div>
                                                                     </label>
                                                                 );

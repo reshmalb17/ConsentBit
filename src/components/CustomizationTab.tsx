@@ -556,23 +556,24 @@ const handleToggles = (option) => {
     fetchPages();
   }, [webflow]);
 
-  //banner details
+  //banner details - fetch from API when siteInfo is available
   useEffect(() => {
     const fetchbannerdetails = async () => {
       const token = getSessionTokenFromLocalStorage();
       try {
-        if (token) {
-          const response = await customCodeApi.getBannerStyles(token, siteInfo?.siteId);
+        if (token && siteInfo?.siteId) {
+          // Get current siteId to ensure we fetch the correct site's banner settings
+          const currentSiteId = siteInfo.siteId;
+          const response = await customCodeApi.getBannerStyles(token, currentSiteId);
 
           if (response) {
-
-            // Set all the values with proper checks
+            // Set all the values with proper checks - these will be saved to site-specific storage
             if (response.cookieExpiration !== undefined) setCookieExpiration(response.cookieExpiration);
             if (response.bgColor !== undefined) {
               setBgColor(response.bgColor);
             }
               
-                         // Removed activeMode setting - no longer needed
+            // Removed activeMode setting - no longer needed
             if (response.selectedtext !== undefined) settextSelected(response.selectedtext);
             // fetchScripts is now only set by user action (scan button), not from API
             if (response.btnColor !== undefined) setBtnColor(response.btnColor);
@@ -598,20 +599,20 @@ const handleToggles = (option) => {
             if (response.color !== undefined) {
               setColor(response.color);
             }
-
           } else {
-            openAuthScreen();
+            // No response - might be first time, don't open auth screen
           }
-        } else {
-          openAuthScreen();
         }
       } catch (error) {
-        // Error fetching banner details
+        // Error fetching banner details - silent fail, will use defaults
       }
     };
 
-    fetchbannerdetails();
-  }, []);
+    // Only fetch when siteInfo is available
+    if (siteInfo?.siteId) {
+      fetchbannerdetails();
+    }
+  }, [siteInfo?.siteId]); // Re-fetch when siteId changes
 
 
   //main function for adding custom code to the head

@@ -476,7 +476,11 @@ useEffect(() => {
     // ... existing code ...
 
     const handleToggle = useCallback((category: string, scriptIndex: number) => {
-        // Remove the Essential restriction - allow Essential to be toggled like other categories
+        // Prevent toggling Essential category - it must always be enabled
+        if (category === "Essential") {
+            return; // Do nothing if trying to toggle Essential
+        }
+        
         setScripts(prevScripts =>
             prevScripts.map((script, index) => {
                 if (index === scriptIndex && script.identifier) {
@@ -861,21 +865,28 @@ useEffect(() => {
                                                             <div className="category">
                                                                 <span>Category:</span>
                                                                 {categories.map((category) => {
-                                                                    const isChecked = script.selectedCategories.includes(category);
+                                                                    const isEssential = category === "Essential";
+                                                                    // Essential should always appear checked, even if not in selectedCategories
+                                                                    const isChecked = isEssential ? true : script.selectedCategories.includes(category);
 
                                                                     return (
-                                                                        <label key={category} className="toggle-switch">
+                                                                        <label key={category} className={`toggle-switch ${isEssential ? 'essential-disabled' : ''}`}>
                                                                             <input
                                                                                 type="checkbox"
                                                                                 value={category}
                                                                                 checked={isChecked}
+                                                                                disabled={isEssential}
                                                                                 onChange={() => handleToggle(category, index)}
                                                                             />
                                                                             <span className="slider"></span>
                                                                             <span className="category-label">{category}</span>
                                                                             <div className="tooltip-containers">
                                                                                 <img src={questionmark} alt="info" className="tooltip-icon" />
-                                                                                <span className="tooltip-text">Categorize this script based on its purpose.</span>
+                                                                                <span className="tooltip-text">
+                                                                                    {isEssential 
+                                                                                        ? "Essential category is always enabled and cannot be changed."
+                                                                                        : "Categorize this script based on its purpose."}
+                                                                                </span>
                                                                             </div>
                                                                         </label>
                                                                     );
