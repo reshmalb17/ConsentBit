@@ -37,6 +37,18 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
   // Timing tracking for authorization flow
   const [authStartTime, setAuthStartTime] = useState<number | null>(null);
   const [scanButtonShowTime, setScanButtonShowTime] = useState<number | null>(null);
+  
+  // Timeout to reset isAuthorizing if authentication takes too long
+  useEffect(() => {
+    if (isAuthorizing) {
+      const timeout = setTimeout(() => {
+        console.warn("Authorization timeout - resetting authorizing state");
+        setIsAuthorizing(false);
+      }, 30000); // 30 seconds timeout
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isAuthorizing]);
 
 
   useEffect(() => {
@@ -44,8 +56,16 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
     // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
     const userinfo = getAuthStorageItem("consentbit-userinfo");
     const hasData = userinfo && userinfo !== "null" && userinfo !== "undefined";
-    setHasUserData(authenticated || !!hasData);
-  }, [authenticated]);
+    const newHasUserData = authenticated || !!hasData;
+    console.log("[WelcomeScreen] hasUserData check:", {
+      authenticated,
+      userinfo: userinfo ? "exists" : "null",
+      hasData,
+      newHasUserData,
+      externalIsCheckingAuth
+    });
+    setHasUserData(newHasUserData);
+  }, [authenticated, externalIsCheckingAuth]); // Also check when auth check completes
 
   // Check session storage for bannerAdded status
   useEffect(() => {
@@ -110,9 +130,23 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
       // Track when authentication completes
       if (authStartTime) {
         const authDuration = performance.now() - authStartTime;
+        console.log("Authentication completed in", authDuration, "ms");
       }
+    } else if (isAuthorizing) {
+      // If we're authorizing but not authenticated, check if auth failed
+      // Reset after a delay if authentication doesn't complete
+      const checkAuth = setTimeout(() => {
+        const userinfo = getAuthStorageItem("consentbit-userinfo");
+        const hasData = userinfo && userinfo !== "null" && userinfo !== "undefined";
+        if (!hasData && !authenticated) {
+          console.warn("Authentication appears to have failed - resetting authorizing state");
+          setIsAuthorizing(false);
+        }
+      }, 10000); // Check after 10 seconds
+      
+      return () => clearTimeout(checkAuth);
     }
-  }, [authenticated, authStartTime]);
+  }, [authenticated, authStartTime, isAuthorizing]);
   
   // Track when scan button becomes visible
   useEffect(() => {
@@ -154,8 +188,24 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
             <span className="welcome-title-highlight">ConsentBit</span>
           </h1>
           {(() => {
+            console.log("[WelcomeScreen] Instruction text logic:", {
+              hasUserData,
+              isAuthorizing,
+              externalIsCheckingAuth,
+              isBannerAdded
+            });
             
-            if (externalIsCheckingAuth) {
+            // If we have user data, show the appropriate message even while checking
+            if (hasUserData && !isAuthorizing) {
+              return (
+                <p className="welcome-instructions">
+                  {isBannerAdded
+                    ? "Your banner has been successfully added! Customize your consent banner appearance and settings."
+                    : "Scan your Webflow site, review detected scripts, add them to the backend, and publish when you're ready."
+                  }
+                </p>
+              );
+            } else if (externalIsCheckingAuth) {
               return (
                 <p className="welcome-instructions">
                   Checking your authentication status...
@@ -165,15 +215,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
               return (
                 <p className="welcome-instructions">
                   Please complete the authorization process in the popup window...
-                </p>
-              );
-            } else if (hasUserData) {
-              return (
-                <p className="welcome-instructions">
-                  {isBannerAdded
-                    ? "Your banner has been successfully added! Customize your consent banner appearance and settings."
-                    : "Scan your Webflow site, review detected scripts, add them to the backend, and publish when you're ready."
-                  }
                 </p>
               );
             } else {
@@ -187,34 +228,52 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
 
         
 
-          {externalIsCheckingAuth ? (
-            <button className="welcome-authorize-btn" disabled>
-              Loading...
-            </button>
-          ) : isAuthorizing ? (
-            <button className="welcome-authorize-btn" disabled>
-              Authorizing...
-            </button>
-          ) : hasUserData ? (
-            <>
-              {isBannerStatusLoading ? (
+          {(() => {
+            console.log("[WelcomeScreen] Button render logic:", {
+              isAuthorizing,
+              hasUserData,
+              externalIsCheckingAuth,
+              isBannerStatusLoading,
+              isBannerAdded
+            });
+            
+            if (isAuthorizing) {
+              return (
+                <button className="welcome-authorize-btn" disabled>
+                  Authorizing...
+                </button>
+              );
+            } else if (hasUserData) {
+              if (externalIsCheckingAuth || isBannerStatusLoading) {
+                return (
+                  <button className="welcome-authorize-btn" disabled>
+                    Loading...
+                  </button>
+                );
+              } else {
+                return (
+                  <button
+                    className="welcome-authorize-btn scan-project"
+                    onClick={isBannerAdded ? onCustomize : handleWelcomeScreen}
+                  >
+                    {isBannerAdded ? "Customize" : "Scan Project"}
+                  </button>
+                );
+              }
+            } else if (externalIsCheckingAuth) {
+              return (
                 <button className="welcome-authorize-btn" disabled>
                   Loading...
                 </button>
-              ) : (
-                <button
-                  className="welcome-authorize-btn scan-project"
-                  onClick={isBannerAdded ? onCustomize : handleWelcomeScreen}
-                >
-                  {isBannerAdded ? "Customize" : "Scan Project"}
+              );
+            } else {
+              return (
+                <button className="welcome-authorize-btn" onClick={handleAuthorizeClick}>
+                  Authorize
                 </button>
-              )}
-            </>
-          ) : (
-            <button className="welcome-authorize-btn" onClick={handleAuthorizeClick}>
-              Authorize
-            </button>
-          )}
+              );
+            }
+          })()}
         </div>
         {hasUserData && !externalIsCheckingAuth && !isBannerStatusLoading && !isBannerAdded?(
         <>

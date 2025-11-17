@@ -97,13 +97,7 @@ export function clearAuthData(): void {
     }
   }
   
-  // COMMENTED OUT: Also clear from localStorage (for migration purposes)
-  // AUTH_KEYS.forEach(key => {
-  //   if (localStorage.getItem(key) !== null) {
-  //     localStorage.removeItem(key);
-  //     keysToRemove.push(key);
-  //   }
-  // });
+  
   
 }
 
@@ -114,17 +108,7 @@ export function clearAuthData(): void {
 export function clearAppData(): void {
   if (typeof window === 'undefined') return;
   
-  // COMMENTED OUT: localStorage usage
-  // const keysToRemove: string[] = [];
   
-  // // Get all localStorage keys
-  // for (let i = 0; i < localStorage.length; i++) {
-  //   const key = localStorage.key(i);
-  //   if (key && !isAuthKey(key)) {
-  //     localStorage.removeItem(key);
-  //     keysToRemove.push(key);
-  //   }
-  // }
   
 }
 

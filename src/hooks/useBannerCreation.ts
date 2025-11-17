@@ -5,13 +5,13 @@ import createCookiePreferences from './gdprPreference';
 import createCookieccpaPreferences from './ccpaPreference';
 import { getSessionTokenFromLocalStorage } from '../util/Session'; 
 import { customCodeApi } from '../services/api';
-import { CodeApplication } from 'src/types/types';
+import { CodeApplication, ScriptRegistrationRequest } from 'src/types/types';
 import { useAuth } from '../hooks/userAuth';
 import { usePersistentState, getCurrentSiteId } from './usePersistentState';
 import pkg from '../../package.json';
 
 const appVersion = pkg.version;
-const base_url = "https://cb-server.web-8fb.workers.dev"
+const base_url = "https://consentbit-test-server.web-8fb.workers.dev"
 
 
 export interface BannerConfig {
@@ -76,9 +76,23 @@ export const useBannerCreation = () => {
 
   const createSimpleGDPRBanner = async (selectedElement: any, config: BannerConfig, animationAttribute: string) => {
     try {
+      // Check if the selected element can have children
+      if (!selectedElement?.children) {
+        throw new Error("Selected element cannot have children.");
+      }
+
+      // Add ConsentBit class name to the selected element
+      try {
+        const consentBitStyle = await webflow.getStyleByName("ConsentBit") || await webflow.createStyle("ConsentBit");
+        if (selectedElement.setStyles) {
+          await selectedElement.setStyles([consentBitStyle]);
+        }
+      } catch (error) {
+        // Continue if style application fails
+      }
       
-      // Step 1: Create main banner div using selectedElement.before() exactly like GDPR function
-      const newDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+      // Step 1: Create main banner div as child of selected element
+      const newDiv = await selectedElement.prepend(webflow.elementPresets.DivBlock);
       if (!newDiv) {
         throw new Error("Failed to create banner div");
       }
@@ -305,22 +319,18 @@ export const useBannerCreation = () => {
       }
       await newDiv.setCustomAttribute("data-all-banners","false");
      
-      // Step 5: Create inner div exactly like GDPR function
-      const innerdiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+      // Step 5: Create inner div as child of newDiv
+      const innerdiv = await newDiv.append(webflow.elementPresets.DivBlock);
       if (!innerdiv) {
         throw new Error("Failed to create inner div");
       }
       await innerdiv.setStyles([innerDivStyle]);
 
-      // Step 6: Create heading with proper styles and black text
-      
-      const tempHeading = await selectedElement.before(webflow.elementPresets.Heading);
+      // Step 6: Create heading as child of innerdiv
+      const tempHeading = await innerdiv.append(webflow.elementPresets.Heading);
       if (!tempHeading) {
         throw new Error("Failed to create heading");
       }
-     
-
-      
       
       await headingStyle.setProperties(headingPropertyMap);
       
@@ -334,14 +344,12 @@ export const useBannerCreation = () => {
         await tempHeading.setTextContent('Cookie Settings');
       }
 
-      // Step 7: Create paragraph with proper styles and black text
-      const tempParagraph = await selectedElement.before(webflow.elementPresets.Paragraph);
+      // Step 7: Create paragraph as child of innerdiv
+      const tempParagraph = await innerdiv.append(webflow.elementPresets.Paragraph);
       if (!tempParagraph) {
         throw new Error("Failed to create paragraph");
       }
-      if (tempParagraph.setStyles) {
       
-     
       await paragraphStyle.setProperties(paragraphPropertyMap);
       
       if (tempParagraph.setStyles) {
@@ -351,22 +359,21 @@ export const useBannerCreation = () => {
         await tempParagraph.setTextContent('We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.');
       }
 
-      // Step 8: Create button container with proper styles
-      const buttonContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
+      // Step 8: Create button container as child of innerdiv
+      const buttonContainer = await innerdiv.append(webflow.elementPresets.DivBlock);
       if (!buttonContainer) {
         throw new Error("Failed to create button container");
       }
       
-     
       await buttonContainerStyle.setProperties(buttonContainerPropertyMap);
       if (buttonContainer.setStyles) {
         await buttonContainer.setStyles([buttonContainerStyle]);
       }
 
-      // Step 9: Create preferences button with proper styles and black text
-      const prefrenceButton = await selectedElement.before(webflow.elementPresets.Button);
+      // Step 9: Create preferences button as child of buttonContainer
+      const prefrenceButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!prefrenceButton) {
-        throw new Error("Failed to create decline button");
+        throw new Error("Failed to create preferences button");
       }
       await prefrenceButton.setStyles([prefrenceButtonStyle]);
       await prefrenceButton.setTextContent('Preferences');
@@ -375,11 +382,8 @@ export const useBannerCreation = () => {
         await (prefrenceButton as any).setDomId("preferences-btn"); // Type assertion
       }
 
-     
-     
-
-      // Step 10: Create accept button with proper styles and black text
-      const acceptButton = await selectedElement.before(webflow.elementPresets.Button);
+      // Step 10: Create accept button as child of buttonContainer
+      const acceptButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!acceptButton) {
         throw new Error("Failed to create accept button");
       }
@@ -390,10 +394,9 @@ export const useBannerCreation = () => {
       }
      
       await acceptButton.setTextContent('Accept');
-    
 
-      // Step 11: Create decline button with proper styles and black text
-      const declineButton = await selectedElement.before(webflow.elementPresets.Button);
+      // Step 11: Create decline button as child of buttonContainer
+      const declineButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!declineButton) {
         throw new Error("Failed to create decline button");
       }
@@ -403,26 +406,6 @@ export const useBannerCreation = () => {
       if ((declineButton as any).setDomId) {
         await (declineButton as any).setDomId("decline-btn"); // Type assertion
       }
-      
-      
-    
-
-      // Step 12: Build hierarchy using append() exactly like GDPR function
-      if (newDiv.append  && innerdiv && tempHeading && tempParagraph && buttonContainer) {
-        // Append elements inside banner div
-        await newDiv.append(innerdiv);
-        await innerdiv.append(tempHeading);
-        await innerdiv.append(tempParagraph);
-        await innerdiv.append(buttonContainer);
-
-        if (buttonContainer.append && prefrenceButton && declineButton && acceptButton) {
-          await buttonContainer.append(prefrenceButton);
-          await buttonContainer.append(declineButton);
-          await buttonContainer.append(acceptButton);
-        }
-      }
-    }
-      
     } catch (error) {
       throw error;
     }
@@ -430,12 +413,23 @@ export const useBannerCreation = () => {
 
   const createSimpleCCPABanner = async (selectedElement: any, config: BannerConfig, animationAttribute: string) => {
     try {
+      // Check if the selected element can have children
+      if (!selectedElement?.children) {
+        throw new Error("Selected element cannot have children.");
+      }
 
+      // Add ConsentBit class name to the selected element
+      try {
+        const consentBitStyle = await webflow.getStyleByName("ConsentBit") || await webflow.createStyle("ConsentBit");
+        if (selectedElement.setStyles) {
+          await selectedElement.setStyles([consentBitStyle]);
+        }
+      } catch (error) {
+        // Continue if style application fails
+      }
 
-
-      
-      // Step 1: Create main CCPA banner div using selectedElement.before() exactly like CCPA function
-      const newDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+      // Step 1: Create main CCPA banner div as child of selected element
+      const newDiv = await selectedElement.prepend(webflow.elementPresets.DivBlock);
       if (!newDiv) {
         throw new Error("Failed to create CCPA banner div");
       }
@@ -629,61 +623,57 @@ export const useBannerCreation = () => {
        }
        await newDiv.setCustomAttribute("data-all-banners","false");
 
-      const innerdiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+      // Create innerdiv as child of newDiv
+      const innerdiv = await newDiv.append(webflow.elementPresets.DivBlock);
       await innerdiv.setStyles([innerDivStyle]);
-      const tempHeading = await selectedElement.before(webflow.elementPresets.Heading);
+      
+      // Create heading as child of innerdiv
+      const tempHeading = await innerdiv.append(webflow.elementPresets.Heading);
       if (!tempHeading) {
         throw new Error("Failed to create heading");
       }
       
-        if (tempHeading.setHeadingLevel) {
-          await tempHeading.setHeadingLevel(2);
-        }
-        if (tempHeading.setStyles) {
-          await tempHeading.setStyles([headingStyle]);
-        }
-        if (tempHeading.setTextContent) {
-           await tempHeading.setTextContent("We value your privacy");
-         }
-      const tempParagraph = await selectedElement.before(webflow.elementPresets.Paragraph);
-        if (!tempParagraph) {
-          throw new Error("Failed to create paragraph");
-        }
-         if (tempParagraph.setStyles) {
-           await tempParagraph.setStyles([paragraphStyle]);
-             }
-        
-         if (tempParagraph.setTextContent) {
+      if (tempHeading.setHeadingLevel) {
+        await tempHeading.setHeadingLevel(2);
+      }
+      if (tempHeading.setStyles) {
+        await tempHeading.setStyles([headingStyle]);
+      }
+      if (tempHeading.setTextContent) {
+        await tempHeading.setTextContent("We value your privacy");
+      }
+      
+      // Create paragraph as child of innerdiv
+      const tempParagraph = await innerdiv.append(webflow.elementPresets.Paragraph);
+      if (!tempParagraph) {
+        throw new Error("Failed to create paragraph");
+      }
+      if (tempParagraph.setStyles) {
+        await tempParagraph.setStyles([paragraphStyle]);
+      }
+      
+      if (tempParagraph.setTextContent) {
         await tempParagraph.setTextContent("We use cookies to provide you with the best possible experience. They also allow us to analyze user behavior in order to constantly improve the website for you.");
-         }
-        
-        const buttonContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
-        if (!buttonContainer) {
-          throw new Error("Failed to create button container");
-        }
-        await buttonContainer.setStyles([buttonContainerStyle]);
+      }
+      
+      // Create buttonContainer as child of innerdiv
+      const buttonContainer = await innerdiv.append(webflow.elementPresets.DivBlock);
+      if (!buttonContainer) {
+        throw new Error("Failed to create button container");
+      }
+      await buttonContainer.setStyles([buttonContainerStyle]);
 
-        const prefrenceButton = await selectedElement.before(webflow.elementPresets.LinkBlock);
-        if (!prefrenceButton) {
-          throw new Error("Failed to create decline button");
-        }
-        await prefrenceButton.setStyles([Linktext])
-        await prefrenceButton.setTextContent('Do Not Share My Personal Information');
+      // Create prefrenceButton as child of buttonContainer
+      const prefrenceButton = await buttonContainer.append(webflow.elementPresets.LinkBlock);
+      if (!prefrenceButton) {
+        throw new Error("Failed to create decline button");
+      }
+      await prefrenceButton.setStyles([Linktext]);
+      await prefrenceButton.setTextContent('Do Not Share My Personal Information');
   
-     if ((prefrenceButton as any).setDomId) {
-           await (prefrenceButton as any).setDomId("do-not-share-link"); 
-         }
-      if (newDiv.append && innerdiv && tempHeading && tempParagraph && buttonContainer) {
-          await newDiv.append(innerdiv);
-          await innerdiv.append(tempHeading);
-          await innerdiv.append(tempParagraph);
-          await innerdiv.append(buttonContainer);
-
-           if (buttonContainer.append && prefrenceButton) {
-
-             await buttonContainer.append(prefrenceButton)
-           }
-         }
+      if ((prefrenceButton as any).setDomId) {
+        await (prefrenceButton as any).setDomId("do-not-share-link"); 
+      }
          
       
     } catch (error) {
@@ -715,7 +705,9 @@ export const useBannerCreation = () => {
        typeof config.buttonRadius === 'number' 
        ? config.buttonRadius 
        : parseInt(config.buttonRadius as string),
-       config.Font
+       config.Font,
+       "", // privacyUrl
+       selectedElement // targetDiv
       );
       
     } catch (error) {
@@ -742,9 +734,11 @@ export const useBannerCreation = () => {
         config.toggleStates?.closebutton || false,   // closebutton
         true,                     // skipCommonDiv (true to avoid duplicate toggle button)
         config.Font ,
-           typeof config.buttonRadius === 'number' 
-       ? config.buttonRadius 
-       : parseInt(config.buttonRadius as string),
+        typeof config.buttonRadius === 'number' 
+          ? config.buttonRadius 
+          : parseInt(config.buttonRadius as string),
+        "", // privacyUrl
+        selectedElement // targetDiv
       );    
     } catch (error) {
       throw error;
@@ -760,28 +754,74 @@ export const useBannerCreation = () => {
         openAuthScreen();
         return;
       }
-2
 
       const siteIdinfo = await webflow.getSiteInfo();
       setSiteInfo(siteIdinfo);
 
+      // First, register the script to get the hosting location
       const hostingScript = await customCodeApi.registerV2BannerCustomCode(token, siteIdinfo.siteId);
 
       if (hostingScript && hostingScript.result) {
         try {
-          const scriptId = hostingScript.result.id;
-          const version = hostingScript.result.version;
-
-          const params: CodeApplication = {
-            targetType: 'site',
-            targetId: siteIdinfo.siteId, // Use siteIdinfo.siteId for application
-            scriptId: scriptId,
-            location: 'header',
-            version: version
-          };
+          // Get the hosted location URL
+          const hostedLocation = hostingScript.result.hostedLocation;
           
-          const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
-
+          if (hostedLocation) {
+            try {
+              // Fetch the script content from the hosting location
+              const scriptResponse = await fetch(hostedLocation);
+              if (!scriptResponse.ok) {
+                throw new Error(`Failed to fetch script: ${scriptResponse.status}`);
+              }
+              const scriptContent = await scriptResponse.text();
+              
+              // Register as inline script with the fetched content
+              const inlineScriptData: ScriptRegistrationRequest = {
+                siteId: siteIdinfo.siteId,
+                isHosted: false,
+                scriptData: {
+                  displayName: `ConsentBit Banner Script (Inline)`,
+                  version: hostingScript.result.version || '1.0.0',
+                  sourceCode: scriptContent
+                }
+              };
+              
+              const inlineScriptResult = await customCodeApi.registerScript(inlineScriptData, token);
+              
+              // Apply the inline script to the site head
+              if (inlineScriptResult && inlineScriptResult.result) {
+                const params: CodeApplication = {
+                  targetType: 'site',
+                  targetId: siteIdinfo.siteId,
+                  scriptId: inlineScriptResult.result.id,
+                  location: 'header',
+                  version: inlineScriptResult.result.version
+                };
+                const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
+              }
+            } catch (fetchError) {
+              console.error("Error fetching script content or registering inline script:", fetchError);
+              // Fallback to original hosted script registration
+              const params: CodeApplication = {
+                targetType: 'site',
+                targetId: siteIdinfo.siteId,
+                scriptId: hostingScript.result.id,
+                location: 'header',
+                version: hostingScript.result.version
+              };
+              const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
+            }
+          } else {
+            // If no hostedLocation, apply the original script
+            const params: CodeApplication = {
+              targetType: 'site',
+              targetId: siteIdinfo.siteId,
+              scriptId: hostingScript.result.id,
+              location: 'header',
+              version: hostingScript.result.version
+            };
+            const applyScriptResponse = await customCodeApi.applyV2Script(params, token);
+          }
         }
         catch (error) {
           throw error;

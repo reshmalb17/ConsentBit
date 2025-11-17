@@ -1,4 +1,4 @@
-const base_url = "https://cb-server.web-8fb.workers.dev";
+const base_url = "https://consentbit-test-server.web-8fb.workers.dev";
 import { ScriptCategory, SaveCategoriesResponse, AppData } from '../types/types';
 import { scriptCategorizationService } from './script-categorization-service';
 import { ClientEncryption } from '../util/Secure-Data';
@@ -278,30 +278,7 @@ export const customCodeApi = {
       };
     }
   },
-//   getVisitorsData: async (token: string, siteName: string, year?: number) => {
-//   try {
-//     const url = year 
-//       ? `${base_url}/api/v2/consent-data/${siteName}/visitors?year=${year}`
-//       : `${base_url}/api/v2/consent-data/${siteName}/visitors`;
-    
-//     const response = await fetch(url, {
-//       method: 'GET',
-//       headers: {
-//         'Authorization': `Bearer ${token}`,
-//         'Content-Type': 'application/json',
-//       },
-//     });
 
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! status: ${response.status}`);
-//     }
-
-//     const data = await response.json();
-//     return data;
-//   } catch (error) {
-//     throw error;
-//   }
-// },
 
 getVisitorsData: async (token: string, siteName: string, year?: number, month?: number) => {
   try {
@@ -414,6 +391,28 @@ downloadPDFFromUrl: async (token: string, pdfUrl: string, filename: string) => {
       throw error;
     }
   },
+  postInstalltionCall:async (token: string, siteId: string) => {
+  try {
+    const response = await fetch(`${base_url}/api/postinstallation/${siteId}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result = await response.json();
+     if (result.all_P === true) {
+       return { success: true, message: 'Already processed' };
+    } else if (result.success === true) {
+      return { success: true, message: 'Successfully processed' };
+    }
+  
+  } catch (error) {   
+    throw error;
+  }
+}
 
-
-};
+}

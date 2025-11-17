@@ -672,7 +672,7 @@ const handleToggles = (option) => {
 
 
   //GDPR preferences banner
-  const handleCreatePreferences = async (skipCommonDiv: boolean = false) => {
+  const handleCreatePreferences = async (skipCommonDiv: boolean = false, targetDiv?: any) => {
     try {
       const selectedPreferences = Object.entries(cookiePreferences)
         .filter(([_, isChecked]) => isChecked)
@@ -683,7 +683,7 @@ const handleToggles = (option) => {
       }
 
       await createCookiePreferences(
-        selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton, borderRadius , Font, privacyUrl
+        selectedPreferences, language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, toggleStates.customToggle, primaryButtonText, secondbuttontext, skipCommonDiv, toggleStates.disableScroll, toggleStates.closebutton, borderRadius , Font, privacyUrl, targetDiv
       );
     } catch (error) {
       // Error creating cookie preferences
@@ -692,9 +692,9 @@ const handleToggles = (option) => {
 
 
   //CCPA preferences banner
-  const handleCreatePreferencesccpa = async () => {
+  const handleCreatePreferencesccpa = async (targetDiv?: any) => {
     try {
-      await createCookieccpaPreferences(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font, borderRadius, privacyUrl);
+      await createCookieccpaPreferences(language, color, btnColor, headColor, paraColor, secondcolor, buttonRadius, animation, primaryButtonText, secondbuttontext, toggleStates.disableScroll, toggleStates.closebutton, false, Font, borderRadius, privacyUrl, targetDiv);
     } catch (error) {
       // Error creating cookie preferences
     }
@@ -716,7 +716,7 @@ const handleToggles = (option) => {
 
 
   //ccpa banner
-  const ccpabanner = async () => {
+  const ccpabanner = async (targetDiv?: any) => {
     setShowPopup(false); // close the first popup
     setShowLoadingPopup(true); // show loading popup
     setIsLoading(true);
@@ -758,15 +758,36 @@ const handleToggles = (option) => {
       }));
 
 
-             const selectedElement = await webflow.getSelectedElement();
-       if (!selectedElement) {
-         webflow.notify({ type: "error", message: "No element selected in the Designer." });
-         return;
-       }
+      // Use provided targetDiv if available, otherwise get selected element
+      const selectedElement = targetDiv || await webflow.getSelectedElement();
+      if (!selectedElement) {
+        webflow.notify({ type: "error", message: "No element selected in the Designer." });
+        setIsLoading(false);
+        return;
+      }
 
-      const newDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+      // Check if the selected element can have children
+      if (!selectedElement?.children) {
+        webflow.notify({ type: "error", message: "Selected element cannot have children." });
+        setIsLoading(false);
+        return;
+      }
+
+      // Add ConsentBit class name to the selected element
+      try {
+        const consentBitStyle = await webflow.getStyleByName("ConsentBit") || await webflow.createStyle("ConsentBit");
+        if (selectedElement.setStyles) {
+          await selectedElement.setStyles([consentBitStyle]);
+        }
+      } catch (error) {
+        // Continue if style application fails
+      }
+
+      // Create newDiv as a child of the selected element
+      const newDiv = await selectedElement.prepend(webflow.elementPresets.DivBlock);
       if (!newDiv) {
         webflow.notify({ type: "error", message: "Failed to create div." });
+        setIsLoading(false);
         return;
       }
 
@@ -1015,42 +1036,20 @@ const handleToggles = (option) => {
         await newDiv.setStyles([divStyle]);
       }
 
-             if (newDiv.setCustomAttribute) {
-         await newDiv.setCustomAttribute("data-animation", animationAttribute);
-         await newDiv.setCustomAttribute("data-cookie-banner", toggleStates.disableScroll ? "true" : "false");
-       }
-
-      const innerdiv = await selectedElement.before(webflow.elementPresets.DivBlock);
-      await innerdiv.setStyles([innerDivStyle]);
-
+      if (newDiv.setCustomAttribute) {
+        await newDiv.setCustomAttribute("data-animation", animationAttribute);
+        await newDiv.setCustomAttribute("data-cookie-banner", toggleStates.disableScroll ? "true" : "false");
+      }
 
       try {
-        let SecondDiv;
-        if (style === "alignstyle") {
-          SecondDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
-          if (SecondDiv.setStyles) {
-            await SecondDiv.setStyles([secondBackgroundStyle]);
-          }
-        }
+        // Create innerdiv as child of newDiv
+        const innerdiv = await newDiv.append(webflow.elementPresets.DivBlock);
+        await innerdiv.setStyles([innerDivStyle]);
 
-        const tempHeading = await selectedElement.before(webflow.elementPresets.Heading);
-        if (!tempHeading) {
-          throw new Error("Failed to create heading");
-        }
-        if (tempHeading.setHeadingLevel) {
-          await tempHeading.setHeadingLevel(2);
-        }
-        if (tempHeading.setStyles) {
-          await tempHeading.setStyles([headingStyle]);
-        }
-                 if (tempHeading.setTextContent) {
-           await tempHeading.setTextContent(translations[language as keyof typeof translations].ccpa.heading);
-         }
-
-        // Conditionally add close button only if toggleStates.closebutton is true
+        // Create Closebuttons as child of newDiv (if enabled)
         let Closebuttons = null;
         if (toggleStates.closebutton) {
-          Closebuttons = await selectedElement.before(webflow.elementPresets.Paragraph);
+          Closebuttons = await newDiv.append(webflow.elementPresets.Paragraph);
           if (!Closebuttons) {
             throw new Error("Failed to create paragraph");
           }
@@ -1062,25 +1061,47 @@ const handleToggles = (option) => {
           }
         }
 
-        const tempParagraph = await selectedElement.before(webflow.elementPresets.Paragraph);
+        // Create SecondDiv as child of innerdiv (if alignstyle)
+        let SecondDiv;
+        if (style === "alignstyle") {
+          SecondDiv = await innerdiv.append(webflow.elementPresets.DivBlock);
+          if (SecondDiv.setStyles) {
+            await SecondDiv.setStyles([secondBackgroundStyle]);
+          }
+        }
+
+        // Create heading as child of innerdiv
+        const tempHeading = await innerdiv.append(webflow.elementPresets.Heading);
+        if (!tempHeading) {
+          throw new Error("Failed to create heading");
+        }
+        if (tempHeading.setHeadingLevel) {
+          await tempHeading.setHeadingLevel(2);
+        }
+        if (tempHeading.setStyles) {
+          await tempHeading.setStyles([headingStyle]);
+        }
+        if (tempHeading.setTextContent) {
+          await tempHeading.setTextContent(translations[language as keyof typeof translations].ccpa.heading);
+        }
+
+        // Create paragraph as child of innerdiv
+        const tempParagraph = await innerdiv.append(webflow.elementPresets.Paragraph);
         if (!tempParagraph) {
           throw new Error("Failed to create paragraph");
         }
-
         if (tempParagraph.setStyles) {
           await tempParagraph.setStyles([paragraphStyle]);
         }
+        if (tempParagraph.setTextContent) {
+          const descriptionText = translations[language as keyof typeof translations].ccpa.description;
+          await tempParagraph.setTextContent(descriptionText);
+        }
 
-                 if (tempParagraph.setTextContent) {
-           const descriptionText = translations[language as keyof typeof translations].ccpa.description;
-           await tempParagraph.setTextContent(descriptionText);
-         }
-
-         // Create privacy link if privacyUrl is available
-         let privacyLink = null;
-         
-         if (privacyUrl && privacyUrl.trim() !== "") {
-          privacyLink = await selectedElement.before(webflow.elementPresets.LinkBlock);
+        // Create privacy link as child of tempParagraph (if privacyUrl is available)
+        let privacyLink = null;
+        if (privacyUrl && privacyUrl.trim() !== "") {
+          privacyLink = await tempParagraph.append(webflow.elementPresets.LinkBlock);
           if (!privacyLink) throw new Error("Failed to create privacy link");
 
           // Set URL using setSettings method
@@ -1089,10 +1110,10 @@ const handleToggles = (option) => {
           } catch (error) {
           }
         
-           if (privacyLink.setTextContent) {
-             const translation = getTranslation(language);
-             await privacyLink.setTextContent(` ${translation.moreInfo}`);
-           }
+          if (privacyLink.setTextContent) {
+            const translation = getTranslation(language);
+            await privacyLink.setTextContent(` ${translation.moreInfo}`);
+          }
         
           if (privacyLink.setDomId) {
             await privacyLink.setDomId("privacy-link");
@@ -1102,47 +1123,29 @@ const handleToggles = (option) => {
           if (privacyLink.setCustomAttribute) {
             await privacyLink.setCustomAttribute("data-hover-underline", "true");
           }
-        
         }
 
-        const buttonContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
+        // Create buttonContainer as child of innerdiv
+        const buttonContainer = await innerdiv.append(webflow.elementPresets.DivBlock);
         if (!buttonContainer) {
           throw new Error("Failed to create button container");
         }
         await buttonContainer.setStyles([buttonContainerStyle]);
 
-        const prefrenceButton = await selectedElement.before(webflow.elementPresets.LinkBlock);
+        // Create prefrenceButton as child of buttonContainer
+        const prefrenceButton = await buttonContainer.append(webflow.elementPresets.LinkBlock);
         if (!prefrenceButton) {
           throw new Error("Failed to create decline button");
         }
-        await prefrenceButton.setStyles([Linktext])
+        await prefrenceButton.setStyles([Linktext]);
         await prefrenceButton.setTextContent(translations[language as keyof typeof translations].ccpa.doNotShare);
-
-
-                 if ((prefrenceButton as any).setDomId) {
-           await (prefrenceButton as any).setDomId("do-not-share-link"); // Type assertion
-         }
-
-        if (newDiv.append && innerdiv && tempHeading && tempParagraph && buttonContainer) {
-          await newDiv.append(innerdiv);
-          if (Closebuttons) await newDiv.append(Closebuttons);
-          if (SecondDiv) await innerdiv.append(SecondDiv);
-          await innerdiv.append(tempHeading);
-          await innerdiv.append(tempParagraph);
-          if (privacyLink && tempParagraph.append) {
-            await tempParagraph.append(privacyLink);
-          }
-          await innerdiv.append(buttonContainer);
-
-                     if (buttonContainer.append && prefrenceButton) {
-
-             await buttonContainer.append(prefrenceButton)
-           }
-         }
+        if ((prefrenceButton as any).setDomId) {
+          await (prefrenceButton as any).setDomId("do-not-share-link"); // Type assertion
+        }
 
 
 
-        handleCreatePreferencesccpa()
+        handleCreatePreferencesccpa(selectedElement)
         
         setTimeout(async () => {
           setShowPopup(false);
@@ -1226,7 +1229,7 @@ const handleToggles = (option) => {
 
 
   //gdpr banner
-  const gdpr = async (skipCommonDiv: boolean = false, bothbanners:boolean=false) => {
+  const gdpr = async (skipCommonDiv: boolean = false, bothbanners:boolean=false, targetDiv?: any) => {
     setShowPopup(false);
     setShowLoadingPopup(true);
     setIsLoading(true);
@@ -1268,25 +1271,46 @@ const handleToggles = (option) => {
         }
       }));
 
-      const selectedElement = await webflow.getSelectedElement();
+      // Use provided targetDiv if available, otherwise get selected element
+      const selectedElement = targetDiv ;
       if (!selectedElement) {
         webflow.notify({ type: "error", message: "No element selected in the Designer." });
         setIsLoading(false); // Reset loading state
         return;
       }
 
-
-      const newDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
-
-      if (!newDiv) {
-        webflow.notify({ type: "error", message: "Failed to create div." });
+      // Check if the selected element can have children
+      if (!selectedElement?.children) {
+        webflow.notify({ type: "error", message: "Selected element cannot have children." });
+        setIsLoading(false);
         return;
       }
 
+      // Add ConsentBit class name to the selected element
+      try {
+        const consentBitStyle = await webflow.getStyleByName("ConsentBit") || await webflow.createStyle("ConsentBit");
+        if (selectedElement.setStyles) {
+          await selectedElement.setStyles([consentBitStyle]);
+        }
+      } catch (error) {
+        // Continue if style application fails
+      }
 
-             if ((newDiv as any).setDomId) {
-         await (newDiv as any).setDomId("consent-banner"); // Type assertion
-       }
+      // Create newDiv as a child of the selected element
+      const newDiv = await selectedElement.prepend(webflow.elementPresets.DivBlock);
+      
+      if (!newDiv) {
+        webflow.notify({ type: "error", message: "Failed to create div." });
+        setIsLoading(false);
+        return;
+      }
+      
+      if ((newDiv as any).setDomId) {
+        await (newDiv as any).setDomId("consent-banner"); // Type assertion
+      }
+
+
+
 
 
       const styleNames = {
@@ -1566,34 +1590,14 @@ const handleToggles = (option) => {
         await newDiv.setCustomAttribute("data-all-banners", "false");
       }
       try {
-        let SecondDiv;
-        if (style === "alignstyle") {
-          SecondDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
-          if (SecondDiv.setStyles) {
-            await SecondDiv.setStyles([secondBackgroundStyle]);
-          }
-        }
-        const innerdiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+        // Create innerdiv as child of newDiv
+        const innerdiv = await newDiv.append(webflow.elementPresets.DivBlock);
         await innerdiv.setStyles([innerDivStyle]);
 
-        const tempHeading = await selectedElement.before(webflow.elementPresets.Heading);
-        if (!tempHeading) {
-          throw new Error("Failed to create heading");
-        }
-        if (tempHeading.setHeadingLevel) {
-          await tempHeading.setHeadingLevel(2);
-        }
-        if (tempHeading.setStyles) {
-          await tempHeading.setStyles([headingStyle]);
-        }
-                 if (tempHeading.setTextContent) {
-           await tempHeading.setTextContent(translations[language as keyof typeof translations].heading);
-         }
-
-        // Conditionally add close button only if toggleStates.closebutton is true
+        // Create Closebuttons as child of newDiv (if enabled)
         let Closebuttons = null;
         if (toggleStates.closebutton) {
-          Closebuttons = await selectedElement.before(webflow.elementPresets.Paragraph);
+          Closebuttons = await newDiv.append(webflow.elementPresets.Paragraph);
           if (!Closebuttons) {
             throw new Error("Failed to create paragraph");
           }
@@ -1605,25 +1609,47 @@ const handleToggles = (option) => {
           }
         }
 
-        const tempParagraph = await selectedElement.before(webflow.elementPresets.Paragraph);
+        // Create SecondDiv as child of innerdiv (if alignstyle)
+        let SecondDiv;
+        if (style === "alignstyle") {
+          SecondDiv = await innerdiv.append(webflow.elementPresets.DivBlock);
+          if (SecondDiv.setStyles) {
+            await SecondDiv.setStyles([secondBackgroundStyle]);
+          }
+        }
+
+        // Create heading as child of innerdiv
+        const tempHeading = await innerdiv.append(webflow.elementPresets.Heading);
+        if (!tempHeading) {
+          throw new Error("Failed to create heading");
+        }
+        if (tempHeading.setHeadingLevel) {
+          await tempHeading.setHeadingLevel(2);
+        }
+        if (tempHeading.setStyles) {
+          await tempHeading.setStyles([headingStyle]);
+        }
+        if (tempHeading.setTextContent) {
+          await tempHeading.setTextContent(translations[language as keyof typeof translations].heading);
+        }
+
+        // Create paragraph as child of innerdiv
+        const tempParagraph = await innerdiv.append(webflow.elementPresets.Paragraph);
         if (!tempParagraph) {
           throw new Error("Failed to create paragraph");
         }
         if (tempParagraph.setStyles) {
           await tempParagraph.setStyles([paragraphStyle]);
-
+        }
+        if (tempParagraph.setTextContent) {
+          const descriptionText = translations[language as keyof typeof translations].description;
+          await tempParagraph.setTextContent(descriptionText);
         }
 
-                 if (tempParagraph.setTextContent) {
-           const descriptionText = translations[language as keyof typeof translations].description;
-           await tempParagraph.setTextContent(descriptionText);
-         }
-
-         // Create privacy link if privacyUrl is available
-         let privacyLink = null;
-         
-         if (privacyUrl && privacyUrl.trim() !== "") {
-          privacyLink = await selectedElement.before(webflow.elementPresets.LinkBlock);
+        // Create privacy link as child of tempParagraph (if privacyUrl is available)
+        let privacyLink = null;
+        if (privacyUrl && privacyUrl.trim() !== "") {
+          privacyLink = await tempParagraph.append(webflow.elementPresets.LinkBlock);
           if (!privacyLink) throw new Error("Failed to create privacy link");
 
           // Set URL using setSettings method
@@ -1632,12 +1658,10 @@ const handleToggles = (option) => {
           } catch (error) {
           }
         
-           if (privacyLink.setTextContent) {
-             const translation = getTranslation(language);
-             await privacyLink.setTextContent(` ${translation.moreInfo}`);
-           }
-        
-        
+          if (privacyLink.setTextContent) {
+            const translation = getTranslation(language);
+            await privacyLink.setTextContent(` ${translation.moreInfo}`);
+          }
         
           if (privacyLink.setDomId) {
             await privacyLink.setDomId("privacy-link");
@@ -1647,76 +1671,48 @@ const handleToggles = (option) => {
           if (privacyLink.setCustomAttribute) {
             await privacyLink.setCustomAttribute("data-hover-underline", "true");
           }
-        
         }
-        
 
-        const buttonContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
+        // Create buttonContainer as child of innerdiv
+        const buttonContainer = await innerdiv.append(webflow.elementPresets.DivBlock);
         if (!buttonContainer) {
           throw new Error("Failed to create button container");
         }
         await buttonContainer.setStyles([buttonContainerStyle]);
 
-        const prefrenceButton = await selectedElement.before(webflow.elementPresets.Button);
+        // Create buttons as children of buttonContainer
+        const prefrenceButton = await buttonContainer.append(webflow.elementPresets.Button);
         if (!prefrenceButton) {
-          throw new Error("Failed to create decline button");
+          throw new Error("Failed to create preferences button");
         }
         await prefrenceButton.setStyles([prefrenceButtonStyle]);
         await prefrenceButton.setTextContent(translations[language as keyof typeof translations].preferences);
-
-
-                 if ((prefrenceButton as any).setDomId) {
-           await (prefrenceButton as any).setDomId("preferences-btn"); // Type assertion
-         }
-
-        const acceptButton = await selectedElement.before(webflow.elementPresets.Button);
-        if (!acceptButton) {
-          throw new Error("Failed to create accept button");
+        if ((prefrenceButton as any).setDomId) {
+          await (prefrenceButton as any).setDomId("preferences-btn"); // Type assertion
         }
-        await acceptButton.setStyles([buttonStyle]);
-        await acceptButton.setTextContent(translations[language as keyof typeof translations].accept);
 
-
-                 if ((acceptButton as any).setDomId) {
-           await (acceptButton as any).setDomId("accept-btn"); // Type assertion
-         }
-
-        const declineButton = await selectedElement.before(webflow.elementPresets.Button);
+        const declineButton = await buttonContainer.append(webflow.elementPresets.Button);
         if (!declineButton) {
           throw new Error("Failed to create decline button");
         }
         await declineButton.setStyles([declineButtonStyle]);
         await declineButton.setTextContent(translations[language as keyof typeof translations].reject);
+        if ((declineButton as any).setDomId) {
+          await (declineButton as any).setDomId("decline-btn"); // Type assertion
+        }
+
+        const acceptButton = await buttonContainer.append(webflow.elementPresets.Button);
+        if (!acceptButton) {
+          throw new Error("Failed to create accept button");
+        }
+        await acceptButton.setStyles([buttonStyle]);
+        await acceptButton.setTextContent(translations[language as keyof typeof translations].accept);
+        if ((acceptButton as any).setDomId) {
+          await (acceptButton as any).setDomId("accept-btn"); // Type assertion
+        }
 
 
-                 if ((declineButton as any).setDomId) {
-           await (declineButton as any).setDomId("decline-btn"); // Type assertion
-         }
-
-
-
-        if (newDiv.append && innerdiv && tempHeading && tempParagraph && buttonContainer) {
-          // Append elements inside innerDiv
-          await newDiv.append(innerdiv);
-          if (Closebuttons) await newDiv.append(Closebuttons);
-          if (SecondDiv) await innerdiv.append(SecondDiv);
-          await innerdiv.append(tempHeading);
-          await innerdiv.append(tempParagraph);
-          if (privacyLink && tempParagraph.append) {
-            await tempParagraph.append(privacyLink);
-          }
-          await innerdiv.append(buttonContainer);
-          
-
-         if (buttonContainer.append && prefrenceButton && declineButton && acceptButton) {
-             await buttonContainer.append(prefrenceButton)
-             await buttonContainer.append(declineButton);
-             await buttonContainer.append(acceptButton);
-           }
-         }
-
-
-        handleCreatePreferences(skipCommonDiv);
+        handleCreatePreferences(skipCommonDiv, selectedElement);
         
         setTimeout(async () => {
           setShowPopup(false);
@@ -1756,8 +1752,16 @@ const handleToggles = (option) => {
 
   //both banners
   const handleBothBanners = async () => {
-    await gdpr(true,true);
-    await ccpabanner();
+     const targetDiv = await webflow.getSelectedElement();
+      if (!targetDiv) {
+        webflow.notify({ type: "error", message: "No element selected in the Designer." });
+        setIsLoading(false); // Reset loading state
+        return;
+      }
+    
+
+    await gdpr(true,true,targetDiv);
+    await ccpabanner(targetDiv);
   };
 
   const handleExpirationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2482,8 +2486,14 @@ const handleToggles = (option) => {
                 </button>) : selectedOptions.includes("GDPR") ?
                   (<button
                     className={`confirm-button ${isLoading ? "loading" : ""}`}
-                    onClick={() => {
-                      gdpr(false,false);
+                    onClick={async () => {
+                      const targetDiv = await webflow.getSelectedElement();
+                      if (!targetDiv) {
+                        webflow.notify({ type: "error", message: "No element selected in the Designer." });
+                        setIsLoading(false);
+                        return;
+                      }
+                      await gdpr(false, false, targetDiv);
                     }}
                   >
                     {isLoading ? (
@@ -2494,8 +2504,14 @@ const handleToggles = (option) => {
                   </button>) : selectedOptions.includes("U.S. State Laws") ?
                     (<button
                       className="confirm-button"
-                      onClick={() => {
-                        ccpabanner();
+                      onClick={async () => {
+                        const targetDiv = await webflow.getSelectedElement();
+                        if (!targetDiv) {
+                          webflow.notify({ type: "error", message: "No element selected in the Designer." });
+                          setIsLoading(false);
+                          return;
+                        }
+                        await ccpabanner(targetDiv);
                       }}
                     >
                       Confirm
@@ -3140,4 +3156,5 @@ const handleToggles = (option) => {
 };
 
 export default CustomizationTab;
+
 

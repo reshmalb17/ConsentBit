@@ -74,18 +74,35 @@ const getOrCreateBrandAsset = async (): Promise<any> => {
   }
 };
 
-const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false, borderRadius: number, font: string, privacyUrl: string = "") => {
+const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false, borderRadius: number, font: string, privacyUrl: string = "", targetDiv?: any) => {
   
   try {
     const translation = getTranslation(language);
 
-    const selectedElement = await webflow.getSelectedElement();
+    // Use provided targetDiv if available, otherwise get selected element
+    const selectedElement = targetDiv || await webflow.getSelectedElement();
     if (!selectedElement) {
       webflow.notify({ type: "error", message: "No element selected in the Designer." });
       return;
     }
 
-    const newDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+        // Check if the selected element can have children
+        if (!selectedElement?.children) {
+            webflow.notify({ type: "error", message: "Selected element cannot have children." });
+            return;
+        }
+
+        // Add ConsentBit class name to the selected element
+        try {
+            const consentBitStyle = await webflow.getStyleByName("ConsentBit") || await webflow.createStyle("ConsentBit");
+            if (selectedElement.setStyles) {
+                await selectedElement.setStyles([consentBitStyle]);
+            }
+        } catch (error) {
+            // Continue if style application fails
+        }
+
+        const newDiv = await selectedElement.prepend(webflow.elementPresets.DivBlock);
     if (!newDiv) {
 
       webflow.notify({ type: "error", message: "Failed to create div." });
@@ -140,8 +157,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "background-color": color,
       "max-height": "510px",
       "max-width": "435px",
-      "position": "relative",
-      "z-index": "99999",
+      "position": "fixed",
+      "z-index": "100000",
       "top": "50%",
       "left": "50%",
       "transform": "translate(-50%, -50%)",
@@ -155,7 +172,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "padding-bottom": "20px",
       "padding-left": "20px",
       "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-      "font-family":font
+      "font-family":font,
+      "display": "flex"
     };
 
     const responsivePropertyMap: Record<string, string> = {
@@ -320,19 +338,30 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
     await headingStyle.setProperties(headingPropertyMap);
     await maindivs.setProperties(mainDivBlockPropertyMap)
 
-    if (newDiv.setStyles) {
-      await newDiv.setStyles([divStyle]);
-    }
-
-    if (newDiv.setCustomAttribute) {
-      await newDiv.setCustomAttribute("data-animation", animationAttribute);
-      await newDiv.setCustomAttribute("data-cookie-banner", disableScroll ? "true" : "false");
-
-    } else {
-    }
+    // Note: newDiv will be appended to mainBanner, so we don't apply divStyle to newDiv
+    // The mainBanner (consentbit-preference) already has the overlay styles
+    // We'll create a content wrapper inside newDiv for the actual banner content
 
     try {
-      const tempHeading = await selectedElement.before(webflow.elementPresets.Heading);
+      // Create a content wrapper div inside newDiv to hold the banner content
+      // This wrapper will have the divStyle applied instead of newDiv
+      const contentWrapper = await newDiv.append(webflow.elementPresets.DivBlock);
+      if (!contentWrapper) {
+        throw new Error("Failed to create content wrapper");
+      }
+      
+      // Apply divStyle to contentWrapper instead of newDiv
+      if (contentWrapper.setStyles) {
+        await contentWrapper.setStyles([divStyle]);
+      }
+
+      if (contentWrapper.setCustomAttribute) {
+        await contentWrapper.setCustomAttribute("data-animation", animationAttribute);
+        await contentWrapper.setCustomAttribute("data-cookie-banner", disableScroll ? "true" : "false");
+      }
+
+      // Create heading as child of contentWrapper
+      const tempHeading = await contentWrapper.append(webflow.elementPresets.Heading);
       if (!tempHeading) {
         throw new Error("Failed to create heading");
       }
@@ -347,7 +376,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       } else {
       }
 
-      const tempParagraph = await selectedElement.before(webflow.elementPresets.Paragraph);
+      // Create paragraph as child of contentWrapper
+      const tempParagraph = await contentWrapper.append(webflow.elementPresets.Paragraph);
       if (!tempParagraph) {
         throw new Error("Failed to create paragraph");
       }
@@ -361,11 +391,11 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       } else {
       }
 
-      // Create privacy link if privacyUrl is available
+      // Create privacy link as child of tempParagraph (if privacyUrl is available)
       let privacyLink = null;
       
       if (privacyUrl && privacyUrl.trim() !== "") {
-        privacyLink = await selectedElement.before(webflow.elementPresets.LinkBlock);
+        privacyLink = await tempParagraph.append(webflow.elementPresets.LinkBlock);
         if (!privacyLink) throw new Error("Failed to create privacy link");
 
         // Set URL using setSettings method
@@ -391,8 +421,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
 
       //divblock///////////////////////////////////////////////////////////////////
 
-             // Create the main banner container with class consentbit-preference
-       const mainBanner = await selectedElement.before(webflow.elementPresets.DivBlock);
+             // Create the main banner container with class consentbit-preference as child of targetDiv
+       const mainBanner = await selectedElement.append(webflow.elementPresets.DivBlock);
        if (!mainBanner) {
          throw new Error("Failed to create main banner");
        }
@@ -404,8 +434,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
        } else {
        }
 
-       // Create the preference div with class consentbit-preference_div
-       const preferenceDiv = await selectedElement.before(webflow.elementPresets.DivBlock);
+       // Create the preference div with class consentbit-preference_div as child of contentWrapper
+       const preferenceDiv = await contentWrapper.append(webflow.elementPresets.DivBlock);
        if (!preferenceDiv) {
          throw new Error("Failed to create preference div");
        }
@@ -417,14 +447,18 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
        } else {
        }
 
-       // Append preference div to main banner
-       if (mainBanner.append && preferenceDiv) {
-         await mainBanner.append(preferenceDiv);
-       }
 
 
+      //////////////////////
+      // Create prefrenceContainerinner as child of preferenceDiv
+      const prefrenceContainerinner = await preferenceDiv.append(webflow.elementPresets.DivBlock);
+      if (!prefrenceContainerinner) {
+        throw new Error("Failed to create button container");
+      }
+      await prefrenceContainerinner.setStyles([prefrenceDiv]);
 
-      const formBlock = await selectedElement.before(webflow.elementPresets.FormForm);
+      // Create formBlock as child of prefrenceContainerinner
+      const formBlock = await prefrenceContainerinner.append(webflow.elementPresets.FormForm);
       if (!formBlock) {
         throw new Error("Failed to create form block");
       }
@@ -441,7 +475,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       // Get all elements inside the form and remove them
       const formElements = await form.getChildren();
       await Promise.all(formElements.map(child => child.remove()));
-
 
       // Define labels, corresponding checkbox IDs, and descriptions
       const allSections = [
@@ -573,15 +606,10 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
 
       }
 
-      //////////////////////
-      const prefrenceContainerinner = await selectedElement.before(webflow.elementPresets.DivBlock);
-      if (!prefrenceContainerinner) {
-        throw new Error("Failed to create button container");
-      }
-      await prefrenceContainerinner.setStyles([prefrenceDiv]);
 
       if (!skipCommonDiv) {
-        const mainDivBlock = await selectedElement.before(webflow.elementPresets.DivBlock);
+        // Create the change-preference div as child of targetDiv
+        const mainDivBlock = await selectedElement.append(webflow.elementPresets.DivBlock);
         await mainDivBlock.setStyles([changepre]);
 
         if (!mainDivBlock) {
@@ -648,7 +676,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       // Conditionally add close button only if closebutton parameter is true
       let Closebuttons = null;
       if (closebutton) {
-        Closebuttons = await selectedElement.before(webflow.elementPresets.Paragraph);
+        Closebuttons = await contentWrapper.append(webflow.elementPresets.Paragraph);
         if (!Closebuttons) {
           throw new Error("Failed to create paragraph");
         }
@@ -660,13 +688,15 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         }
       }
 
-      const buttonContainer = await selectedElement.before(webflow.elementPresets.DivBlock);
+      // Create buttonContainer as child of contentWrapper
+      const buttonContainer = await contentWrapper.append(webflow.elementPresets.DivBlock);
       if (!buttonContainer) {
         throw new Error("Failed to create button container");
       }
       await buttonContainer.setStyles([buttonContainerStyle]);
 
-      const acceptButton = await selectedElement.before(webflow.elementPresets.Button);
+      // Create acceptButton as child of buttonContainer
+      const acceptButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!acceptButton) {
         throw new Error("Failed to create accept button");
       }
@@ -678,7 +708,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       } else {
       }
 
-      const declineButton = await selectedElement.before(webflow.elementPresets.Button);
+      // Create declineButton as child of buttonContainer
+      const declineButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!declineButton) {
         throw new Error("Failed to create decline button");
       }
@@ -690,39 +721,14 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       } else {
       }
 
-             if (mainBanner.append && newDiv) {
-         await mainBanner.append(newDiv);
-       }
-
-       if (newDiv.append && tempHeading && tempParagraph && buttonContainer && preferenceDiv) {
-         await newDiv.append(tempHeading);
-         await newDiv.append(tempParagraph);
-         if (privacyLink && tempParagraph.append) {
-           await tempParagraph.append(privacyLink);
-         }
-         await newDiv.append(preferenceDiv)
-         await newDiv.append(buttonContainer);
-         if (Closebuttons) await newDiv.append(Closebuttons)
-
-         if (preferenceDiv.append && prefrenceContainerinner) {
-           // await preferenceDiv.append(prefrenceContainertoggle)
-           await preferenceDiv.append(prefrenceContainerinner)
-         }
-
-        if (prefrenceContainerinner.append && formBlock) {
-          await prefrenceContainerinner.append(formBlock)
-          // await prefrenceContainerinner.append(prefeParagraph)
-        }
-
-        if (buttonContainer.append && acceptButton && declineButton) {
-          await buttonContainer.append(acceptButton);
-          await buttonContainer.append(declineButton);
-          // await buttonContainer.append(prefrenceButton)
-        } else {
-        }
+      // All elements are already created as children of their appropriate parents
+      // mainBanner is already a child of selectedElement (targetDiv), append newDiv to it
+      if (mainBanner.append && newDiv) {
+        await mainBanner.append(newDiv);
+      }
         // Append brand image inside a full-width wrapper at the bottom of the banner
         try {
-          const brandWrapper = await newDiv.append(webflow.elementPresets.DivBlock);
+          const brandWrapper = await contentWrapper.append(webflow.elementPresets.DivBlock);
             const brandWrapperStyle = (await webflow.getStyleByName("consentBrandWrapper")) || (await webflow.createStyle("consentBrandWrapper"));
             await brandWrapperStyle.setProperties({
               "width": "40%",
@@ -760,8 +766,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
             await (brandImage as any).setStyles?.([brandStyle]);
         } catch (e) {
         }
-      } else {
-      }
 
       // Set bannerAdded to true in sessionStorage
       // COMMENTED OUT: localStorage.setItem('bannerAdded', 'true');

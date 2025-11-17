@@ -20,132 +20,6 @@ import pkg from '../package.json';
 
 const appVersion = pkg.version;
 
-// // Helper function to add script directly to document head
-// const addScriptToHead = (scriptUrl: string) => {
-//   try {
-//     // Check if script already exists
-//     const existingScript = document.querySelector(`script[src="${scriptUrl}"]`);
-//     if (existingScript) {
-//       console.log('Script already exists in head:', scriptUrl);
-//       return;
-//     }
-
-//     // Create and add script element
-//     const script = document.createElement('script');
-//     script.src = scriptUrl;
-//     script.async = true;
-//     script.defer = true;
-    
-//     // Add to head
-//     document.head.appendChild(script);
-//     console.log('Script added to document head:', scriptUrl);
-    
-//     // Log success/failure
-//     script.onload = () => {
-//       console.log('Script loaded successfully:', scriptUrl);
-//     };
-    
-//     script.onerror = () => {
-//       console.error('Failed to load script:', scriptUrl);
-//     };
-//   } catch (error) {
-//     console.error('Error adding script to head:', error);
-//   }
-// };
-
-// // Helper function to check if script exists in head
-// const checkScriptInHead = (scriptUrl: string) => {
-//   const existingScript = document.querySelector(`script[src="${scriptUrl}"]`);
-//   console.log('Script check in head:', scriptUrl, existingScript ? 'EXISTS' : 'NOT FOUND');
-//   return !!existingScript;
-// };
-
-// // Helper function to log all scripts in head for debugging
-// const logAllScriptsInHead = () => {
-//   const scripts = document.head.querySelectorAll('script');
-//   console.log('All scripts in document head:');
-//   scripts.forEach((script, index) => {
-//     console.log(`${index + 1}. ${script.src || script.textContent?.substring(0, 50) + '...'}`);
-//   });
-// };
-
-// Debug function removed - no session storage checks needed
-  
-//   // Check for common consent script URLs
-//   const commonScriptUrls = [
-//     'https://cb-server.web-8fb.workers.dev',
-//     'consentbit',
-//     'v2',
-//     'banner'
-//   ];
-  
-//   commonScriptUrls.forEach(url => {
-//     const scripts = document.head.querySelectorAll(`script[src*="${url}"]`);
-//     console.log(`Scripts containing "${url}":`, scripts.length);
-//   });
-// };
-
-// // Global function to manually trigger script registration
-// (window as any).forceScriptRegistration = async () => {
-//   console.log('=== FORCING SCRIPT REGISTRATION ===');
-  
-//   // Clear existing flags
-//   sessionStorage.removeItem(`scripts_registered_${appVersion}`);
-//   sessionStorage.removeItem(`v2_consent_script_registered_${appVersion}`);
-  
-//   // Get fresh token and site info
-//   const token = getSessionTokenFromLocalStorage();
-//   if (!token) {
-//     console.error('No session token available');
-//     return;
-//   }
-  
-//   try {
-//     const siteInfo = await webflow.getSiteInfo();
-//     console.log('Site info:', siteInfo);
-    
-//     if (appVersion === '2.0.0' || appVersion === '2.0.1') {
-//       console.log('Registering V2 Banner Custom Code...');
-//       const result = await customCodeApi.registerV2BannerCustomCode(token);
-//       console.log('Registration result:', result);
-      
-//       if (result && result.result) {
-//         const params: CodeApplication = {
-//           targetType: 'site',
-//           targetId: siteInfo.siteId,
-//           scriptId: result.result.id,
-//           location: 'header',
-//           version: result.result.version
-//         };
-        
-//         console.log('Applying V2 script...', params);
-//         const applyResult = await customCodeApi.applyV2Script(params, token);
-//         console.log('Apply result:', applyResult);
-        
-//         // Add directly to head as fallback
-//         if (result.result.hostedLocation) {
-//           addScriptToHead(result.result.hostedLocation);
-//         }
-        
-//         console.log('Script registration completed');
-//       }
-//     }
-//   } catch (error) {
-//     console.error('Error in force script registration:', error);
-//   }
-// };
-
-// Global function to test script addition to head
-// (window as any).testScriptAddition = (scriptUrl: string = 'https://cb-server.web-8fb.workers.dev/test-script.js') => {
-//   console.log('=== TESTING SCRIPT ADDITION TO HEAD ===');
-//   console.log('Adding test script:', scriptUrl);
-//   addScriptToHead(scriptUrl);
-  
-//   setTimeout(() => {
-//     checkScriptInHead(scriptUrl);
-//     logAllScriptsInHead();
-//   }, 1000);
-// };
 
 
 
@@ -153,26 +27,6 @@ const appVersion = pkg.version;
 
 const App: React.FC = () => {
 
-  // COMMENTED OUT: Clear ALL data including authentication on every reload
-  // This was causing unnecessary re-authentication on every reload
-  // React.useEffect(() => {
-  //   // Clear everything immediately on mount - complete fresh start
-  //   clearAllDataIncludingAuth();
-  //   
-  //   // Also set up a more aggressive clearing to catch any late sessionStorage writes
-  //   const clearAgain = () => {
-  //     // COMMENTED OUT: const currentKeys = Object.keys(localStorage);
-  //     const currentKeys = Object.keys(sessionStorage);
-  //     if (currentKeys.length > 0) {
-  //       clearAllDataIncludingAuth();
-  //     }
-  //   };
-  //   
-  //   // Check again after a short delay to catch any late writes
-  //   const timeoutId = setTimeout(clearAgain, 100);
-  //   
-  //   return () => clearTimeout(timeoutId);
-  // }, []);
 
   const queryClient = useQueryClient();
   const [skipWelcomeScreen, setSkipWelcomeScreen] = usePersistentState("skipWelcomeScreen", false);
@@ -208,12 +62,7 @@ const App: React.FC = () => {
     // Check if scan button should be available (authenticated && !isCheckingAuth && !isBannerAdded)
   }, [isAuthenticated, isCheckingAuth, bannerBooleans.isBannerAdded, globalAuthStartTime]);
 
-  // // Debug component states
-  // useEffect(() => {
-
-    
-  // }, [componentStates.isWelcomeScreen, componentStates.isSetUpStep, componentStates.isWelcomeScipt, componentStates.isConfirmPublish, componentStates.isSuccessPublish, componentStates.isCustomizationTab]);
-
+  
   const { user, sessionToken, exchangeAndVerifyIdToken, openAuthScreen, isAuthenticatedForCurrentSite, attemptAutoRefresh } = useAuth();
   const [isFetchWelcomeScripts, setIsFetchWelcomeScripts] = useState(false);
   const [currentSiteId, setCurrentSiteId] = useState<string | null>(null);
@@ -221,161 +70,198 @@ const App: React.FC = () => {
     // App initialization with clean welcome screen flow
   useEffect(() => {
     const initializeApp = async () => {
-      const startTime = performance.now();
-      
-      // Start with welcome screen and loading state
+      // Always reset to welcome screen on app launch
+      console.log("[App] Initializing - resetting to welcome screen");
+      setSkipWelcomeScreen(false);
       componentStates.resetComponentStates();
       componentStates.setIsWelcomeScreen(true);
+      
       setIsAppInitializing(false);
       setIsCheckingAuth(true);
       
-      // Check if user data already exists in sessionStorage - if so, skip auth check
-      const existingUserData = getAuthStorageItem("consentbit-userinfo");
+      // Set overall timeout for authorization check (15 seconds)
+      const authTimeout = setTimeout(() => {
+        console.warn("Authorization check timeout - proceeding with default state");
+        setSkipWelcomeScreen(false);
+        bannerBooleans.setIsBannerAdded(false);
+        setIsAuthenticated(false);
+        setIsBannerStatusLoading(false);
+        setIsCheckingAuth(false);
+      }, 15000);
       
-      if (existingUserData && existingUserData !== "null" && existingUserData !== "undefined") {
-        const authStartTime = performance.now();
-        setIsAuthenticated(true);
-       
-        // Track timing for cached authentication
-        if (globalAuthStartTime) {
-          const totalTime = performance.now() - globalAuthStartTime;
+      try {
+        // Get existing user data from sessionStorage
+        const existingUserDataStr = sessionStorage.getItem("consentbit-userinfo");
+        let existingUserData = null;
+        if (existingUserDataStr && existingUserDataStr !== "null" && existingUserDataStr !== "undefined") {
+          try {
+            existingUserData = JSON.parse(existingUserDataStr);
+          } catch (e) {
+            console.error("Error parsing user data:", e);
+          }
         }
         
-        // Always check banner status from API to get accurate status
-        const bannerStartTime = performance.now();
-        const token = getSessionTokenFromLocalStorage();
+        // Get current site info from Webflow with timeout
+        const siteInfoPromise = webflow.getSiteInfo();
+        const siteInfoTimeout = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('getSiteInfo timeout after 5 seconds')), 5000);
+        });
         
-        if (token) {
+        let siteInfo;
+        try {
+          siteInfo = await Promise.race([siteInfoPromise, siteInfoTimeout]);
+        } catch (error) {
+          console.error("Error getting site info:", error);
+          clearTimeout(authTimeout);
+          setSkipWelcomeScreen(false);
+          bannerBooleans.setIsBannerAdded(false);
+          setIsAuthenticated(false);
+          setIsBannerStatusLoading(false);
+          setIsCheckingAuth(false);
+          return;
+        }
+        
+        // If user data doesn't exist, or siteId doesn't match, exchange token and store again
+        if (!existingUserData) {
+          console.log("No user data found, exchanging token...");
           try {
-            const apiStartTime = performance.now();
+            const exchangePromise = exchangeAndVerifyIdToken();
+            const exchangeTimeout = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Token exchange timeout after 10 seconds')), 10000);
+            });
+            await Promise.race([exchangePromise, exchangeTimeout]);
             
-            // Get site info to pass siteId to API call
-            const siteInfo = await webflow.getSiteInfo();
-            
-            // Add timeout to prevent hanging API calls
-            const apiPromise = await customCodeApi.getBannerStyles(token, siteInfo?.siteId);
+            // Re-fetch user data after exchange
+            const newUserDataStr = sessionStorage.getItem("consentbit-userinfo");
+            if (newUserDataStr && newUserDataStr !== "null" && newUserDataStr !== "undefined") {
+              try {
+                existingUserData = JSON.parse(newUserDataStr);
+              } catch (e) {
+                console.error("Error parsing user data after exchange:", e);
+              }
+            }
+          } catch (error: any) {
+            console.error("Error exchanging token:", error);
+            // Check if it's a server error (500) and log appropriately
+            if (error?.message?.includes('500') || error?.message?.includes('Internal server error')) {
+              console.warn("Server error during token exchange - this may be a temporary issue. The app will continue with limited functionality.");
+            }
+            // Continue with default state if token exchange fails
+          }
+        } else if (existingUserData.siteId && siteInfo?.siteId) {
+          if (existingUserData.siteId !== siteInfo.siteId) {
+            console.log("Site ID mismatch, exchanging token...", {
+              storedSiteId: existingUserData.siteId,
+              currentSiteId: siteInfo.siteId
+            });
+            try {
+              const exchangePromise = exchangeAndVerifyIdToken();
+              const exchangeTimeout = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Token exchange timeout after 10 seconds')), 10000);
+              });
+              await Promise.race([exchangePromise, exchangeTimeout]);
+              
+              // Re-fetch user data after exchange
+              const newUserDataStr = sessionStorage.getItem("consentbit-userinfo");
+              if (newUserDataStr && newUserDataStr !== "null" && newUserDataStr !== "undefined") {
+                try {
+                  existingUserData = JSON.parse(newUserDataStr);
+                } catch (e) {
+                  console.error("Error parsing user data after exchange:", e);
+                }
+              }
+            } catch (error: any) {
+              console.error("Error exchanging token:", error);
+              // Check if it's a server error (500) and log appropriately
+              if (error?.message?.includes('500') || error?.message?.includes('Internal server error')) {
+                console.warn("Server error during token exchange - this may be a temporary issue. The app will continue with existing data.");
+              }
+              // Continue with existing data if token exchange fails
+            }
+          }
+        }
+        
+        // Get token from existing user data
+        const token = existingUserData?.sessionToken;
+        
+        if (token && siteInfo?.siteId) {
+          try {
+            // Check banner status from API
+            const apiPromise = customCodeApi.getBannerStyles(token, siteInfo.siteId);
             const timeoutPromise = new Promise((_, reject) => {
               setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
             });
             
             const response = await Promise.race([apiPromise, timeoutPromise]);
             
+            // Clear the auth timeout since we completed successfully
+            clearTimeout(authTimeout);
+            
             // Set banner status based on API response
             if (response && response.isBannerAdded === true) {
-              // Banner was previously added - show welcome screen with "Customize" button
               setSkipWelcomeScreen(false);
               bannerBooleans.setIsBannerAdded(true);
+              setIsAuthenticated(true);
             } else {
-              // Response is null, empty, or bannerAdded is not true - show welcome screen with "Scan Project" button
               setSkipWelcomeScreen(false);
               bannerBooleans.setIsBannerAdded(false);
+              setIsAuthenticated(!!token);
             }
             setIsBannerStatusLoading(false);
           } catch (error) {
-            // API call failed or timed out - show welcome screen with default state
-           
+            console.error("Error checking banner status:", error);
+            clearTimeout(authTimeout);
             setSkipWelcomeScreen(false);
             bannerBooleans.setIsBannerAdded(false);
+            setIsAuthenticated(!!token);
             setIsBannerStatusLoading(false);
           }
         } else {
-          // No token available - show welcome screen with default state
+          // No token or siteId available
+          clearTimeout(authTimeout);
           setSkipWelcomeScreen(false);
           bannerBooleans.setIsBannerAdded(false);
-          setIsBannerStatusLoading(false);
-        }
-        
-        
-        // Set checking auth to false only after all initialization is complete
-        const finalStartTime = performance.now();
-        setIsCheckingAuth(false);
-        return; // Exit early since we have user data
-      }
-      
-      try {
-        const authStartTime = performance.now();
-        
-        // Try fresh background authentication (silent) with timeout
-        const authPromise = attemptAutoRefresh();
-        const timeoutPromise = new Promise<boolean>((resolve) => {
-          setTimeout(() => {
-            resolve(false);
-          }, 5000); // 5 second timeout
-        });
-        
-        const refreshSuccess = await Promise.race([authPromise, timeoutPromise]);
-        
-        if (refreshSuccess) {
-          setIsAuthenticated(true);
-          
-          // Track timing for fresh authentication
-          if (globalAuthStartTime) {
-            const totalTime = performance.now() - globalAuthStartTime;
-          }
-          
-          // Always check API for current banner status (don't rely on cached data)
-          const token = getSessionTokenFromLocalStorage();
-          if (token) {
-            try {
-              const apiStartTime = performance.now();
-              
-              // Get site info to pass siteId to API call
-              const siteInfo = await webflow.getSiteInfo();
-              
-              // Add timeout to prevent hanging API calls
-              const apiPromise = customCodeApi.getBannerStyles(token, siteInfo?.siteId);
-              const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
-              });
-              
-            const response = await Promise.race([apiPromise, timeoutPromise]);
-              
-              // Set banner status based on API response (not cached data)
-              if (response && response.isBannerAdded === true) {
-                // Banner was previously added - show welcome screen with "Customize" button
-                setSkipWelcomeScreen(false);
-                bannerBooleans.setIsBannerAdded(true);
-              } else {
-                // Response is null, empty, or bannerAdded is not true - show welcome screen with "Scan Project" button
-                setSkipWelcomeScreen(false);
-                bannerBooleans.setIsBannerAdded(false);
-              }
-              setIsBannerStatusLoading(false);
-            } catch (error) {
-              // API call failed - show welcome screen
-              setSkipWelcomeScreen(false);
-              bannerBooleans.setIsBannerAdded(false);
-              setIsBannerStatusLoading(false);
-            }
-          } else {
-            // No token available - show welcome screen
-            setSkipWelcomeScreen(false);
-            bannerBooleans.setIsBannerAdded(false);
-            setIsBannerStatusLoading(false);
-          }
-        } else {
-          // Auth failed - show welcome screen
-          setSkipWelcomeScreen(false);
-          bannerBooleans.setIsBannerAdded(false);
+          setIsAuthenticated(false);
           setIsBannerStatusLoading(false);
         }
       } catch (error) {
-        // Silent error handling - show welcome screen
+        console.error("Error initializing app:", error);
+        clearTimeout(authTimeout);
         setSkipWelcomeScreen(false);
         bannerBooleans.setIsBannerAdded(false);
+        setIsAuthenticated(false);
         setIsBannerStatusLoading(false);
       } finally {
-        // Auth check complete
         setIsCheckingAuth(false);
       }
     };
 
     initializeApp();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on app launch
 
   // Update isAuthenticated state when user authentication changes
   useEffect(() => {
-    const isUserAuthenticated = !!(user?.email && sessionToken);
+    // Check if we have a session token (either from hook or storage)
+    const tokenFromStorage = getSessionTokenFromLocalStorage();
+    const hasToken = !!(sessionToken || tokenFromStorage);
+    
+    // Check if we have user email (either from hook or storage)
+    const authData = getAuthData();
+    const hasEmail = !!(user?.email || authData?.email);
+    
+    const isUserAuthenticated = hasToken && hasEmail;
+    
+    console.log("[App] isAuthenticated update:", {
+      userEmail: user?.email || "none",
+      sessionToken: sessionToken ? "exists" : "none",
+      tokenFromStorage: tokenFromStorage ? "exists" : "none",
+      authDataEmail: authData?.email || "none",
+      hasToken,
+      hasEmail,
+      isUserAuthenticated
+    });
+    
     setIsAuthenticated(isUserAuthenticated);
   }, [user, sessionToken]);
 
@@ -447,6 +333,79 @@ const App: React.FC = () => {
       clearTimeout(timer);
     };
   }, [isAuthenticated, sessionToken, user?.email]); // Trigger when auth state changes
+
+  // Call postInstallationCall only once on first launch, after authentication is ready
+  useEffect(() => {
+    // Only proceed if authentication is ready
+    if (!isAuthenticated || !sessionToken) {
+      console.log("postInstallationCall: Waiting for authentication...", {
+        isAuthenticated,
+        hasSessionToken: !!sessionToken
+      });
+      return;
+    }
+
+    // Check if we've already called this (prevent multiple calls)
+    const hasCalled = getAuthStorageItem("postInstallationCalled");
+    if (hasCalled === "true") {
+      console.log("postInstallationCall: Already called, skipping...");
+      return;
+    }
+
+    const callPostInstallation = async () => {
+      console.log("postInstallationCall: Starting...");
+      console.log("postInstallationCall: isAuthenticated =", isAuthenticated);
+      console.log("postInstallationCall: sessionToken =", sessionToken ? "exists" : "null");
+      
+      try {
+        const token = getSessionTokenFromLocalStorage();
+        console.log("postInstallationCall: token from storage =", token ? "exists" : "null");
+        
+        if (token) {
+          const siteInfo = await webflow.getSiteInfo();
+          console.log("postInstallationCall: siteInfo =", siteInfo);
+          console.log("postInstallationCall: siteId =", siteInfo?.siteId);
+          
+          if (siteInfo?.siteId) {
+            // Call the API - it will handle checking if already processed
+            console.log("postInstallationCall: Calling API...");
+            try {
+              const result = await customCodeApi.postInstalltionCall(token, siteInfo.siteId);
+              console.log("postInstallationCall: API result =", result);
+              
+              // Mark as called to prevent duplicate calls
+              setAuthStorageItem("postInstallationCalled", "true");
+              
+              // API returns { success: true, message: 'Already processed' } if already called
+              // or { success: true, message: 'Successfully processed' } if just processed
+            } catch (apiError: any) {
+              // Handle CORS and other API errors gracefully
+              // CORS errors typically show as "Failed to fetch" or "NetworkError"
+              const errorMessage = apiError?.message || String(apiError);
+              if (errorMessage.includes('CORS') || 
+                  errorMessage.includes('Failed to fetch') || 
+                  errorMessage.includes('NetworkError') ||
+                  errorMessage.includes('Access-Control')) {
+                console.warn("postInstallationCall: CORS error detected - server may not have proper CORS headers configured. This is a server-side issue and won't block the app.");
+              } else {
+                console.error("postInstallationCall: API error:", apiError);
+              }
+              // Don't throw - this is a non-critical call
+            }
+          } else {
+            console.log("postInstallationCall: No siteId available");
+          }
+        } else {
+          console.log("postInstallationCall: No token available");
+        }
+      } catch (error) {
+        // Silently handle error - don't block app
+        console.error("postInstallationCall: Error calling postInstallationCall:", error);
+      }
+    };
+
+    callPostInstallation();
+  }, [isAuthenticated, sessionToken]); // Trigger when authentication is ready
 
  
 
@@ -572,85 +531,6 @@ const App: React.FC = () => {
 
 
 
-  // Removed - this is now handled in the main initialization useEffect
-
-  // REMOVED: This useEffect was causing conflicts with fast sessionStorage-based auth
-  // The authentication state is now properly managed in the main initialization useEffect
-
-  // Site change detection - clear scripts when site changes
-  // useEffect(() => {
-  //   const detectSiteChange = async () => {
-  //     try {
-  //       // Check if we already have site info cached to avoid unnecessary API call
-  //       const cachedSiteInfo = getAuthStorageItem("siteInfo");
-  //       let siteInfo;
-  //       let newSiteId;
-        
-  //       if (cachedSiteInfo) {
-  //         try {
-  //           siteInfo = JSON.parse(cachedSiteInfo);
-  //           newSiteId = siteInfo?.siteId;
-  //         } catch (error) {
-  //           // Fallback to API call if cached data is invalid
-  //           siteInfo = await webflow.getSiteInfo();
-  //           newSiteId = siteInfo?.siteId;
-  //         }
-  //       } else {
-  //         siteInfo = await webflow.getSiteInfo();
-  //         newSiteId = siteInfo?.siteId;
-  //         // Cache the site info for future use
-  //         if (siteInfo) {
-  //           setAuthStorageItem("siteInfo", JSON.stringify(siteInfo));
-  //         }
-  //       }
-        
-  //       if (newSiteId && newSiteId !== currentSiteId) {
-  //         // Site has changed, clear scripts to prevent cross-site contamination
-  //         if (currentSiteId !== null) {
-  //           // Only clear if we had a previous site (not initial load)
-  //           // COMMENTED OUT: localStorage.removeItem('scriptContext_scripts');
-  //           removeAuthStorageItem('scriptContext_scripts');
-            
-  //           // Regenerate session token for the new site
-  //           try {
-              
-  //             // Clear old token first to force complete regeneration
-  //             // COMMENTED OUT: localStorage.removeItem("consentbit-userinfo");
-  //             removeAuthStorageItem("consentbit-userinfo");
-              
-  //             const newTokenData = await exchangeAndVerifyIdToken();
-             
-  //           } catch (error) {
-  //             // Fallback: just update the site ID in stored data
-  //             // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
-  //             const userinfo = getAuthStorageItem("consentbit-userinfo");
-  //             if (userinfo) {
-  //               try {
-  //                 const userData = JSON.parse(userinfo);
-  //                 userData.siteId = newSiteId;
-  //                 // COMMENTED OUT: localStorage.setItem("consentbit-userinfo", JSON.stringify(userData));
-  //                 setAuthStorageItem("consentbit-userinfo", JSON.stringify(userData));
-  //               } catch (error) {
-  //               }
-  //             }
-  //           }
-  //         }
-  //         setCurrentSiteId(newSiteId);
-  //       }
-  //     } catch (error) {
-  //       // Silent error handling
-  //     }
-  //   };
-    
-  //   detectSiteChange();
-  // }, [currentSiteId, exchangeAndVerifyIdToken]);
-
- 
-  // App initialization delay removed - now handled in automatic token refresh useEffect
-
-
-
-// Site change detection - clear scripts when site changes
 useEffect(() => {
   const detectSiteChange = async () => {
     try {
@@ -713,6 +593,19 @@ useEffect(() => {
   // Data is automatically cleared on every reload (see useEffect above)
 
 
+
+  // Debug: Log current screen state
+  console.log("[App] Render - Screen state:", {
+    skipWelcomeScreen,
+    isWelcomeScreen: componentStates.isWelcomeScreen,
+    isWelcomeScipt: componentStates.isWelcomeScipt,
+    isSetUpStep: componentStates.isSetUpStep,
+    isConfirmPublish: componentStates.isConfirmPublish,
+    isSuccessPublish: componentStates.isSuccessPublish,
+    isCustomizationTab: componentStates.isCustomizationTab,
+    isCheckingAuth,
+    isAuthenticated
+  });
 
   return (
    <div>

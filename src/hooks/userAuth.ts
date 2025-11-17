@@ -4,7 +4,7 @@ import { User, DecodedToken } from "../types/types";
 import webflow from "../types/webflowtypes";
 import { setAuthData, setSiteInfo, getAuthData, getSiteInfo, isAuthenticated, migrateAuthDataToSessionStorage, clearAuthData, setAuthStorageItem, removeAuthStorageItem, getAuthStorageItem } from "../util/authStorage";
 
-const base_url = "https://cb-server.web-8fb.workers.dev";
+const base_url = "https://consentbit-test-server.web-8fb.workers.dev";
 
 interface AuthState {
   user: User;
@@ -90,7 +90,7 @@ export function useAuth() {
     }
   };
   // Query for managing auth state and token validation
-  const { data: authState, isLoading: isAuthLoading } = useQuery<AuthState>({
+  const { data: authState, isLoading: isAuthLoading, refetch: refetchAuth } = useQuery<AuthState>({
     queryKey: ["auth"],
     queryFn: async () => {
       const authStartTime = performance.now();
@@ -327,7 +327,8 @@ export function useAuth() {
       if (siteInfo) {
         setSiteInfo(siteInfo);
       }
- // Update React Query cache
+      
+      // Update React Query cache
       queryClient.setQueryData<AuthState>(["auth"], {
         user: {
           firstName: data.firstName,
@@ -336,6 +337,12 @@ export function useAuth() {
         },
         sessionToken: data.sessionToken
       });
+      
+      // Refetch auth query to ensure state is updated from storage
+      // This ensures the UI updates immediately after token exchange
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["auth"] });
+      }, 100);
 
       return data;
 
@@ -396,10 +403,24 @@ export function useAuth() {
       const onAuth = async () => {
         try {
           await exchangeAndVerifyIdToken();
-        } catch (error) {
-          // Clear any partial auth state
+          // Force refetch of auth state after successful token exchange
+          // This ensures the UI updates immediately
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["auth"] });
+          }, 200);
+        } catch (error: any) {
+          console.error('[AUTH_WINDOW] Token exchange failed after window closed:', error);
+          // Check if it's a server error (500)
+          if (error?.message?.includes('500') || error?.message?.includes('Internal server error')) {
+            console.warn('[AUTH_WINDOW] Server error during token exchange - user may need to try again');
+            // Don't clear auth data on server errors - let user retry
+            return;
+          }
+          // Clear any partial auth state only on non-server errors
           clearAuthData();
           setAuthStorageItem("explicitly_logged_out", "true");
+          // Invalidate auth query to reflect cleared state
+          queryClient.invalidateQueries({ queryKey: ["auth"] });
         }
       };
 
@@ -407,7 +428,7 @@ export function useAuth() {
         if (authWindow?.closed) {
           clearInterval(checkWindow);
           onAuth();
-             }
+        }
       }, 1000);
     } catch (error) {
     }

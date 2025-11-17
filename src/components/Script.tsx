@@ -8,6 +8,8 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { getAuthStorageItem, setAuthStorageItem, removeAuthStorageItem, setCurrentSiteId } from '../util/authStorage';
 import webflow from '../types/webflowtypes';
 
+const base_url = "https://consentbit-test-server.web-8fb.workers.dev";
+
 const questionmark = new URL("../assets/blue question.svg", import.meta.url).href;
 const settings = new URL("../assets/setting-2.svg", import.meta.url).href;
 const tickmark = new URL("../assets/implement correctly.svg", import.meta.url).href;
@@ -142,7 +144,7 @@ const Script: React.FC<{
             
           
 
-            const response = await fetch('https://cb-server.web-8fb.workers.dev/api/auth/token', {
+            const response = await fetch(`${base_url}/api/auth/token`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json"
