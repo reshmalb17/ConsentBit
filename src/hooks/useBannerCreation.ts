@@ -313,11 +313,16 @@ export const useBannerCreation = () => {
       
       // Debug: Log the actual DOM element after styling
       
+      // Get siteId from Webflow API
+      const siteInfo = await webflow.getSiteInfo();
+      const siteId = siteInfo?.siteId || "";
+      
       if (newDiv.setCustomAttribute) {
         await newDiv.setCustomAttribute("data-animation", bannerAnimation.animation);
         await newDiv.setCustomAttribute("data-cookie-banner", bannerToggleStates.toggleStates.disableScroll ? "true" : "false");
+        await newDiv.setCustomAttribute("data-site-info", siteId);
+        await newDiv.setCustomAttribute("data-all-banners","false");
       }
-      await newDiv.setCustomAttribute("data-all-banners","false");
      
       // Step 5: Create inner div as child of newDiv
       const innerdiv = await newDiv.append(webflow.elementPresets.DivBlock);

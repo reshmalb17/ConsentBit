@@ -86,6 +86,67 @@ interface CustomizationTabProps {
 };
 
 
+// Helper to get or create the close icon asset (X-Vector.svg) with dynamic color
+const getOrCreateCloseIconAsset = async (backgroundColor: string): Promise<any> => {
+  try {
+    // Import color utility to determine icon color
+    const { getCloseIconColor } = await import('../util/colorUtils');
+    const iconColor = getCloseIconColor(backgroundColor);
+    
+    // Create a unique asset name based on color to support different colors
+    const assetName = `close-icon-${iconColor.replace('#', '')}`;
+    
+    const assets = await webflow.getAllAssets();
+    const existingAsset = assets.find(asset => asset.name && asset.name === assetName);
+    if (existingAsset) {
+      return existingAsset;
+    }
+
+    const xVectorIcon = new URL("../assets/X-Vector.svg", import.meta.url).href;
+    // Fetch the X-Vector.svg file
+    const response = await fetch(xVectorIcon);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch X-Vector.svg: ${response.status} ${response.statusText}`);
+    }
+
+    // Get SVG content and modify the fill color
+    let svgContent = await response.text();
+    
+    // Replace the fill color in the SVG
+    svgContent = svgContent.replace(/fill="black"/g, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill='black'/g, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill=black/g, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill\s*=\s*["']black["']/gi, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill\s*=\s*["'][^"']*["']/gi, `fill="${iconColor}"`);
+    
+    // Resize the SVG to 16x16
+    svgContent = svgContent.replace(/width="385"/g, 'width="16"');
+    svgContent = svgContent.replace(/height="385"/g, 'height="16"');
+    
+    // Ensure fill color is set
+    if (!svgContent.includes(`fill="${iconColor}"`)) {
+      svgContent = svgContent.replace(/<path([^>]*?)>/gi, (match, attrs) => {
+        if (!attrs.includes('fill=')) {
+          return `<path${attrs} fill="${iconColor}">`;
+        }
+        return match;
+      });
+    }
+
+    // Create blob from modified SVG content
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const file = new File([blob], `${assetName}.svg`, {
+      type: 'image/svg+xml',
+    });
+    
+    const newAsset = await (webflow as any).createAsset(file);
+    return newAsset;
+  } catch (error) {
+    console.error('Error getting or creating close icon asset:', error);
+    throw error;
+  }
+};
+
 const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
   const [color, setColor] = usePersistentState("color", "#ffffff");
   
@@ -1049,15 +1110,47 @@ const handleToggles = (option) => {
         // Create Closebuttons as child of newDiv (if enabled)
         let Closebuttons = null;
         if (toggleStates.closebutton) {
-          Closebuttons = await newDiv.append(webflow.elementPresets.Paragraph);
+          Closebuttons = await newDiv.append(webflow.elementPresets.DivBlock);
           if (!Closebuttons) {
-            throw new Error("Failed to create paragraph");
+            throw new Error("Failed to create close button div");
           }
 
           if (Closebuttons.setStyles) {
             await Closebuttons.setStyles([closebutton]);
-            await Closebuttons.setTextContent("X");
             await Closebuttons.setCustomAttribute("consentbit", "close");
+            
+            // Create Image element and set X-Vector.svg as asset (same approach as toggle icon)
+            let imageElement: any = null;
+            
+            try {
+              // Create the image element
+              imageElement = await Closebuttons.append(webflow.elementPresets.Image);
+              
+              if (!imageElement) {
+                throw new Error("Failed to create image element");
+              }
+
+              // Create the asset in Webflow
+              const asset = await getOrCreateCloseIconAsset(color);
+              
+              // Set the asset to the image element
+              await (imageElement as any).setAsset(asset);
+              
+              // Style the image to match close button size
+              const imageStyle =
+                (await webflow.getStyleByName("consentCloseIcon")) ||
+                (await webflow.createStyle("consentCloseIcon"));
+              
+              await imageStyle.setProperties({
+                "width": "16px",
+                "height": "16px",
+                "display": "block"
+              });
+              
+              await (imageElement as any).setStyles?.([imageStyle]);
+            } catch (error) {
+              console.error('Error creating close icon image element:', error);
+            }
           }
         }
 
@@ -1579,9 +1672,15 @@ const handleToggles = (option) => {
       if (newDiv.setStyles) {
         await newDiv.setStyles([divStyle]);
       }
+      
+      // Get siteId from Webflow API
+      const siteInfo = await webflow.getSiteInfo();
+      const siteId = siteInfo?.siteId || "";
+      
       if (newDiv.setCustomAttribute) {
         await newDiv.setCustomAttribute("data-animation", animationAttribute);
         await newDiv.setCustomAttribute("data-cookie-banner", toggleStates.disableScroll ? "true" : "false");
+        await newDiv.setCustomAttribute("data-site-info", siteId);
       }
       if(bothbanners=== true){
         await newDiv.setCustomAttribute("data-all-banners", "true");
@@ -1597,15 +1696,47 @@ const handleToggles = (option) => {
         // Create Closebuttons as child of newDiv (if enabled)
         let Closebuttons = null;
         if (toggleStates.closebutton) {
-          Closebuttons = await newDiv.append(webflow.elementPresets.Paragraph);
+          Closebuttons = await newDiv.append(webflow.elementPresets.DivBlock);
           if (!Closebuttons) {
-            throw new Error("Failed to create paragraph");
+            throw new Error("Failed to create close button div");
           }
 
           if (Closebuttons.setStyles) {
             await Closebuttons.setStyles([closebutton]);
-            await Closebuttons.setTextContent("X");
             await Closebuttons.setCustomAttribute("consentbit", "close");
+            
+            // Create Image element and set X-Vector.svg as asset (same approach as toggle icon)
+            let imageElement: any = null;
+            
+            try {
+              // Create the image element
+              imageElement = await Closebuttons.append(webflow.elementPresets.Image);
+              
+              if (!imageElement) {
+                throw new Error("Failed to create image element");
+              }
+
+              // Create the asset in Webflow
+              const asset = await getOrCreateCloseIconAsset(color);
+              
+              // Set the asset to the image element
+              await (imageElement as any).setAsset(asset);
+              
+              // Style the image to match close button size
+              const imageStyle =
+                (await webflow.getStyleByName("consentCloseIcon")) ||
+                (await webflow.createStyle("consentCloseIcon"));
+              
+              await imageStyle.setProperties({
+                "width": "16px",
+                "height": "16px",
+                "display": "block"
+              });
+              
+              await (imageElement as any).setStyles?.([imageStyle]);
+            } catch (error) {
+              console.error('Error creating close icon image element:', error);
+            }
           }
         }
 

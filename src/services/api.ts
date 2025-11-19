@@ -391,28 +391,48 @@ downloadPDFFromUrl: async (token: string, pdfUrl: string, filename: string) => {
       throw error;
     }
   },
-  postInstalltionCall:async (token: string, siteId: string) => {
-  try {
-    const response = await fetch(`${base_url}/api/postinstallation/${siteId}`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const result = await response.json();
-     if (result.all_P === true) {
-       return { success: true, message: 'Already processed' };
-    } else if (result.success === true) {
-      return { success: true, message: 'Successfully processed' };
-    }
-  
-  } catch (error) {   
-    throw error;
-  }
-}
-
-}
+   postInstalltionCall:async (token: string, siteId: string) => {
+   try {
+     const response = await fetch(`${base_url}/api/postinstallation/${siteId}`, {
+       method: 'POST',
+       headers: { 
+         'Content-Type': 'application/json',
+         'Authorization': `Bearer ${token}`
+       },
+     });
+     if (!response.ok) {
+       throw new Error(`HTTP error! status: ${response.status}`);
+     }
+     const result = await response.json();
+      if (result.all_P === true) {
+        return { success: true, message: 'Already processed' };
+     } else if (result.success === true) {
+       return { success: true, message: 'Successfully processed' };
+     }
+   
+   } catch (error) {   
+     throw error;
+   }
+ },
+ getCouponCode: async (token: string) => {
+   try {
+     const response = await fetch(`${base_url}/api/coupon-code`, {
+       method: 'GET',
+       headers: {
+         'Authorization': `Bearer ${token}`,
+         'Content-Type': 'application/json'
+       }
+     });
+     
+     if (!response.ok) {
+       throw new Error(`HTTP error! status: ${response.status}`);
+     }
+     
+     const data = await response.json();
+     return data;
+   } catch (error) {
+     throw error;
+   }
+ }
+ 
+ }

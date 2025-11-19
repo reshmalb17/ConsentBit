@@ -3,6 +3,11 @@ import { FaStar } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { otherIcons } from "../util/optimized-images";
 import "../style/styless.css";
+
+// Coupon code and discount - update these values to change the displayed text
+const COUPON_CODE = "BlackFriday2025";
+const COUPON_DISCOUNT = "20%";
+
 const cross = new URL("../assets/cross mark.svg", import.meta.url).href;
 const arrow = new URL("../assets/→.svg", import.meta.url).href;
 
@@ -41,7 +46,7 @@ const ChoosePlan: React.FC<ChoosePlanProps> = ({ onClose }) => {
 
         <div className="plan-big-card">
           <div className="choose-plan-card">
-            {/* <p>Celebrate our launch with a free year of Consentbit - CONSENTBIT100</p> */}
+             <p>Use code <b>{COUPON_CODE}</b> at checkout and get {COUPON_DISCOUNT} off your purchase. Limited time only!</p> 
             <div className="choose-plan-price">
               ${price}
             </div>

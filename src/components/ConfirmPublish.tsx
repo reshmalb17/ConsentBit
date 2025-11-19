@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../style/styless.css";
 import "../style/confirmpublish.css";
 import NeedHelp from "../components/NeedHelp";
@@ -12,7 +12,9 @@ import CustomizationTab from "./CustomizationTab";
 import ChoosePlan from "./ChoosePlan";
 import { customCodeApi } from "../services/api";
 
-
+// Coupon code and discount - update these values to change the displayed text
+const COUPON_CODE = "BlackFriday2025";
+const COUPON_DISCOUNT = "20%";
 
 const confirmIcon = new URL("../assets/confirmicon.svg", import.meta.url).href;
 const CopyContent = new URL("../assets/copy.svg", import.meta.url).href;
@@ -239,10 +241,10 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                       Complete payment to publish cookie widget to the Live site
                     </p>
 
-                    {/* <div className="coupon-strip">
+                     <div className="coupon-strip">
                       <div style={{ display: "flex", flexDirection: "column", padding: "10px" }}>
-                        <span>Get the app free for one year</span>
-                        <span>coupon code - CONSENTBIT100</span>
+                        <span>Get {COUPON_DISCOUNT} off your purchase</span>
+<span>coupon code – {COUPON_CODE}</span>
                       </div>
 
                        <img
@@ -250,7 +252,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                         alt="Copy"
                         className="copy-icon"
                         onClick={() => {
-                          navigator.clipboard.writeText("CONSENTBIT100")
+                          navigator.clipboard.writeText(COUPON_CODE)
                             .then(() => {
                               setIconSrc(tickSVG); // show tick
                               setTimeout(() => setIconSrc(CopyContent), 500); // revert after 0.5s
@@ -258,7 +260,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                             .catch(() => {
                               // fallback copy
                               const textArea = document.createElement("textarea");
-                              textArea.value = "CONSENTBIT100";
+                              textArea.value = COUPON_CODE;
                               document.body.appendChild(textArea);
                               textArea.select();
                               document.execCommand("copy");
@@ -270,7 +272,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                         }}
                         title="Copy"
                       /> 
-                    </div>  */}
+                    </div>  
                   </div>
 
                   <div style={{ width: "100%", borderTop: "1px solid rgba(140, 121, 255, 1)", display: "flex", justifyContent: "space-between" }}><div className="pay-container"> <a href="https://billing.stripe.com/p/login/00gbIJclf5nz4Hm8ww" target="_blank" onClick={(e) => {

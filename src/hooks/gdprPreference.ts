@@ -9,6 +9,7 @@ type BreakpointAndPseudo = {
 
 const logo = new URL("../assets/icon.svg", import.meta.url).href;
 const brandLogo = new URL("../assets/BrandImage.png", import.meta.url).href;
+const xVectorIcon = new URL("../assets/X-Vector.svg", import.meta.url).href;
 
 
 // Helper function to get or create an ass
@@ -74,6 +75,66 @@ const getOrCreateBrandAsset = async (): Promise<any> => {
   }
 };
 
+// Helper to get or create the close icon asset (X-Vector.svg) with dynamic color
+const getOrCreateCloseIconAsset = async (backgroundColor: string): Promise<any> => {
+  try {
+    // Import color utility to determine icon color
+    const { getCloseIconColor } = await import('../util/colorUtils');
+    const iconColor = getCloseIconColor(backgroundColor);
+    
+    // Create a unique asset name based on color to support different colors
+    const assetName = `close-icon-${iconColor.replace('#', '')}`;
+    
+    const assets = await webflow.getAllAssets();
+    const existingAsset = assets.find(asset => asset.name && asset.name === assetName);
+    if (existingAsset) {
+      return existingAsset;
+    }
+
+    // Fetch the X-Vector.svg file
+    const response = await fetch(xVectorIcon);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch X-Vector.svg: ${response.status} ${response.statusText}`);
+    }
+
+    // Get SVG content and modify the fill color
+    let svgContent = await response.text();
+    
+    // Replace the fill color in the SVG
+    svgContent = svgContent.replace(/fill="black"/g, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill='black'/g, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill=black/g, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill\s*=\s*["']black["']/gi, `fill="${iconColor}"`);
+    svgContent = svgContent.replace(/fill\s*=\s*["'][^"']*["']/gi, `fill="${iconColor}"`);
+    
+    // Resize the SVG to 16x16
+    svgContent = svgContent.replace(/width="385"/g, 'width="16"');
+    svgContent = svgContent.replace(/height="385"/g, 'height="16"');
+    
+    // Ensure fill color is set
+    if (!svgContent.includes(`fill="${iconColor}"`)) {
+      svgContent = svgContent.replace(/<path([^>]*?)>/gi, (match, attrs) => {
+        if (!attrs.includes('fill=')) {
+          return `<path${attrs} fill="${iconColor}">`;
+        }
+        return match;
+      });
+    }
+
+    // Create blob from modified SVG content
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const file = new File([blob], `${assetName}.svg`, {
+      type: 'image/svg+xml',
+    });
+    
+    const newAsset = await (webflow as any).createAsset(file);
+    return newAsset;
+  } catch (error) {
+    console.error('Error getting or creating close icon asset:', error);
+    throw error;
+  }
+};
+
 const createCookiePreferences = async (selectedPreferences: string[], language: string = "English", color: string = "#ffffff", btnColor: string = "#F1F1F1", headColor: string = "#483999", paraColor: string = "#1F1D40", secondcolor: string = "secondcolor", buttonRadius: number, animation: string, customToggle: boolean, primaryButtonText: string = "#ffffff", secondbuttontext: string = "#4C4A66", skipCommonDiv: boolean = false, disableScroll: boolean, closebutton: boolean = false, borderRadius: number, font: string, privacyUrl: string = "", targetDiv?: any) => {
   
   try {
@@ -101,14 +162,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         } catch (error) {
             // Continue if style application fails
         }
-
-        const newDiv = await selectedElement.prepend(webflow.elementPresets.DivBlock);
-    if (!newDiv) {
-
-      webflow.notify({ type: "error", message: "Failed to create div." });
-      return;
-    }
-
 
     const timestamp = Date.now();
 
@@ -157,8 +210,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "background-color": color,
       "max-height": "510px",
       "max-width": "435px",
-      "position": "fixed",
-      "z-index": "100000",
+      "position": "relative",
+      "z-index": "99999",
       "top": "50%",
       "left": "50%",
       "transform": "translate(-50%, -50%)",
@@ -172,10 +225,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "padding-bottom": "20px",
       "padding-left": "20px",
       "box-shadow": "2px 2px 20px rgba(0, 0, 0, 0.51)",
-      "font-family":font,
-      "display": "flex"
+      "font-family":font
     };
-
     const responsivePropertyMap: Record<string, string> = {
       "max-width": "23.5rem",
       "width": "100%"
@@ -219,7 +270,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "display": "flex",
       "flex-direction": "column",
       "margin-top": "10px",
-      "width": "100%",
     };
 
     const setTooglePropertyMap: Record<string, string> = {
@@ -281,13 +331,13 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "width": "25px",
       "height": "25px",
       "display": "flex",
-      "position": "absolute",
-      "top": "5%",
-      "left": "auto",
-      "right": "10",
+      "position": "relative",
+      "top": "0",
+      "right": "0",
       "z-index": "99",
       "font-family": "'Montserrat', sans-serif",
       "cursor": "pointer",
+      "flex-shrink": "0",
     };
 
     const checkboxlabelPropertyMap: Record<string, string> = {
@@ -307,7 +357,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       "left": "2%",
       "cursor": "pointer",
       "background-position-x": "50%",
-      "background-position-y": "50%"
+      "background-position-y": "50%",
+      "display": "none"
     };
 
 
@@ -338,30 +389,63 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
     await headingStyle.setProperties(headingPropertyMap);
     await maindivs.setProperties(mainDivBlockPropertyMap)
 
-    // Note: newDiv will be appended to mainBanner, so we don't apply divStyle to newDiv
-    // The mainBanner (consentbit-preference) already has the overlay styles
-    // We'll create a content wrapper inside newDiv for the actual banner content
+    // Create the main banner container with class consentbit-preference as child of targetDiv
+    const mainBanner = await selectedElement.append(webflow.elementPresets.DivBlock);
+    if (!mainBanner) {
+      throw new Error("Failed to create main banner");
+    }
+    // Apply only overlay styles to mainBanner
+    await mainBanner.setStyles([maindivs]);
+
+    // Set DOM ID to main-banner
+    if ((mainBanner as any).setDomId) {
+      await (mainBanner as any).setDomId("main-banner");
+    }
+
+    // The mainBanner (consentbit-preference) has both overlay and content styles
+    // All children will be added directly to mainBanner without an extra wrapper
 
     try {
-      // Create a content wrapper div inside newDiv to hold the banner content
-      // This wrapper will have the divStyle applied instead of newDiv
-      const contentWrapper = await newDiv.append(webflow.elementPresets.DivBlock);
-      if (!contentWrapper) {
-        throw new Error("Failed to create content wrapper");
+
+      if (mainBanner.setCustomAttribute) {
+        await mainBanner.setCustomAttribute("data-animation", animationAttribute);
+        await mainBanner.setCustomAttribute("data-cookie-banner", disableScroll ? "true" : "false");
+      }
+
+      // Create the preference div with class consentbit-preference_div as child of mainBanner first
+      const preferenceDiv = await mainBanner.append(webflow.elementPresets.DivBlock);
+      if (!preferenceDiv) {
+        throw new Error("Failed to create preference div");
+      }
+      // Apply content box styles (divStyle) to preferenceDiv for centering and sizing
+      // divStyle corresponds to consentbit-preference_div class
+      await preferenceDiv.setStyles([divStyle]);
+
+      // Set DOM ID to consentbit-preference_div
+      if ((preferenceDiv as any).setDomId) {
+        await (preferenceDiv as any).setDomId("consentbit-preference_div");
+      }
+
+      // Create a wrapper div for heading and close button
+      const headingCloseWrapper = await preferenceDiv.append(webflow.elementPresets.DivBlock);
+      if (!headingCloseWrapper) {
+        throw new Error("Failed to create heading-close wrapper");
       }
       
-      // Apply divStyle to contentWrapper instead of newDiv
-      if (contentWrapper.setStyles) {
-        await contentWrapper.setStyles([divStyle]);
-      }
+      // Style the wrapper to position heading on left and close button on right
+      const headingCloseWrapperStyle = (await webflow.getStyleByName("consentHeadingCloseWrapper")) || (await webflow.createStyle("consentHeadingCloseWrapper"));
+      await headingCloseWrapperStyle.setProperties({
+        "display": "flex",
+        "justify-content": "space-between",
+        "align-items": "flex-start",
+        "width": "100%",
+        "position": "relative",
+        "margin-bottom": "10px"
+      });
+      await headingCloseWrapper.setStyles([headingCloseWrapperStyle]);
 
-      if (contentWrapper.setCustomAttribute) {
-        await contentWrapper.setCustomAttribute("data-animation", animationAttribute);
-        await contentWrapper.setCustomAttribute("data-cookie-banner", disableScroll ? "true" : "false");
-      }
-
-      // Create heading as child of contentWrapper
-      const tempHeading = await contentWrapper.append(webflow.elementPresets.Heading);
+      // Create heading as child of headingCloseWrapper
+      const tempHeading = await headingCloseWrapper.append(webflow.elementPresets.Heading);
       if (!tempHeading) {
         throw new Error("Failed to create heading");
       }
@@ -376,8 +460,8 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       } else {
       }
 
-      // Create paragraph as child of contentWrapper
-      const tempParagraph = await contentWrapper.append(webflow.elementPresets.Paragraph);
+      // Create paragraph as child of preferenceDiv
+      const tempParagraph = await preferenceDiv.append(webflow.elementPresets.Paragraph);
       if (!tempParagraph) {
         throw new Error("Failed to create paragraph");
       }
@@ -420,34 +504,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       }
 
       //divblock///////////////////////////////////////////////////////////////////
-
-             // Create the main banner container with class consentbit-preference as child of targetDiv
-       const mainBanner = await selectedElement.append(webflow.elementPresets.DivBlock);
-       if (!mainBanner) {
-         throw new Error("Failed to create main banner");
-       }
-       await mainBanner.setStyles([maindivs]);
-
-       // Set DOM ID to main-banner
-       if ((mainBanner as any).setDomId) {
-         await (mainBanner as any).setDomId("main-banner");
-       } else {
-       }
-
-       // Create the preference div with class consentbit-preference_div as child of contentWrapper
-       const preferenceDiv = await contentWrapper.append(webflow.elementPresets.DivBlock);
-       if (!preferenceDiv) {
-         throw new Error("Failed to create preference div");
-       }
-       await preferenceDiv.setStyles([prefrenceDiv]);
-
-       // Set DOM ID to consentbit-preference_div
-       if ((preferenceDiv as any).setDomId) {
-         await (preferenceDiv as any).setDomId("consentbit-preference_div");
-       } else {
-       }
-
-
 
       //////////////////////
       // Create prefrenceContainerinner as child of preferenceDiv
@@ -674,22 +730,55 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       ////////////////////////////////////////////////////////////////////////////////////////
 
       // Conditionally add close button only if closebutton parameter is true
+      // Add it to the headingCloseWrapper (same wrapper as heading)
       let Closebuttons = null;
       if (closebutton) {
-        Closebuttons = await contentWrapper.append(webflow.elementPresets.Paragraph);
+        Closebuttons = await headingCloseWrapper.append(webflow.elementPresets.DivBlock);
         if (!Closebuttons) {
-          throw new Error("Failed to create paragraph");
+          throw new Error("Failed to create close button div");
         }
 
         if (Closebuttons.setStyles) {
           await Closebuttons.setStyles([closebuttonStyle]);
-          await Closebuttons.setTextContent("X");
           await Closebuttons.setCustomAttribute("consentbit","close");
+          
+          // Create Image element and set X-Vector.svg as asset (same approach as toggle icon)
+          let imageElement: any = null;
+          
+          try {
+            // Create the image element
+            imageElement = await Closebuttons.append(webflow.elementPresets.Image);
+            
+            if (!imageElement) {
+              throw new Error("Failed to create image element");
+            }
+
+            // Create the asset in Webflow with color based on background
+            const asset = await getOrCreateCloseIconAsset(color);
+            
+            // Set the asset to the image element
+            await (imageElement as any).setAsset(asset);
+            
+            // Style the image to match close button size
+            const imageStyle =
+              (await webflow.getStyleByName("consentCloseIcon")) ||
+              (await webflow.createStyle("consentCloseIcon"));
+            
+            await imageStyle.setProperties({
+              "width": "16px",
+              "height": "16px",
+              "display": "block"
+            });
+            
+            await (imageElement as any).setStyles?.([imageStyle]);
+          } catch (error) {
+            console.error('Error creating close icon image element:', error);
+          }
         }
       }
 
-      // Create buttonContainer as child of contentWrapper
-      const buttonContainer = await contentWrapper.append(webflow.elementPresets.DivBlock);
+      // Create buttonContainer as child of preferenceDiv
+      const buttonContainer = await preferenceDiv.append(webflow.elementPresets.DivBlock);
       if (!buttonContainer) {
         throw new Error("Failed to create button container");
       }
@@ -722,13 +811,10 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       }
 
       // All elements are already created as children of their appropriate parents
-      // mainBanner is already a child of selectedElement (targetDiv), append newDiv to it
-      if (mainBanner.append && newDiv) {
-        await mainBanner.append(newDiv);
-      }
+      // preferenceDiv contains all the content elements
         // Append brand image inside a full-width wrapper at the bottom of the banner
         try {
-          const brandWrapper = await contentWrapper.append(webflow.elementPresets.DivBlock);
+          const brandWrapper = await preferenceDiv.append(webflow.elementPresets.DivBlock);
             const brandWrapperStyle = (await webflow.getStyleByName("consentBrandWrapper")) || (await webflow.createStyle("consentBrandWrapper"));
             await brandWrapperStyle.setProperties({
               "width": "40%",
