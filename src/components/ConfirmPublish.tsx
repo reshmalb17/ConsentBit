@@ -17,13 +17,14 @@ const COUPON_CODE = "BlackFriday2025";
 const COUPON_DISCOUNT = "20%";
 
 const confirmIcon = new URL("../assets/confirmicon.svg", import.meta.url).href;
-const CopyContent = new URL("../assets/copy.svg", import.meta.url).href;
+const CopyContent = new URL("../assets/copy-small.svg", import.meta.url).href;
 const Previewtab = new URL("../assets/Previewtab.svg", import.meta.url).href;
 const arrow = new URL("../assets/bluearrow.svg", import.meta.url).href;
 const whitearrow = new URL("../assets/→.svg", import.meta.url).href;
 const logo = new URL("../assets/icon.svg", import.meta.url).href;
 const errorsheild = new URL("../assets/warning-2.svg", import.meta.url).href;
 const crossmark = new URL("../assets/group.svg", import.meta.url).href;
+const couponCodeBg = new URL("../assets/Couponcode.svg", import.meta.url).href;
 
 const tickSVG =
   "data:image/svg+xml;utf8," +
@@ -238,24 +239,33 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                 <div className="coupon-box">
                   <div className="coupon-container">
                     <p className="coupon-header">
-                      Complete payment to publish cookie widget to the Live site
+                    Complete the payment to publish the Cookie banner to custom domain
                     </p>
 
-                     <div className="coupon-strip">
-                      <div style={{ display: "flex", flexDirection: "column", padding: "10px" }}>
-                        <span>Get {COUPON_DISCOUNT} off your purchase</span>
-<span>coupon code – {COUPON_CODE}</span>
+                     <div 
+                       className="coupon-strip"
+                       style={{
+                         backgroundImage: `url(${couponCodeBg})`,
+                         backgroundSize: "cover",
+                         backgroundPosition: "center",
+                         backgroundRepeat: "no-repeat"
+                       }}
+                     >
+                      <div style={{ display: "flex", flexDirection: "column", padding: "10px" ,justifyContent: "center",marginLeft: "75px"}}>
+                        <span style={{color: "black",fontSize: "8px",marginLeft: "5px",fontWeight: "600"}}>Use Coupon Code:</span>
+                        <span style={{color: "black",fontWeight: "600",fontSize: "10px"}}>{COUPON_CODE}</span>
                       </div>
 
                        <img
                         src={iconSrc}   // ✅ use state here
                         alt="Copy"
                         className="copy-icon"
+                        style={{ filter: "brightness(0)" }}
                         onClick={() => {
                           navigator.clipboard.writeText(COUPON_CODE)
                             .then(() => {
                               setIconSrc(tickSVG); // show tick
-                              setTimeout(() => setIconSrc(CopyContent), 500); // revert after 0.5s
+                              setTimeout(() => setIconSrc(CopyContent), 10000); // revert after 10s
                             })
                             .catch(() => {
                               // fallback copy
@@ -267,7 +277,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                               document.body.removeChild(textArea);
 
                               setIconSrc(tickSVG);
-                              setTimeout(() => setIconSrc(CopyContent), 500);
+                              setTimeout(() => setIconSrc(CopyContent), 10000);
                             });
                         }}
                         title="Copy"
@@ -288,7 +298,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
                 <div className="note">
                   <p className="note-star">*</p>
                   <p className="note-text">
-                    Complete the payment to publish cookie widget to the live site.
+                  Complete the payment to publish the Cookie banner to custom domain.
                     If payment is not made, it will only be published to the staging site.
                   </p>
                 </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import iro from "@jaames/iro"; // Import iro.js
 import { getAlignmentIcon, getBannerStyleIcon } from "../util/optimized-images";
+import { getCloseIconSVG, getCloseIconColor } from "../util/colorUtils";
 
 const justiflyleft = new URL("../assets/left align uncheck.svg", import.meta.url).href;
 const justiflycenter = new URL("../assets/center align uncheck.svg", import.meta.url).href;
@@ -119,6 +120,7 @@ const Customization: React.FC<CustomizationProps> = ({
   const colorPickerRef = useRef<HTMLDivElement | null>(null);
   const pickerInstance = useRef<any>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [closeIconSvg, setCloseIconSvg] = useState<string>("");
 
   
   // Custom dropdown states
@@ -278,6 +280,24 @@ const Customization: React.FC<CustomizationProps> = ({
   const handleButtonRadiusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setButtonRadius(Number(e.target.value));
   };
+
+  // Generate close icon SVG based on background color
+  useEffect(() => {
+    const generateCloseIcon = async () => {
+      try {
+        const svgContent = await getCloseIconSVG(color);
+        const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`;
+        setCloseIconSvg(svgDataUrl);
+      } catch (error) {
+        console.error('Error generating close icon:', error);
+        // Fallback to a simple X SVG
+        const iconColor = getCloseIconColor(color);
+        const fallbackSvg = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4L12 12M12 4L4 12" stroke="${iconColor}" stroke-width="2" stroke-linecap="round"/></svg>`;
+        setCloseIconSvg(`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(fallbackSvg)))}`);
+      }
+    };
+    generateCloseIcon();
+  }, [color]);
 
   useEffect(() => {
     setIsActive(false);
@@ -950,7 +970,19 @@ const Customization: React.FC<CustomizationProps> = ({
               }}
             >
               {style === "alignstyle" && <div className="secondclass" style={{ backgroundColor: bgColors, borderBottomRightRadius: `${borderRadius}px`, borderTopRightRadius: `${borderRadius}px` }}></div>}
-              <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between" , fontFamily: Font, }}>
+              {closebutton && closeIconSvg ? (
+                <img 
+                  src={closeIconSvg} 
+                  alt="Close" 
+                  className="closebutton" 
+                  style={{ 
+                    width: "8px", 
+                    height: "8px", 
+                    cursor: "pointer"
+                  }}
+                />
+              ) : ""}
+              <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between", fontFamily: Font }}>
                 <h4 style={{fontFamily: Font}}>
                   {language === "English"
                     ? "Cookie Settings"
@@ -972,8 +1004,6 @@ const Customization: React.FC<CustomizationProps> = ({
                   ? "Ustawienia plików cookie"
                                   : "Cookie Settings"}
                 </h4>
-
-                {closebutton ? <p className="closebutton">X</p> : ""}
               </div>
 
               <div className="padding" style={{ color: paraColor, alignItems: style === "centeralign" ? "center" : undefined, }}>
@@ -1154,6 +1184,18 @@ const Customization: React.FC<CustomizationProps> = ({
                   }}
                 ></div>
               )}
+              {closebutton && closeIconSvg ? (
+                <img 
+                  src={closeIconSvg} 
+                  alt="Close" 
+                  className="closebutton" 
+                  style={{ 
+                    width: "8px", 
+                    height: "8px", 
+                    cursor: "pointer"
+                  }}
+                />
+              ) : ""}
               <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between", fontFamily: Font }}>
                 <h4 style={{ fontFamily: Font }}>
                   {language === "English"
@@ -1176,7 +1218,6 @@ const Customization: React.FC<CustomizationProps> = ({
                                     ? "Cenimy Twoją prywatność"
                                     : "We value your privacy"}
                 </h4>
-                {closebutton ? <p className="closebutton">X</p> : ""}
               </div>
 
               <div className="padding" style={{ color: paraColor, alignItems: style === "centeralign" ? "center" : undefined }}>

@@ -4817,11 +4817,12 @@ text-align: center;
   font-style: italic;
 }
 .closebutton{
-  text-align: end;
   position: absolute;
-  right: 3%;
-  font-family: 'DM Sans', sans-serif;
-
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  /* Styles are now handled via inline styles in preview banners */
+  /* This class is only used for preview banner close buttons */
 }
 
 /* Banner Type Badge Styles */

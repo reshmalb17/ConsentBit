@@ -8,7 +8,7 @@ type BreakpointAndPseudo = {
 };
 
 const logo = new URL("../assets/icon.svg", import.meta.url).href;
-const brandLogo = new URL("../assets/BrandImage.png", import.meta.url).href;
+const brandLogo = new URL("../assets/BrandImage.svg", import.meta.url).href;
 const xVectorIcon = new URL("../assets/X-Vector.svg", import.meta.url).href;
 
 
@@ -51,7 +51,7 @@ const getOrCreateAsset = async (): Promise<any> => {
   }
 };
 
-// Helper to get or create the brand image asset (Brand.png)
+// Helper to get or create the brand image asset (BrandImage.svg)
 const getOrCreateBrandAsset = async (): Promise<any> => {
   try {
     const assets = await webflow.getAllAssets();
@@ -66,7 +66,7 @@ const getOrCreateBrandAsset = async (): Promise<any> => {
     }
 
     const blob = await response.blob();
-    const file = new File([blob], 'consent-brand.png', { type: 'image/png' });
+    const file = new File([blob], 'consent-brand.svg', { type: 'image/svg+xml' });
     const newAsset = await (webflow as any).createAsset(file);
     return newAsset;
   } catch (error) {

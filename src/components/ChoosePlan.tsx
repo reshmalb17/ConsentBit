@@ -10,6 +10,7 @@ const COUPON_DISCOUNT = "20%";
 
 const cross = new URL("../assets/cross mark.svg", import.meta.url).href;
 const arrow = new URL("../assets/→.svg", import.meta.url).href;
+const couponImage = new URL("../assets/CouponImage.svg", import.meta.url).href;
 
 type ChoosePlanProps = {
   onClose: () => void;
@@ -45,8 +46,18 @@ const ChoosePlan: React.FC<ChoosePlanProps> = ({ onClose }) => {
         </div>
 
         <div className="plan-big-card">
-          <div className="choose-plan-card">
-             <p>Use code <b>{COUPON_CODE}</b> at checkout and get {COUPON_DISCOUNT} off your purchase. Limited time only!</p> 
+          <div className="choose-plan-card" style={{ position: "relative" }}>
+            <img 
+              src={couponImage} 
+              alt="Coupon" 
+              style={{
+                position: "absolute",
+                top: "3%",
+                left: "3%",
+                zIndex: 1
+              }}
+            />
+             {/* <p>Use code <b>{COUPON_CODE}</b> at checkout and get {COUPON_DISCOUNT} off your purchase. Limited time only!</p>  */}
             <div className="choose-plan-price">
               ${price}
             </div>
@@ -90,8 +101,6 @@ const ChoosePlan: React.FC<ChoosePlanProps> = ({ onClose }) => {
               </button>
             </div>
           </div>
-
-
         </div>
       </div>
     </div>

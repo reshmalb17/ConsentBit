@@ -17,7 +17,7 @@ const uparrow = new URL("../assets/blue up arrow.svg", import.meta.url).href;
 const copyScript = new URL("../assets/copy script.svg", import.meta.url).href;
 const warningicon = new URL("../assets/warning-2.png", import.meta.url).href;
 const messageicon = new URL("../assets/message-icon.svg", import.meta.url).href;
-const BrandImageUrl = new URL("../assets/BrandImage.png", import.meta.url).href;
+const BrandImageUrl = new URL("../assets/BrandImage.svg", import.meta.url).href;
 
 import { customCodeApi } from "../services/api";
 import { useAuth } from "../hooks/userAuth";
@@ -28,6 +28,7 @@ import { CodeApplication } from "../types/types";
 import createCookiePreferences from "../hooks/gdprPreference";
 import createCookieccpaPreferences from "../hooks/ccpaPreference";
 import { usePersistentState, getCurrentSiteId } from "../hooks/usePersistentState";
+import { getCloseIconSVG, getCloseIconColor } from "../util/colorUtils";
 import { Script as ScriptType } from "../types/types";
 import { useQueryClient } from "@tanstack/react-query";
 import PulseAnimation from "./PulseAnimation";
@@ -167,6 +168,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [primaryButtonText, setPrimaryButtonText] = usePersistentState("primaryButtonText", "#FFFFFF");
   const [activeTab, setActiveTab] = usePersistentState("activeTab", initialActiveTab);
   const [previewMode, setPreviewMode] = useState<'gdpr' | 'ccpa'>('gdpr');
+  const [closeIconSvg, setCloseIconSvg] = useState<string>("");
 
 
   
@@ -235,6 +237,23 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
     }
   }, [previewMode, showCCPAPreview]);
 
+  // Generate close icon SVG based on background color
+  useEffect(() => {
+    const generateCloseIcon = async () => {
+      try {
+        const svgContent = await getCloseIconSVG(color);
+        const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`;
+        setCloseIconSvg(svgDataUrl);
+      } catch (error) {
+        console.error('Error generating close icon:', error);
+        // Fallback to a simple X SVG
+        const iconColor = getCloseIconColor(color);
+        const fallbackSvg = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4L12 12M12 4L4 12" stroke="${iconColor}" stroke-width="2" stroke-linecap="round"/></svg>`;
+        setCloseIconSvg(`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(fallbackSvg)))}`);
+      }
+    };
+    generateCloseIcon();
+  }, [color]);
 
   // Ensure at least one option is always selected
  useEffect(() => {
@@ -3073,7 +3092,7 @@ const handleToggles = (option) => {
                       alignItems: style === "centeralign" ? "center" : undefined,
                       fontWeight: weight,
                       width: previewDimensions.width,
-                      height: previewDimensions.minHeight,
+                      ...(previewDimensions.minHeight ? { height: previewDimensions.minHeight } : {}),
                       borderRadius: `${borderRadius}px`,
                       backgroundColor: color,
                       fontSize: `${size}px`,
@@ -3081,12 +3100,24 @@ const handleToggles = (option) => {
                   >
 
                     {style === "alignstyle" && <div className="secondclass" style={{ backgroundColor: bgColors, borderBottomRightRadius: `${borderRadius}px`, borderTopRightRadius: `${borderRadius}px` }}></div>}
-                    <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between" }}>
+                    {toggleStates.closebutton && closeIconSvg ? (
+                      <img 
+                        src={closeIconSvg} 
+                        alt="Close" 
+                        className="closebutton" 
+                        style={{ 
+                          width: "8px", 
+                          height: "8px", 
+                          cursor: "pointer",
+                          top: "8px"
+                        }}
+                      />
+                    ) : ""}
+                    <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between", fontFamily: Font }}>
                       <h4 style={{ textAlign: selectedtext as "left" | "center" | "right", fontFamily: Font }}>
 
                         {translations[language as keyof typeof translations]?.heading || "Cookie Settings"}
                       </h4>
-                      {toggleStates.closebutton ? <p className="closebutton">X</p> : ""}
                     </div>
                     <div className="padding" style={{ color: paraColor }}>
                       <span>
@@ -3153,11 +3184,22 @@ const handleToggles = (option) => {
                       }}
                     ></div>
                   )}
-                  <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between" }}>
+                  {toggleStates.closebutton && closeIconSvg ? (
+                    <img 
+                      src={closeIconSvg} 
+                      alt="Close" 
+                      className="closebutton" 
+                      style={{ 
+                        width: "8px", 
+                        height: "8px", 
+                        cursor: "pointer"
+                      }}
+                    />
+                  ) : ""}
+                  <div className="space" style={{ color: headColor, fontWeight: weight, display: "flex", justifyContent: "space-between", fontFamily: Font }}>
                     <h4 style={{ textAlign: selectedtext as "left" | "center" | "right", fontFamily: Font }}>
                       {translations[language as keyof typeof translations]?.ccpa?.heading || "Privacy Choices"}
                     </h4>
-                    {toggleStates.closebutton ? <p className="closebutton">X</p> : ""}
                   </div>
                   <div className="padding" style={{ color: paraColor }}>
                     <span>
