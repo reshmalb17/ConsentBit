@@ -18,6 +18,10 @@ import { removeAuthStorageItem, getAuthStorageItem, setAuthStorageItem, getAuthD
 import webflow from './types/webflowtypes';
 import pkg from '../package.json';
 
+// Import images for tooltip
+const errorsheild = new URL("./assets/warning-2.svg", import.meta.url).href;
+const crossmark = new URL("./assets/group.svg", import.meta.url).href;
+
 const appVersion = pkg.version;
 
 
@@ -54,6 +58,27 @@ const App: React.FC = () => {
     localStorage: localStorageData,
     componentStates,
   } = useAppState();
+  
+  // Auto-dismiss tooltip after 5 seconds (same as CustomizationTab and ConfirmPublish)
+  useEffect(() => {
+    if (tooltips.showTooltip) {
+      console.log('[App] Tooltip is showing - starting auto-dismiss timer (5 seconds)');
+      const timer = setTimeout(() => {
+        console.log('[App] ⏰ Timer fired after 5 seconds - starting fade out');
+        tooltips.setFadeOut(true);
+        setTimeout(() => {
+          console.log('[App] 🎬 Hiding tooltip after fade animation');
+          tooltips.setShowTooltip(false);
+          tooltips.setFadeOut(false);
+          console.log('[App] ✅ Tooltip hidden successfully');
+        }, 300); // Wait for fade-out animation
+      }, 5000); // 5 seconds
+      return () => {
+        console.log('[App] 🧹 Cleaning up tooltip timer');
+        clearTimeout(timer);
+      };
+    }
+  }, [tooltips.showTooltip, tooltips.setFadeOut, tooltips.setShowTooltip]);
   
   // Track when scan button becomes available
   useEffect(() => {
@@ -411,10 +436,122 @@ const App: React.FC = () => {
 
 
   // Welcome Screen -> WelcomeScript (Scan Project clicked)
-  const handleWelcomeScreen = () => {
-    componentStates.setIsWelcomeScreen(false);
-     setIsFetchWelcomeScripts(true);
-    componentStates.setWelcomeScipt(true);
+  const handleWelcomeScreen = async () => {
+    console.log('[handleWelcomeScreen] Scan Project button clicked - starting');
+    try {
+      // Check if site is published before scanning
+      let isPublished = false;
+      let siteInfo = null;        siteInfo = await webflow.getSiteInfo();
+
+      
+      try {
+        console.log('[handleWelcomeScreen] Site info received:', siteInfo);
+        
+        // Check publication status using domains[].lastPublished from getSiteInfo()
+        // If any domain has a non-null lastPublished value, site is published
+        if (siteInfo?.domains && siteInfo.domains.length > 0) {
+          const hasPublishedDomain = siteInfo.domains.some(domain => 
+            domain.lastPublished !== null && domain.lastPublished !== undefined
+          );
+          
+          isPublished = hasPublishedDomain;
+          console.log('[handleWelcomeScreen] Checking domains for lastPublished');
+          siteInfo.domains.forEach((domain, index) => {
+            console.log(`[handleWelcomeScreen] Domain ${index}: url=${domain.url}, lastPublished=${domain.lastPublished}`);
+          });
+          console.log('[handleWelcomeScreen] Is published (based on lastPublished):', isPublished);
+        } else {
+          // No domains found, assume not published
+          isPublished = false;
+          console.log('[handleWelcomeScreen] No domains found in siteInfo, assuming not published');
+        }
+        
+        console.log('[handleWelcomeScreen] Final isPublished result:', isPublished);
+      } catch (checkError) {
+        console.error('[handleWelcomeScreen] Error during publication check:', checkError);
+        // If check fails, we'll proceed anyway but show a warning
+        isPublished = false;
+      }
+      
+      // If site doesn't appear to be published, notify user and STOP scanning
+      if (!isPublished) {
+        console.log('[handleWelcomeScreen] Site is not published - showing notification and blocking scan');
+        console.warn('[handleWelcomeScreen] 🚨 SITE NOT PUBLISHED - BLOCKING SCAN');
+        
+        // Show custom tooltip notification (same style as CustomizationTab and ConfirmPublish)
+        tooltips.setShowTooltip(true);
+        tooltips.setFadeOut(false);
+        console.log('[handleWelcomeScreen] ✅ Tooltip notification set to show');
+        
+        // STOP here - don't proceed with scanning
+        return;
+      }
+      
+      // Site is published - proceed with scanning
+      console.log('[handleWelcomeScreen] Site is published - proceeding with scan');
+      console.log('[handleWelcomeScreen] Current states - isWelcomeScreen:', componentStates.isWelcomeScreen);
+      
+      componentStates.setIsWelcomeScreen(false);
+      setIsFetchWelcomeScripts(true);
+      componentStates.setWelcomeScipt(true);
+      
+      console.log('[handleWelcomeScreen] States updated - isWelcomeScreen:', componentStates.isWelcomeScreen, 'isWelcomeScipt:', componentStates.isWelcomeScipt);
+      console.log('[handleWelcomeScreen] Scan initiated successfully');
+    } catch (error) {
+      console.error('[handleWelcomeScreen] Unexpected error:', error);
+      // On error, show notification and don't proceed (fail closed for safety)
+      webflow.notify({ 
+        type: "error", 
+        message: "Could not verify publication status. Please ensure your site is published before scanning." 
+      });
+      // Auto-dismiss notification after 5 seconds
+      setTimeout(() => {
+        const selectors = [
+          '[data-wf-notification]',
+          '.w-notification',
+          '[class*="notification"]',
+          '[class*="Notification"]',
+          '.notification-container',
+          '[role="alert"]'
+        ];
+        
+        let notification: Element | null = null;
+        for (const selector of selectors) {
+          notification = document.querySelector(selector);
+          if (notification) break;
+        }
+        
+        if (notification) {
+          const closeSelectors = [
+            'button[aria-label*="close" i]',
+            'button[aria-label*="dismiss" i]',
+            '[class*="close"]',
+            '[class*="dismiss"]',
+            '[class*="Close"]',
+            'button:last-child',
+            'svg[class*="close"]',
+            'svg[class*="Close"]'
+          ];
+          
+          let closeButton: Element | null = null;
+          for (const selector of closeSelectors) {
+            closeButton = notification.querySelector(selector);
+            if (closeButton && closeButton instanceof HTMLElement) {
+              closeButton.click();
+              return;
+            }
+          }
+          
+          if (notification instanceof HTMLElement) {
+            notification.style.display = 'none';
+            notification.style.opacity = '0';
+            notification.style.visibility = 'hidden';
+          }
+        }
+      }, 5000);
+      // Don't proceed with scanning if we can't verify publication status
+      return;
+    }
   };
 
   // WelcomeScript -> SetupStep (Next clicked)
@@ -663,6 +800,17 @@ useEffect(() => {
           onCustomize={handleCustomize}
           isBannerStatusLoading={isBannerStatusLoading}
         />
+      )}
+      
+      {/* Global tooltip notification for unpublished site */}
+      {tooltips.showTooltip && (
+        <div className={`global-error-banner ${tooltips.fadeOut ? 'fade-out' : 'fade-in'}`}>
+          <img src={errorsheild} alt="errorsheild" />
+          <div className="global-error-content">
+            <span>Publish your site before scanning</span>
+          </div>
+          <img src={crossmark} onClick={() => { tooltips.setShowTooltip(false); tooltips.setFadeOut(false); }} alt="" />
+        </div>
       )}
        
      

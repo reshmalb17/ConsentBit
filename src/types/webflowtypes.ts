@@ -27,8 +27,41 @@ export interface WebflowAPI {
     siteId: string;
     siteName: string;
     shortName: string;
-    url:string;
+    url?: string;
+    isPasswordProtected?: boolean;
+    isPrivateStaging?: boolean;
+    workspaceId?: string;
+    workspaceSlug?: string;
+    domains?: Array<{
+      url: string;
+      lastPublished: string | null;
+      default?: boolean;
+      stage?: string;
+    }>;
   }>;
+  site?: {
+    get: () => Promise<{
+      id?: string;
+      name?: string;
+      shortName?: string;
+      previewUrl?: string;
+      createdOn?: string;
+      lastPublished?: string;
+      domain?: string;
+      domains?: Array<{
+        id: string;
+        url: string;
+        lastPublished?: string;
+      }>;
+      publishedDomains?: Array<{
+        id: string;
+        url: string;
+        lastPublished?: string;
+      }>;
+      timeZone?: string;
+      locale?: string;
+    }>;
+  };
     getIdToken: () => Promise<string>;
   publishSite: (options?: { 
     customDomains?: string[];
