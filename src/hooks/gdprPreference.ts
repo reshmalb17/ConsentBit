@@ -51,26 +51,31 @@ const getOrCreateAsset = async (): Promise<any> => {
   }
 };
 
-// Helper to get or create the brand image asset (BrandImage.svg)
-const getOrCreateBrandAsset = async (): Promise<any> => {
+// Helper to get or create the brand image asset (BrandImage.svg) with dynamic color
+const getOrCreateBrandAsset = async (backgroundColor: string): Promise<any> => {
   try {
+    // Import color utility to determine brand image color
+    const { getBrandImageColor, getBrandImageSVG } = await import('../util/colorUtils');
+    const brandColor = getBrandImageColor(backgroundColor);
+    
+    // Create a unique asset name based on color to support different colors
+    const assetName = `consent-brand-${brandColor.replace('#', '')}`;
+    
     const assets = await webflow.getAllAssets();
-    const existingAsset = assets.find(asset => asset.name && asset.name === 'consent-brand');
+    const existingAsset = assets.find(asset => asset.name && asset.name === assetName);
     if (existingAsset) {
       return existingAsset;
     }
 
-    const response = await fetch(brandLogo);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch brand file: ${response.status} ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    const file = new File([blob], 'consent-brand.svg', { type: 'image/svg+xml' });
+    // Get the SVG content with modified color
+    const svgContent = await getBrandImageSVG(backgroundColor);
+    
+    // Create blob from modified SVG content
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const file = new File([blob], `${assetName}.svg`, { type: 'image/svg+xml' });
     const newAsset = await (webflow as any).createAsset(file);
     return newAsset;
   } catch (error) {
-    console.error('Error getting or creating brand asset:', error);
     throw error;
   }
 };
@@ -343,7 +348,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
     const buttonPropertyMap: Record<string, string> = {
       "border-radius": `${buttonRadius}px`,
       "cursor": "pointer",
-      "background-color": secondcolor,
+      "background-color": btnColor,
       "margin-left": "5px",
       "margin-right": "5px",
       "min-width": "80px",
@@ -356,7 +361,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
     const declineButtonPropertyMap: Record<string, string> = {
       "border-radius": `${buttonRadius}px`,
       "cursor": "pointer",
-      "background-color": btnColor,
+      "background-color": secondcolor,
       "color": secondbuttontext,
       "margin-left": "5px",
       "margin-right": "5px",
@@ -535,6 +540,24 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         privacyLink = await tempParagraph.append(webflow.elementPresets.LinkBlock);
         if (!privacyLink) throw new Error("Failed to create privacy link");
 
+        // Create and apply privacy link style with paraColor
+        const privacyLinkStyle = (await webflow.getStyleByName("consentbit-privacy-link-preference")) || (await webflow.createStyle("consentbit-privacy-link-preference"));
+        // Paragraph uses font-weight 400, so make link slightly bolder (500)
+        await privacyLinkStyle.setProperties({
+          "color": paraColor,
+          "text-decoration": "none",
+          "font-size": "14px", // Match paragraph font size
+          "font-weight": "500", // Slightly bolder than paragraph (400)
+          "font-family": font,
+          "cursor": "pointer",
+        });
+        // Add hover styles for underline effect
+        await privacyLinkStyle.setProperties({ "text-decoration": "underline" }, { breakpoint: "main", pseudoClass: "hover" });
+        
+        if (privacyLink.setStyles) {
+          await privacyLink.setStyles([privacyLinkStyle]);
+        }
+
         // Set URL using setSettings method
         try {
           await privacyLink.setSettings('url', privacyUrl, {openInNewTab: true});
@@ -547,11 +570,6 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       
         if (privacyLink.setDomId) {
           await privacyLink.setDomId("privacy-link-preference");
-        }
-        
-        // Add hover effect for underline
-        if (privacyLink.setCustomAttribute) {
-          await privacyLink.setCustomAttribute("data-hover-underline", "true");
         }
       
       }
@@ -824,6 +842,27 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
             });
             
             await (imageElement as any).setStyles?.([imageStyle]);
+            
+            // Set DOM ID for close button icon
+            try {
+              if ((imageElement as any).setDomId) {
+                await (imageElement as any).setDomId("close-consent-banner");
+              } else {
+                // Fallback: Set ID on parent container if image doesn't support it
+                if ((Closebuttons as any).setDomId) {
+                  await (Closebuttons as any).setDomId("close-consent-banner");
+                }
+              }
+            } catch (idError) {
+              // Try setting on parent container as fallback
+              try {
+                if ((Closebuttons as any).setDomId) {
+                  await (Closebuttons as any).setDomId("close-consent-banner");
+                }
+              } catch (fallbackError) {
+                // Ignore fallback errors
+              }
+            }
           } catch (error) {
             console.error('Error creating close icon image element:', error);
           }
@@ -837,7 +876,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       }
       await buttonContainer.setStyles([buttonContainerStyle]);
 
-      // Create acceptButton as child of buttonContainer
+      // Create acceptButton (Save Preference) as child of buttonContainer (first button)
       const acceptButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!acceptButton) {
         throw new Error("Failed to create accept button");
@@ -850,7 +889,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
       } else {
       }
 
-      // Create declineButton as child of buttonContainer
+      // Create declineButton (Reject) as child of buttonContainer (second button)
       const declineButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!declineButton) {
         throw new Error("Failed to create decline button");
@@ -892,7 +931,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
             } catch (e) {}
 
             const brandImage = await (brandLink as any).append(webflow.elementPresets.Image);
-            const brandAsset = await getOrCreateBrandAsset();
+            const brandAsset = await getOrCreateBrandAsset(color);
             await (brandImage as any).setAsset(brandAsset);
 
             const brandStyle = (await webflow.getStyleByName("consentBrandImage")) || (await webflow.createStyle("consentBrandImage"));
@@ -906,8 +945,7 @@ const createCookiePreferences = async (selectedPreferences: string[], language: 
         } catch (e) {
         }
 
-      // Set bannerAdded to true in sessionStorage
-      // COMMENTED OUT: localStorage.setItem('bannerAdded', 'true');
+      // Save bannerAdded to sessionStorage
       sessionStorage.setItem('bannerAdded', 'true');
       
       // Dispatch custom event to notify other components

@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "concurrently \"webflow extension serve\" \"npm run watch-webpack\"",
     "build": "npm run build-webpack && webflow extension bundle",
+    "verify": "node scripts/verify-bundle.js",
     "watch-webpack": "webpack --config webpack.config.mjs --mode development --watch",
     "build-webpack": "webpack --config webpack.config.mjs --mode production",
     "lint": "eslint . --ext .ts,.tsx"

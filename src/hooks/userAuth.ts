@@ -146,7 +146,6 @@ export function useAuth() {
     mutationFn: async (idToken: string) => {
       // 🔧 IMPROVED: Get and validate site info
       const siteInfo = await ensureSiteContext();
-      console.log(`[TOKEN_MUTATION] Starting exchange for site: ${siteInfo.siteId}`);
 
       // Exchange token with backend
       const response = await fetch(`${base_url}/api/auth/token`, {
@@ -298,7 +297,6 @@ export function useAuth() {
 
 
       if (!response.ok) {
-        console.error(`[TOKEN_EXCHANGE] Failed:`, data);
         throw new Error(`Token exchange failed: ${data.error || 'Unknown error'}`);
       }
 
@@ -347,7 +345,6 @@ export function useAuth() {
       return data;
 
     } catch (error) {
-      console.error('[TOKEN_EXCHANGE] Failed:', error);
       clearAuthData();
       throw error;
     }
@@ -409,10 +406,8 @@ export function useAuth() {
             queryClient.invalidateQueries({ queryKey: ["auth"] });
           }, 200);
         } catch (error: any) {
-          console.error('[AUTH_WINDOW] Token exchange failed after window closed:', error);
           // Check if it's a server error (500)
           if (error?.message?.includes('500') || error?.message?.includes('Internal server error')) {
-            console.warn('[AUTH_WINDOW] Server error during token exchange - user may need to try again');
             // Don't clear auth data on server errors - let user retry
             return;
           }

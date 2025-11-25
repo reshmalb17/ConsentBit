@@ -42,7 +42,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
   useEffect(() => {
     if (isAuthorizing) {
       const timeout = setTimeout(() => {
-        console.warn("Authorization timeout - resetting authorizing state");
         setIsAuthorizing(false);
       }, 30000); // 30 seconds timeout
       
@@ -57,13 +56,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
     const userinfo = getAuthStorageItem("consentbit-userinfo");
     const hasData = userinfo && userinfo !== "null" && userinfo !== "undefined";
     const newHasUserData = authenticated || !!hasData;
-    console.log("[WelcomeScreen] hasUserData check:", {
-      authenticated,
-      userinfo: userinfo ? "exists" : "null",
-      hasData,
-      newHasUserData,
-      externalIsCheckingAuth
-    });
     setHasUserData(newHasUserData);
   }, [authenticated, externalIsCheckingAuth]); // Also check when auth check completes
 
@@ -126,12 +118,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
     if (authenticated) {
       setHasUserData(true);
       setIsAuthorizing(false);
-      
-      // Track when authentication completes
-      if (authStartTime) {
-        const authDuration = performance.now() - authStartTime;
-        console.log("Authentication completed in", authDuration, "ms");
-      }
     } else if (isAuthorizing) {
       // If we're authorizing but not authenticated, check if auth failed
       // Reset after a delay if authentication doesn't complete
@@ -139,7 +125,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
         const userinfo = getAuthStorageItem("consentbit-userinfo");
         const hasData = userinfo && userinfo !== "null" && userinfo !== "undefined";
         if (!hasData && !authenticated) {
-          console.warn("Authentication appears to have failed - resetting authorizing state");
           setIsAuthorizing(false);
         }
       }, 10000); // Check after 10 seconds
@@ -188,13 +173,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
             <span className="welcome-title-highlight">ConsentBit</span>
           </h1>
           {(() => {
-            console.log("[WelcomeScreen] Instruction text logic:", {
-              hasUserData,
-              isAuthorizing,
-              externalIsCheckingAuth,
-              isBannerAdded
-            });
-            
             // If we have user data, show the appropriate message even while checking
             if (hasUserData && !isAuthorizing) {
               return (
@@ -229,14 +207,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onAuthorize, onNeedHelp ,
         
 
           {(() => {
-            console.log("[WelcomeScreen] Button render logic:", {
-              isAuthorizing,
-              hasUserData,
-              externalIsCheckingAuth,
-              isBannerStatusLoading,
-              isBannerAdded
-            });
-            
             if (isAuthorizing) {
               return (
                 <button className="welcome-authorize-btn" disabled>

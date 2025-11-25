@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAppState } from "./hooks/useAppState";  
 import { useAuth } from "./hooks/userAuth";
 import { serialize } from "v8";
-import { getCurrentSiteId, listCurrentSiteData, clearCurrentSiteData, clearAllData, clearAuthData, clearAuthIfNotAuthorized, checkMigrationStatus, forceMigration, usePersistentState, debugAuthStatus, forceClearAuthData, clearAllDataIncludingAuth } from "./hooks/usePersistentState";
+import { getCurrentSiteId, listCurrentSiteData, clearCurrentSiteData, clearAllData, clearAuthData, clearAuthIfNotAuthorized, checkMigrationStatus, forceMigration, usePersistentState, debugAuthStatus, forceClearAuthData, clearAllDataIncludingAuth, cleanBannerDetailsFromStorage } from "./hooks/usePersistentState";
 import { customCodeApi } from "./services/api";
 import { CodeApplication } from "./types/types";
 import { getSessionTokenFromLocalStorage } from './util/Session';
@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isBannerStatusLoading, setIsBannerStatusLoading] = useState(true);
   const [customizationInitialTab, setCustomizationInitialTab] = useState("Settings");
+  const [bannerDetailsFromApi, setBannerDetailsFromApi] = useState<any>(null);
   
   // Global timing tracking for authorization flow
   const [globalAuthStartTime, setGlobalAuthStartTime] = useState<number | null>(null);
@@ -55,6 +56,8 @@ const App: React.FC = () => {
     siteData,
     buttons,
     bannerAnimation,
+    bannerLanguages,
+    bannerToggleStates,
     localStorage: localStorageData,
     componentStates,
   } = useAppState();
@@ -62,19 +65,14 @@ const App: React.FC = () => {
   // Auto-dismiss tooltip after 5 seconds (same as CustomizationTab and ConfirmPublish)
   useEffect(() => {
     if (tooltips.showTooltip) {
-      console.log('[App] Tooltip is showing - starting auto-dismiss timer (5 seconds)');
       const timer = setTimeout(() => {
-        console.log('[App] ⏰ Timer fired after 5 seconds - starting fade out');
         tooltips.setFadeOut(true);
         setTimeout(() => {
-          console.log('[App] 🎬 Hiding tooltip after fade animation');
           tooltips.setShowTooltip(false);
           tooltips.setFadeOut(false);
-          console.log('[App] ✅ Tooltip hidden successfully');
         }, 300); // Wait for fade-out animation
       }, 5000); // 5 seconds
       return () => {
-        console.log('[App] 🧹 Cleaning up tooltip timer');
         clearTimeout(timer);
       };
     }
@@ -95,8 +93,10 @@ const App: React.FC = () => {
     // App initialization with clean welcome screen flow
   useEffect(() => {
     const initializeApp = async () => {
+      // Clean banner details from consolidated storage on app start
+      cleanBannerDetailsFromStorage();
+      
       // Always reset to welcome screen on app launch
-      console.log("[App] Initializing - resetting to welcome screen");
       setSkipWelcomeScreen(false);
       componentStates.resetComponentStates();
       componentStates.setIsWelcomeScreen(true);
@@ -106,7 +106,6 @@ const App: React.FC = () => {
       
       // Set overall timeout for authorization check (15 seconds)
       const authTimeout = setTimeout(() => {
-        console.warn("Authorization check timeout - proceeding with default state");
         setSkipWelcomeScreen(false);
         bannerBooleans.setIsBannerAdded(false);
         setIsAuthenticated(false);
@@ -122,7 +121,7 @@ const App: React.FC = () => {
           try {
             existingUserData = JSON.parse(existingUserDataStr);
           } catch (e) {
-            console.error("Error parsing user data:", e);
+            // Error parsing user data
           }
         }
         
@@ -136,7 +135,6 @@ const App: React.FC = () => {
         try {
           siteInfo = await Promise.race([siteInfoPromise, siteInfoTimeout]);
         } catch (error) {
-          console.error("Error getting site info:", error);
           clearTimeout(authTimeout);
           setSkipWelcomeScreen(false);
           bannerBooleans.setIsBannerAdded(false);
@@ -148,7 +146,6 @@ const App: React.FC = () => {
         
         // If user data doesn't exist, or siteId doesn't match, exchange token and store again
         if (!existingUserData) {
-          console.log("No user data found, exchanging token...");
           try {
             const exchangePromise = exchangeAndVerifyIdToken();
             const exchangeTimeout = new Promise((_, reject) => {
@@ -162,23 +159,14 @@ const App: React.FC = () => {
               try {
                 existingUserData = JSON.parse(newUserDataStr);
               } catch (e) {
-                console.error("Error parsing user data after exchange:", e);
+                // Error parsing user data after exchange
               }
             }
           } catch (error: any) {
-            console.error("Error exchanging token:", error);
-            // Check if it's a server error (500) and log appropriately
-            if (error?.message?.includes('500') || error?.message?.includes('Internal server error')) {
-              console.warn("Server error during token exchange - this may be a temporary issue. The app will continue with limited functionality.");
-            }
             // Continue with default state if token exchange fails
           }
         } else if (existingUserData.siteId && siteInfo?.siteId) {
           if (existingUserData.siteId !== siteInfo.siteId) {
-            console.log("Site ID mismatch, exchanging token...", {
-              storedSiteId: existingUserData.siteId,
-              currentSiteId: siteInfo.siteId
-            });
             try {
               const exchangePromise = exchangeAndVerifyIdToken();
               const exchangeTimeout = new Promise((_, reject) => {
@@ -192,15 +180,10 @@ const App: React.FC = () => {
                 try {
                   existingUserData = JSON.parse(newUserDataStr);
                 } catch (e) {
-                  console.error("Error parsing user data after exchange:", e);
+                  // Error parsing user data after exchange
                 }
               }
             } catch (error: any) {
-              console.error("Error exchanging token:", error);
-              // Check if it's a server error (500) and log appropriately
-              if (error?.message?.includes('500') || error?.message?.includes('Internal server error')) {
-                console.warn("Server error during token exchange - this may be a temporary issue. The app will continue with existing data.");
-              }
               // Continue with existing data if token exchange fails
             }
           }
@@ -222,6 +205,11 @@ const App: React.FC = () => {
             // Clear the auth timeout since we completed successfully
             clearTimeout(authTimeout);
             
+            // Store banner details from API to pass to CustomizationTab
+            if (response) {
+              setBannerDetailsFromApi(response);
+            }
+            
             // Set banner status based on API response
             if (response && response.isBannerAdded === true) {
               setSkipWelcomeScreen(false);
@@ -234,7 +222,6 @@ const App: React.FC = () => {
             }
             setIsBannerStatusLoading(false);
           } catch (error) {
-            console.error("Error checking banner status:", error);
             clearTimeout(authTimeout);
             setSkipWelcomeScreen(false);
             bannerBooleans.setIsBannerAdded(false);
@@ -250,7 +237,6 @@ const App: React.FC = () => {
           setIsBannerStatusLoading(false);
         }
       } catch (error) {
-        console.error("Error initializing app:", error);
         clearTimeout(authTimeout);
         setSkipWelcomeScreen(false);
         bannerBooleans.setIsBannerAdded(false);
@@ -276,16 +262,6 @@ const App: React.FC = () => {
     const hasEmail = !!(user?.email || authData?.email);
     
     const isUserAuthenticated = hasToken && hasEmail;
-    
-    console.log("[App] isAuthenticated update:", {
-      userEmail: user?.email || "none",
-      sessionToken: sessionToken ? "exists" : "none",
-      tokenFromStorage: tokenFromStorage ? "exists" : "none",
-      authDataEmail: authData?.email || "none",
-      hasToken,
-      hasEmail,
-      isUserAuthenticated
-    });
     
     setIsAuthenticated(isUserAuthenticated);
   }, [user, sessionToken]);
@@ -363,40 +339,26 @@ const App: React.FC = () => {
   useEffect(() => {
     // Only proceed if authentication is ready
     if (!isAuthenticated || !sessionToken) {
-      console.log("postInstallationCall: Waiting for authentication...", {
-        isAuthenticated,
-        hasSessionToken: !!sessionToken
-      });
       return;
     }
 
     // Check if we've already called this (prevent multiple calls)
     const hasCalled = getAuthStorageItem("postInstallationCalled");
     if (hasCalled === "true") {
-      console.log("postInstallationCall: Already called, skipping...");
       return;
     }
 
     const callPostInstallation = async () => {
-      console.log("postInstallationCall: Starting...");
-      console.log("postInstallationCall: isAuthenticated =", isAuthenticated);
-      console.log("postInstallationCall: sessionToken =", sessionToken ? "exists" : "null");
-      
       try {
         const token = getSessionTokenFromLocalStorage();
-        console.log("postInstallationCall: token from storage =", token ? "exists" : "null");
         
         if (token) {
           const siteInfo = await webflow.getSiteInfo();
-          console.log("postInstallationCall: siteInfo =", siteInfo);
-          console.log("postInstallationCall: siteId =", siteInfo?.siteId);
           
           if (siteInfo?.siteId) {
             // Call the API - it will handle checking if already processed
-            console.log("postInstallationCall: Calling API...");
             try {
-              const result = await customCodeApi.postInstalltionCall(token, siteInfo.siteId);
-              console.log("postInstallationCall: API result =", result);
+              await customCodeApi.postInstalltionCall(token, siteInfo.siteId);
               
               // Mark as called to prevent duplicate calls
               setAuthStorageItem("postInstallationCalled", "true");
@@ -404,28 +366,12 @@ const App: React.FC = () => {
               // API returns { success: true, message: 'Already processed' } if already called
               // or { success: true, message: 'Successfully processed' } if just processed
             } catch (apiError: any) {
-              // Handle CORS and other API errors gracefully
-              // CORS errors typically show as "Failed to fetch" or "NetworkError"
-              const errorMessage = apiError?.message || String(apiError);
-              if (errorMessage.includes('CORS') || 
-                  errorMessage.includes('Failed to fetch') || 
-                  errorMessage.includes('NetworkError') ||
-                  errorMessage.includes('Access-Control')) {
-                console.warn("postInstallationCall: CORS error detected - server may not have proper CORS headers configured. This is a server-side issue and won't block the app.");
-              } else {
-                console.error("postInstallationCall: API error:", apiError);
-              }
-              // Don't throw - this is a non-critical call
+              // Handle CORS and other API errors gracefully - don't throw
             }
-          } else {
-            console.log("postInstallationCall: No siteId available");
           }
-        } else {
-          console.log("postInstallationCall: No token available");
         }
       } catch (error) {
         // Silently handle error - don't block app
-        console.error("postInstallationCall: Error calling postInstallationCall:", error);
       }
     };
 
@@ -437,7 +383,6 @@ const App: React.FC = () => {
 
   // Welcome Screen -> WelcomeScript (Scan Project clicked)
   const handleWelcomeScreen = async () => {
-    console.log('[handleWelcomeScreen] Scan Project button clicked - starting');
     try {
       // Check if site is published before scanning
       let isPublished = false;
@@ -445,8 +390,6 @@ const App: React.FC = () => {
 
       
       try {
-        console.log('[handleWelcomeScreen] Site info received:', siteInfo);
-        
         // Check publication status using domains[].lastPublished from getSiteInfo()
         // If any domain has a non-null lastPublished value, site is published
         if (siteInfo?.domains && siteInfo.domains.length > 0) {
@@ -455,50 +398,30 @@ const App: React.FC = () => {
           );
           
           isPublished = hasPublishedDomain;
-          console.log('[handleWelcomeScreen] Checking domains for lastPublished');
-          siteInfo.domains.forEach((domain, index) => {
-            console.log(`[handleWelcomeScreen] Domain ${index}: url=${domain.url}, lastPublished=${domain.lastPublished}`);
-          });
-          console.log('[handleWelcomeScreen] Is published (based on lastPublished):', isPublished);
         } else {
           // No domains found, assume not published
           isPublished = false;
-          console.log('[handleWelcomeScreen] No domains found in siteInfo, assuming not published');
         }
-        
-        console.log('[handleWelcomeScreen] Final isPublished result:', isPublished);
       } catch (checkError) {
-        console.error('[handleWelcomeScreen] Error during publication check:', checkError);
         // If check fails, we'll proceed anyway but show a warning
         isPublished = false;
       }
       
       // If site doesn't appear to be published, notify user and STOP scanning
       if (!isPublished) {
-        console.log('[handleWelcomeScreen] Site is not published - showing notification and blocking scan');
-        console.warn('[handleWelcomeScreen] 🚨 SITE NOT PUBLISHED - BLOCKING SCAN');
-        
         // Show custom tooltip notification (same style as CustomizationTab and ConfirmPublish)
         tooltips.setShowTooltip(true);
         tooltips.setFadeOut(false);
-        console.log('[handleWelcomeScreen] ✅ Tooltip notification set to show');
         
         // STOP here - don't proceed with scanning
         return;
       }
       
       // Site is published - proceed with scanning
-      console.log('[handleWelcomeScreen] Site is published - proceeding with scan');
-      console.log('[handleWelcomeScreen] Current states - isWelcomeScreen:', componentStates.isWelcomeScreen);
-      
       componentStates.setIsWelcomeScreen(false);
       setIsFetchWelcomeScripts(true);
       componentStates.setWelcomeScipt(true);
-      
-      console.log('[handleWelcomeScreen] States updated - isWelcomeScreen:', componentStates.isWelcomeScreen, 'isWelcomeScipt:', componentStates.isWelcomeScipt);
-      console.log('[handleWelcomeScreen] Scan initiated successfully');
     } catch (error) {
-      console.error('[handleWelcomeScreen] Unexpected error:', error);
       // On error, show notification and don't proceed (fail closed for safety)
       webflow.notify({ 
         type: "error", 
@@ -731,19 +654,6 @@ useEffect(() => {
 
 
 
-  // Debug: Log current screen state
-  console.log("[App] Render - Screen state:", {
-    skipWelcomeScreen,
-    isWelcomeScreen: componentStates.isWelcomeScreen,
-    isWelcomeScipt: componentStates.isWelcomeScipt,
-    isSetUpStep: componentStates.isSetUpStep,
-    isConfirmPublish: componentStates.isConfirmPublish,
-    isSuccessPublish: componentStates.isSuccessPublish,
-    isCustomizationTab: componentStates.isCustomizationTab,
-    isCheckingAuth,
-    isAuthenticated
-  });
-
   return (
    <div>
    
@@ -788,7 +698,37 @@ useEffect(() => {
           handleCustomize={handleCustomize}
         />
       ) : componentStates.isCustomizationTab ? (
-        <CustomizationTab onAuth={handleBackToWelcome} isAuthenticated={isAuthenticated} initialActiveTab={customizationInitialTab} />
+        <CustomizationTab 
+          onAuth={handleBackToWelcome} 
+          isAuthenticated={isAuthenticated} 
+          initialActiveTab={customizationInitialTab}
+          initialBannerStyles={bannerDetailsFromApi ? {
+            color: bannerDetailsFromApi.color,
+            btnColor: bannerDetailsFromApi.btnColor,
+            paraColor: bannerDetailsFromApi.paraColor,
+            secondcolor: bannerDetailsFromApi.secondcolor,
+            bgColors: bannerDetailsFromApi.bgColors || bannerDetailsFromApi.bgColor,
+            headColor: bannerDetailsFromApi.headColor,
+            secondbuttontext: bannerDetailsFromApi.secondbuttontext,
+            primaryButtonText: bannerDetailsFromApi.primaryButtonText,
+            Font: bannerDetailsFromApi.Font,
+            style: bannerDetailsFromApi.style,
+            selected: bannerDetailsFromApi.selected,
+            borderRadius: bannerDetailsFromApi.borderRadius,
+            buttonRadius: bannerDetailsFromApi.buttonRadius,
+            animation: bannerDetailsFromApi.animation,
+            easing: bannerDetailsFromApi.easing,
+            language: bannerDetailsFromApi.language,
+            weight: bannerDetailsFromApi.weight,
+            cookieExpiration: bannerDetailsFromApi.cookieExpiration,
+            privacyUrl: bannerDetailsFromApi.privacyUrl,
+            toggleStates: bannerDetailsFromApi.toggleStates ? {
+              customToggle: bannerDetailsFromApi.toggleStates.customToggle,
+              disableScroll: bannerDetailsFromApi.toggleStates.disableScroll,
+              closebutton: bannerDetailsFromApi.toggleStates.closebutton,
+            } : undefined
+          } : undefined}
+        />
       ) : (
         <WelcomeScreen 
           onAuthorize={handleWelcomeAuthorize}

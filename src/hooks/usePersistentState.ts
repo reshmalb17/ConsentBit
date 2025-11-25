@@ -48,8 +48,8 @@ function getSiteSpecificKey(key: string): string {
     return 'siteInfo';
   }
   
-  // For banner settings, use site-specific keys
-  if (BANNER_SETTINGS_KEYS.includes(key)) {
+  // For banner settings, use site-specific keys (but they shouldn't be saved)
+  if (isBannerSettingsKey(key)) {
     const currentSiteId = getAuthStorageItem('currentSiteId');
     if (currentSiteId) {
       return `${key}_${currentSiteId}`;
@@ -608,8 +608,28 @@ export function forceMigration(): void {
 // Keys that should be stored separately (not in consolidated object)
 const SEPARATE_KEYS = ['consentbit-userinfo', 'siteInfo', 'currentSiteId', 'migration_completed', 'bannerAdded'];
 
+// Helper function to check if a key is a banner settings key (including site-specific variants)
+function isBannerSettingsKey(key: string): boolean {
+  // Check exact match first
+  if (BANNER_SETTINGS_KEYS.includes(key)) {
+    return true;
+  }
+  // Check if it's a site-specific banner key (e.g., "color_123")
+  return BANNER_SETTINGS_KEYS.some(bannerKey => {
+    // Match exact key or site-specific variant (key_bannerKey or bannerKey_key)
+    return key === bannerKey || 
+           key.startsWith(`${bannerKey}_`) || 
+           key.endsWith(`_${bannerKey}`) ||
+           key.includes(`_${bannerKey}_`);
+  });
+}
+
 // Check if a key should be stored in the consolidated app data object
 function shouldUseConsolidatedStorage(key: string): boolean {
+  // Don't use consolidated storage for banner settings - they should only come from API
+  if (isBannerSettingsKey(key)) {
+    return false;
+  }
   return !SEPARATE_KEYS.includes(key) && !key.startsWith('siteInfo_');
 }
 
@@ -619,7 +639,18 @@ function getConsolidatedAppData(): Record<string, any> {
   try {
     const data = getAuthStorageItem('consentbit-app-data');
     if (!data) return {};
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Always clean banner details when reading
+    const cleaned: Record<string, any> = {};
+    Object.keys(parsed).forEach(key => {
+      // Only include non-banner keys
+      if (!isBannerSettingsKey(key)) {
+        cleaned[key] = parsed[key];
+      }
+    });
+    // Always save the cleaned version to ensure banner details are removed
+    setAuthStorageItem('consentbit-app-data', JSON.stringify(cleaned));
+    return cleaned;
   } catch (e) {
     return {};
   }
@@ -629,7 +660,40 @@ function getConsolidatedAppData(): Record<string, any> {
 function saveConsolidatedAppData(data: Record<string, any>): void {
   if (typeof window === 'undefined') return;
   try {
-    setAuthStorageItem('consentbit-app-data', JSON.stringify(data));
+    // Remove banner details from consolidated data before saving
+    const cleanedData: Record<string, any> = {};
+    Object.keys(data).forEach(key => {
+      // Only include non-banner keys
+      if (!isBannerSettingsKey(key)) {
+        cleanedData[key] = data[key];
+      }
+    });
+    setAuthStorageItem('consentbit-app-data', JSON.stringify(cleanedData));
+  } catch (e) {
+    // Silent error handling
+  }
+}
+
+// Export function to clean banner details from consolidated storage (can be called on app init)
+export function cleanBannerDetailsFromStorage(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    // Force clean by reading and saving (getConsolidatedAppData already does this)
+    getConsolidatedAppData();
+    
+    // Also clean any individual banner keys from sessionStorage
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && isBannerSettingsKey(key)) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    // Remove all banner keys
+    keysToRemove.forEach(key => {
+      removeAuthStorageItem(key);
+    });
   } catch (e) {
     // Silent error handling
   }
@@ -645,20 +709,21 @@ function migrateToConsolidatedStorage(): void {
     return; // Already migrated
   }
   
-  // List of keys that should be in consolidated storage
+  // List of keys that should be in consolidated storage (excluding banner settings)
   const keysToMigrate = [
-    'color', 'bgColor', 'btnColor', 'paraColor', 'secondcolor', 'bgColors', 'headColor',
-    'secondbuttontext', 'primaryButtonText', 'activeTab', 'size', 'Font', 'selectedtext',
-    'style', 'selected', 'selectedOption', 'selectedOptions', 'weight', 'borderRadius',
-    'buttonRadius', 'cookieExpiration', 'toggleStates', 'animation', 'easing', 'language',
-    'accessToken', 'pages', 'expires', 'buttonText', 'privacyUrl'
+    'accessToken', 'pages', 'expires', 'buttonText'
+    // Banner settings are excluded - they should only come from API
   ];
   
   const consolidatedData: Record<string, any> = {};
   let migratedCount = 0;
   
-  // Migrate each key
+  // Migrate each key (excluding banner settings)
   keysToMigrate.forEach(key => {
+    // Skip banner settings keys
+    if (isBannerSettingsKey(key)) {
+      return;
+    }
     const value = getAuthStorageItem(key);
     if (value) {
       try {
@@ -687,6 +752,8 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
   // Run migration once on first hook usage
   if (!migrationRun && typeof window !== 'undefined') {
     migrateToConsolidatedStorage();
+    // Clean banner details from consolidated storage (getConsolidatedAppData already does this)
+    getConsolidatedAppData(); // This will clean and save automatically
     migrationRun = true;
   }
   
@@ -712,12 +779,24 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
   
   // Track if value was explicitly set (not just initialized with default)
   const wasExplicitlySet = React.useRef(false);
+  // Track the initial loaded value to prevent saving on mount if value hasn't changed
+  const initialValueRef = React.useRef<T | null>(null);
+  // Track if this is the first render to prevent saving on initial mount
+  const isFirstRender = React.useRef(true);
 
   const [state, setState] = useState<T>(() => {
     if (typeof window === 'undefined') return defaultValue;
     
+    // Don't load banner details from session storage - they should only come from API
+    // These will be set via initialBannerStyles prop from API
+    if (isBannerSettingsKey(key)) {
+      initialValueRef.current = defaultValue;
+      return defaultValue;
+    }
+    
     // If not authorized for siteInfo, return default value
     if (key === 'siteInfo' && !isAuthorized) {
+      initialValueRef.current = defaultValue;
       return defaultValue;
     }
     
@@ -725,6 +804,11 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
       let savedState: string | null = null;
       
       if (useConsolidated) {
+        // Don't read banner details from consolidated storage - they should only come from API
+        if (isBannerSettingsKey(key)) {
+          initialValueRef.current = defaultValue;
+          return defaultValue;
+        }
         // Read from consolidated app data object
         const appData = getConsolidatedAppData();
         if (appData[key] !== undefined) {
@@ -733,18 +817,20 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
           // Fallback: check individual key (for backward compatibility before migration)
           savedState = getAuthStorageItem(key);
           if (savedState) {
-            // Auto-migrate: move to consolidated storage
-            try {
-              appData[key] = JSON.parse(savedState);
-              saveConsolidatedAppData(appData);
-              removeAuthStorageItem(key);
-            } catch (e) {
-              // Migration failed, use individual key
+            // Auto-migrate: move to consolidated storage (but skip banner details)
+            if (!isBannerSettingsKey(key)) {
+              try {
+                appData[key] = JSON.parse(savedState);
+                saveConsolidatedAppData(appData);
+                removeAuthStorageItem(key);
+              } catch (e) {
+                // Migration failed, use individual key
+              }
             }
           }
         }
       } else {
-        // Read from separate key (for consentbit-userinfo, siteInfo, banner settings, etc.)
+        // Read from separate key (for consentbit-userinfo, siteInfo, etc.)
         savedState = getAuthStorageItem(siteSpecificKey);
         
         // Handle migration for wf_hybrid_user -> consentbit-userinfo
@@ -755,32 +841,31 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
             removeAuthStorageItem('wf_hybrid_user');
           }
         }
-        
-        // For banner settings, check consolidated storage as fallback (for migration)
-        if (!savedState && BANNER_SETTINGS_KEYS.includes(key)) {
-          const appData = getConsolidatedAppData();
-          if (appData[key] !== undefined) {
-            savedState = JSON.stringify(appData[key]);
-            // Migrate to site-specific storage
-            const currentSiteId = getAuthStorageItem('currentSiteId');
-            if (currentSiteId) {
-              setAuthStorageItem(`${key}_${currentSiteId}`, savedState);
-              delete appData[key];
-              saveConsolidatedAppData(appData);
-            }
-          }
-        }
       }
       
-      if (!savedState || savedState === "undefined") return defaultValue;
-      return JSON.parse(savedState);
+      if (!savedState || savedState === "undefined") {
+        initialValueRef.current = defaultValue;
+        return defaultValue;
+      }
+      const parsedValue = JSON.parse(savedState);
+      initialValueRef.current = parsedValue;
+      return parsedValue;
     } catch (e) {
+      initialValueRef.current = defaultValue;
       return defaultValue;
     }
   });
 
   // Create a wrapped setState that respects authorization
   const authorizedSetState = React.useCallback((newState: React.SetStateAction<T>) => {
+    // Prevent banner settings from being saved - they should only come from API
+    if (isBannerSettingsKey(key)) {
+      // Allow state update for UI purposes, but don't mark as explicitly set
+      // This prevents saving to storage
+      setState(newState);
+      return;
+    }
+    
     // For siteInfo, only allow setting if authorizedS
     if (key === 'siteInfo' && !isAuthorized) {
       return;
@@ -795,6 +880,27 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Skip saving on first render to prevent saving when component just loads
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        return;
+      }
+      
+      // Don't save banner details to session storage - they should only come from API
+      // Check FIRST before any other logic to prevent any saving attempts
+      if (isBannerSettingsKey(key)) {
+        return; // Skip saving banner details completely - exit immediately
+      }
+      
+      // Check if value has actually changed from initial value
+      // Only save if value is different from what was initially loaded
+      const valueChanged = initialValueRef.current === null || 
+                          JSON.stringify(state) !== JSON.stringify(initialValueRef.current);
+      
+      if (!valueChanged && !wasExplicitlySet.current) {
+        return; // Value hasn't changed and wasn't explicitly set, don't save
+      }
+      
       // Special handling for siteInfo - only allow setting if user is authorized
       if (key === 'siteInfo') {
         // COMMENTED OUT: const userInfo = localStorage.getItem('consentbit-userinfo');
@@ -827,20 +933,30 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, React.Dispatch
       })();
       
       // Only save to sessionStorage if:
-      // 1. User is authenticated, OR
-      // 2. Value was explicitly set (not just initialized), OR
-      // 3. We're loading an existing value from sessionStorage
-      if (isUserAuthenticated || wasExplicitlySet.current) {
+      // 1. Value was explicitly set (user action), OR
+      // 2. User is authenticated AND value has changed from initial value
+      if (wasExplicitlySet.current || (isUserAuthenticated && valueChanged)) {
         if (useConsolidated) {
           // Save to consolidated app data object
+          // Get cleaned consolidated data (banner details already removed)
           const appData = getConsolidatedAppData();
-          appData[key] = state;
-          saveConsolidatedAppData(appData);
+          // Only add non-banner keys
+          if (!isBannerSettingsKey(key)) {
+            appData[key] = state;
+            saveConsolidatedAppData(appData);
+            // Update initial value ref after saving
+            initialValueRef.current = state;
+          }
         } else {
           // Recalculate siteSpecificKey to ensure we use current currentSiteId
           const currentSiteSpecificKey = getSiteSpecificKey(key);
-          // Save to separate key (for consentbit-userinfo, siteInfo, banner settings, etc.)
-          setAuthStorageItem(currentSiteSpecificKey, JSON.stringify(state));
+          // Save to separate key (for consentbit-userinfo, siteInfo, etc.)
+          // But skip banner details
+          if (!isBannerSettingsKey(key)) {
+            setAuthStorageItem(currentSiteSpecificKey, JSON.stringify(state));
+            // Update initial value ref after saving
+            initialValueRef.current = state;
+          }
         }
       }
     }

@@ -63,8 +63,8 @@ export const useAppState = () => {
   const [activeTab, setActiveTab] = usePersistentState("activeTab", "Settings");
   const [activeMode, setActiveMode] = usePersistentState("activeMode", "Simple");
   const [selected, setSelected] = usePersistentState<Orientation>("selected", "right");
-  const [selectedOption, setSelectedOption] = usePersistentState("selectedOption", "U.S. State Laws");
-  const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["U.S. State Laws", "GDPR"]);
+  const [selectedOption, setSelectedOption] = usePersistentState("selectedOption", "GDPR");
+  const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["GDPR"]);
   const [selectedtext, settextSelected] = usePersistentState("selectedtext", "left");
   const [style, setStyle] = usePersistentState<BannerStyle>("style", "align");
 

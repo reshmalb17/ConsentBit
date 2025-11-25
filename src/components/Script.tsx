@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import "../style/styless.css";
 import { ScriptCategory } from "../types/types";
 import { customCodeApi } from "../services/api";
@@ -36,8 +36,39 @@ const Script: React.FC<{
     // Debug scripts state changes
     useEffect(() => {
     }, [scripts]);
+    
+    // Check if any script has categories selected (including Essential)
+    const hasAnyCategories = useMemo(() => {
+        return scripts.some(script => {
+            if (!script.identifier || script.isDismissed) return false;
+            // Check if script has any categories selected
+            return script.selectedCategories.length > 0;
+        });
+    }, [scripts]);
+    
+    // Check if any script has categories selected other than Essential
+    const hasNonEssentialCategories = useMemo(() => {
+        return scripts.some(script => {
+            if (!script.identifier || script.isDismissed) return false;
+            // Check if script has any categories other than Essential
+            const nonEssentialCategories = script.selectedCategories.filter(cat => cat !== "Essential");
+            return nonEssentialCategories.length > 0;
+        });
+    }, [scripts]);
+    
+    // Check if any script with non-essential categories has been saved
+    const hasSavedCategories = useMemo(() => {
+        return scripts.some(script => {
+            if (!script.identifier || script.isDismissed) return false;
+            // Check if script has non-essential categories and has been saved
+            const nonEssentialCategories = script.selectedCategories.filter(cat => cat !== "Essential");
+            return nonEssentialCategories.length > 0 && script.isSaved;
+        });
+    }, [scripts]);
+    
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null);
+    const [hasSuccessfullySaved, setHasSuccessfullySaved] = useState(false);
     const categories = ["Essential", "Personalization", "Analytics", "Marketing"];
     const [showPopup, setShowPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -390,6 +421,16 @@ const Script: React.FC<{
             const formattedScripts = validScripts.map(script => {
                 // Add or update type attribute in the script tag
                 let modifiedTag = script.fullTag || '';
+                
+                // First, fix any malformed script tags like <scriptsrc to <script src
+                modifiedTag = modifiedTag.replace(/<script([^>\s])([^>]*?)>/gi, (match, firstChar, rest) => {
+                    // If firstChar is not a space and not '>', it means we have <scriptsrc or similar
+                    if (firstChar !== ' ' && firstChar !== '>') {
+                        return `<script ${firstChar}${rest}>`;
+                    }
+                    return match;
+                });
+                
                 const tagRegex = /<script\b([^>]*)>/i;
                 const match = modifiedTag.match(tagRegex);
                 
@@ -423,17 +464,40 @@ const Script: React.FC<{
                     // Remove consent-related attributes
                     attrs = attrs.replace(/\s*data-cb-consent[^"'\s]*\s*/g, '');
                     
-                    // Update or add type attribute
-                    if (attrs.includes('type=')) {
-                        attrs = attrs.replace(/type\s*=\s*"[^"]*"/i, 'type="text/plain"');
+                    // Check if there are non-essential categories (from data-category if exists)
+                    const categoryMatch = modifiedTag.match(/data-category\s*=\s*"([^"]*)"/i);
+                    let hasNonEssential = false;
+                    if (categoryMatch && categoryMatch[1]) {
+                        const categories = categoryMatch[1].split(',').map(c => c.trim());
+                        hasNonEssential = categories.some(cat => cat !== "Essential");
+                    }
+
+                    // Check if script is in Google category/group (case-insensitive)
+                    const isGoogleScript = script.group?.toLowerCase().includes('google') || script.category?.toLowerCase().includes('google');
+                    
+                    // Only add/update type="text/plain" if there are non-essential categories AND it's not a Google script
+                    if (hasNonEssential && !isGoogleScript) {
+                        // Update or add type attribute
+                        if (attrs.includes('type=')) {
+                            attrs = attrs.replace(/type\s*=\s*"[^"]*"/i, 'type="text/plain"');
+                        } else {
+                            attrs += ' type="text/plain"';
+                        }
                     } else {
-                        attrs += ' type="text/plain"';
+                        // Remove type="text/plain" if only Essential, no categories, or Google script
+                        attrs = attrs.replace(/\s*type\s*=\s*"text\/plain"\s*/i, ' ');
+                        attrs = attrs.trim();
                     }
                     
-                    const newTag = `<script${attrs}>`;
-                    modifiedTag = modifiedTag.replace(tagRegex, newTag);
+                    // Ensure there's always a space between <script and attributes
+                    const trimmedAttrs = attrs.trim();
+                    const scriptTag = trimmedAttrs ? `<script ${trimmedAttrs}>` : `<script>`;
+                    modifiedTag = modifiedTag.replace(tagRegex, scriptTag);
                 }
 
+                // Extract selectedCategories from script if it exists, but only use it if data-category attribute exists
+                const { selectedCategories: backendCategories, ...scriptWithoutCategories } = script;
+                
                 return {
                     identifier: getScriptIdentifier(script),
                     url: script.src || null,
@@ -441,10 +505,10 @@ const Script: React.FC<{
                     fullTag: modifiedTag || null,
                     isDismissed: false,
                     isSaved: false,
-                    selectedCategories: hasDataCategoryAttribute ? existingCategories : [], // Only set if data-category exists
+                    selectedCategories: hasDataCategoryAttribute ? existingCategories : [], // Only set if data-category exists, ignore backend categories
                     hasAutoDetectedCategories: hasDataCategoryAttribute && existingCategories.length > 0, // Track if categories were auto-detected
                     group: script.category || 'Other', // Use backend's category
-                    ...script,
+                    ...scriptWithoutCategories,
                 };
             });
 
@@ -624,11 +688,18 @@ const Script: React.FC<{
     const handleSaveAll = async () => {
         setIsSaving(true);
         setSaveStatus(null);
+        let successMessageShown = false; // Flag to prevent showing message again
+        
         try {
             // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
             const userinfo = getAuthStorageItem("consentbit-userinfo");
             const tokens = JSON.parse(userinfo || "{}")?.sessionToken;
             if (!tokens) {
+                setSaveStatus({
+                    success: false,
+                    message: "No authentication token found. Please authenticate first.",
+                });
+                setIsSaving(false);
                 return;
             }
 
@@ -645,16 +716,30 @@ const Script: React.FC<{
                     success: false,
                     message: "No scripts with selected categories to save.",
                 });
+                setIsSaving(false);
                 return;
             }
 
-            const result = await customCodeApi.saveScriptCategorizations(tokens, scriptsToSave);
+            // Call save - background completion will be silent (no callback passed)
+            const result = await customCodeApi.saveScriptCategorizations(tokens, scriptsToSave) as {
+                success: boolean;
+                message?: string;
+                isEarlyResponse?: boolean;
+                error?: { message?: string } | string;
+            };
 
             if (result.success) {
-                setSaveStatus({
-                    success: true,
-                    message: "Script categories saved successfully!",
-                });
+                // Show success message only once (may be early response after 2s)
+                if (!successMessageShown) {
+                    successMessageShown = true;
+                    setSaveStatus({
+                        success: true,
+                        message: result.message || "Script categories saved successfully!",
+                    });
+                    // Mark that we've successfully saved - this will change button text to "Update Categories"
+                    setHasSuccessfullySaved(true);
+                }
+                
                 // Update the local state: mark the currently saved scripts as 'isSaved: true',
                 // and keep the 'isSaved' status of other scripts as they were.
                 setScripts(prevScripts =>
@@ -674,15 +759,43 @@ const Script: React.FC<{
                         return { ...script, isSaved: script.isSaved || wasJustSaved };
                     })
                 );
+                
+                // If this was an early response (after 2s timeout), keep saving in background
+                // The save will continue and complete silently without showing another message
+                if (result.isEarlyResponse) {
+                    // Keep isSaving true to show "Saving..." while background save completes
+                    // The background save will complete silently - no UI updates
+                    // Set a longer timeout to ensure button resets even if background save takes time
+                    setTimeout(() => {
+                        setIsSaving(false);
+                    }, 1000); // Increased delay to ensure button resets
+                } else {
+                    // Save completed quickly (< 2s), stop showing "Saving..."
+                    setIsSaving(false);
+                }
             } else {
-                throw new Error(result.error || "Failed to save categories");
+                // Handle error response
+                const errorMessage = typeof result.error === 'object' && result.error?.message 
+                    ? result.error.message 
+                    : typeof result.error === 'string' 
+                    ? result.error 
+                    : "Failed to save categories";
+                if (!successMessageShown) {
+                    setSaveStatus({
+                        success: false,
+                        message: errorMessage,
+                    });
+                }
+                setIsSaving(false);
             }
         } catch (error) {
-            setSaveStatus({
-                success: false,
-                message: error instanceof Error ? error.message : "Failed to save categories",
-            });
-        } finally {
+            // Only show error if we haven't already shown a success message
+            if (!successMessageShown) {
+                setSaveStatus({
+                    success: false,
+                    message: error instanceof Error ? error.message : "Failed to save categories",
+                });
+            }
             setIsSaving(false);
         }
     };
@@ -700,6 +813,8 @@ const Script: React.FC<{
                 return script;
             })
         );
+        // Reset hasSuccessfullySaved when user edits a script
+        setHasSuccessfullySaved(false);
     }, [setScripts]);
 
     // ... existing code ...
@@ -709,6 +824,9 @@ const Script: React.FC<{
         if (category === "Essential") {
             return; // Do nothing if trying to toggle Essential
         }
+        
+        // Reset hasSuccessfullySaved when user changes categories
+        setHasSuccessfullySaved(false);
         
         setScripts(prevScripts =>
             prevScripts.map((script, index) => {
@@ -731,19 +849,36 @@ const Script: React.FC<{
                                 attrs = attrs.replace(/\s*data-cb-consent[^"'\s]*\s*/g, '');
                                 attrs = attrs.replace(/\s*data-category\s*=\s*"[^"]*"/i, '');
                                 
-                                // Update or add type attribute
-                                if (attrs.includes('type=')) {
-                                    attrs = attrs.replace(/type\s*=\s*"[^"]*"/i, 'type="text/plain"');
+                                // Check if there are non-essential categories
+                                const nonEssentialCategories = updatedCategories.filter(cat => cat !== "Essential");
+                                const hasNonEssential = nonEssentialCategories.length > 0;
+                                
+                                // Check if script is in Google category/group (case-insensitive)
+                                const isGoogleScript = script.group?.toLowerCase().includes('google') || script.category?.toLowerCase().includes('google');
+
+                                // Only add/update type="text/plain" if there are non-essential categories AND it's not a Google script
+                                if (hasNonEssential && !isGoogleScript) {
+                                    // Update or add type attribute
+                                    if (attrs.includes('type=')) {
+                                        attrs = attrs.replace(/type\s*=\s*"[^"]*"/i, 'type="text/plain"');
+                                    } else {
+                                        attrs += ' type="text/plain"';
+                                    }
                                 } else {
-                                    attrs += ' type="text/plain"';
+                                    // Remove type="text/plain" if only Essential, no categories, or Google script
+                                    attrs = attrs.replace(/\s*type\s*=\s*"text\/plain"\s*/i, ' ');
+                                    attrs = attrs.trim();
                                 }
                                 
                                 // Add category attribute if needed (including Essential)
                                 const categoryAttr = updatedCategories.length > 0
                                     ? ` data-category="${updatedCategories.join(',')}"`
                                     : '';
-                                const newTag = `<script${attrs}${categoryAttr}>`;
-                                updatedTag = updatedTag.replace(tagRegex, newTag);
+                                // Ensure there's always a space between <script and attributes
+                                const trimmedAttrs = attrs.trim();
+                                const combinedAttrs = trimmedAttrs + categoryAttr;
+                                const scriptTag = combinedAttrs.trim() ? `<script ${combinedAttrs.trim()}>` : `<script>`;
+                                updatedTag = updatedTag.replace(tagRegex, scriptTag);
                             }
 
                             return {
@@ -792,8 +927,10 @@ const Script: React.FC<{
                         attrs = attrs.replace(/\s*data-category\s*=\s*"[^"]*"/gi, '');
                         attrs = attrs.replace(/\s*type\s*=\s*"[^"]*"/gi, '');
                         
-                        // Create clean script tag
-                        originalTag = originalTag.replace(tagRegex, `<script${attrs}>`);
+                        // Ensure there's always a space between <script and attributes
+                        const trimmedAttrs = attrs.trim();
+                        const scriptTag = trimmedAttrs ? `<script ${trimmedAttrs}>` : `<script>`;
+                        originalTag = originalTag.replace(tagRegex, scriptTag);
                     }
 
                     return {
@@ -855,18 +992,41 @@ const Script: React.FC<{
             // Remove any existing data-category attributes
             attrs = attrs.replace(/\s*data-category\s*=\s*"[^"]*"/gi, '');
             
-            // Add type attribute
-            attrs += ' type="text/plain"';
-            
             // Get the categories from the script's selectedCategories (including Essential)
             const scriptObj = scripts[index];
-            if (scriptObj?.selectedCategories?.length > 0) {
-                // Add all selected categories including Essential
-                attrs += ` data-category="${scriptObj.selectedCategories.join(',')}"`;
+            const selectedCategories = scriptObj?.selectedCategories || [];
+            
+            // Check if there are non-essential categories
+            const nonEssentialCategories = selectedCategories.filter(cat => cat !== "Essential");
+            const hasNonEssential = nonEssentialCategories.length > 0;
+            
+            // Check if script is in Google category/group (case-insensitive)
+            const isGoogleScript = scriptObj?.group?.toLowerCase().includes('google') || scriptObj?.category?.toLowerCase().includes('google');
+
+            // Only add type="text/plain" if there are non-essential categories AND it's not a Google script
+            if (hasNonEssential && !isGoogleScript) {
+                // Remove existing type attribute first
+                attrs = attrs.replace(/\s*type\s*=\s*"[^"]*"/gi, '');
+                attrs = attrs.trim();
+                // Add type attribute
+                attrs += ' type="text/plain"';
+            } else {
+                // Remove type="text/plain" if only Essential, no categories, or Google script
+                attrs = attrs.replace(/\s*type\s*=\s*"text\/plain"\s*/gi, ' ');
+                attrs = attrs.trim();
             }
             
+            if (selectedCategories.length > 0) {
+                // Add all selected categories including Essential
+                attrs += ` data-category="${selectedCategories.join(',')}"`;
+            }
+            
+            // Ensure there's always a space between <script and attributes
+            const trimmedAttrs = attrs.trim();
+            const scriptTag = trimmedAttrs ? `<script ${trimmedAttrs}>` : `<script>`;
+            
             // Create clean script tag
-            cleanScript = script.replace(tagRegex, `<script${attrs}>`);
+            cleanScript = script.replace(tagRegex, scriptTag);
         }
 
         // Use the Clipboard API
@@ -940,14 +1100,14 @@ const Script: React.FC<{
                     <img src={line2} alt="line2" />
                 </div>)}
 
-            {scripts.length > 0 && (
+            {scripts.length > 0 && hasAnyCategories && (
                 <div className="save-btn-container">
                     <button className="save-all-btn" onClick={handleSaveAll} disabled={isSaving}>
-                        {isSaving ? "Saving..." : "Save Categories"}
+                        {isSaving ? "Saving..." : (hasSuccessfullySaved || hasSavedCategories) ? "Update Categories" : "Save Categories"}
                     </button>
                 </div>
             )}
-
+            
             {(() => { return null; })()}
             {isLoading ? (
                 <div className="pulse-overlays">

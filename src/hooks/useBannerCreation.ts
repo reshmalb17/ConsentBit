@@ -191,9 +191,9 @@ export const useBannerCreation = () => {
 
       const buttonPropertyMap: Record<string, string> = {
         "border-radius": "2px",
-        "background-color": "rgb(0, 0, 0)",
-        "color": "rgb(255, 255, 255)",
-        "font-family": "Montserrat",
+        "background-color": "rgb(0, 0, 0)", // Hardcoded default: black for Accept button
+        "color": "rgb(255, 255, 255)", // Hardcoded default: white text for Accept button
+        "font-family": config.Font || "Montserrat",
         "cursor": "pointer",
         "margin-left": "5px",
         "margin-right": "5px",
@@ -217,9 +217,9 @@ export const useBannerCreation = () => {
 
       const declineButtonPropertyMap: Record<string, string> = {
         "border-radius": "2px",
-        "background-color": "#C9C9C9",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "Montserrat",
+        "background-color": "#C9C9C9", // Hardcoded default: grey for Preferences/Reject buttons
+        "color": "rgb(0, 0, 0)", // Hardcoded default: black text for Preferences/Reject buttons
+        "font-family": config.Font || "Montserrat",
         "cursor": "pointer",
         "margin-left": "5px",
         "margin-right": "5px",
@@ -242,7 +242,7 @@ export const useBannerCreation = () => {
         "text-align": "center",
         "display": "flex",
         "justify-content": "center",
-
+        "text-decoration": "none",
       };
 
 
@@ -375,7 +375,7 @@ export const useBannerCreation = () => {
         await buttonContainer.setStyles([buttonContainerStyle]);
       }
 
-      // Step 9: Create preferences button as child of buttonContainer
+      // Step 9: Create preferences button as child of buttonContainer (first button)
       const prefrenceButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!prefrenceButton) {
         throw new Error("Failed to create preferences button");
@@ -387,7 +387,19 @@ export const useBannerCreation = () => {
         await (prefrenceButton as any).setDomId("preferences-btn"); // Type assertion
       }
 
-      // Step 10: Create accept button as child of buttonContainer
+      // Step 10: Create decline button as child of buttonContainer (second button)
+      const declineButton = await buttonContainer.append(webflow.elementPresets.Button);
+      if (!declineButton) {
+        throw new Error("Failed to create decline button");
+      }
+      await declineButton.setStyles([declineButtonStyle]);
+      await declineButton.setTextContent('Reject');
+      
+      if ((declineButton as any).setDomId) {
+        await (declineButton as any).setDomId("decline-btn"); // Type assertion
+      }
+
+      // Step 11: Create accept button as child of buttonContainer (third button)
       const acceptButton = await buttonContainer.append(webflow.elementPresets.Button);
       if (!acceptButton) {
         throw new Error("Failed to create accept button");
@@ -399,18 +411,6 @@ export const useBannerCreation = () => {
       }
      
       await acceptButton.setTextContent('Accept');
-
-      // Step 11: Create decline button as child of buttonContainer
-      const declineButton = await buttonContainer.append(webflow.elementPresets.Button);
-      if (!declineButton) {
-        throw new Error("Failed to create decline button");
-      }
-      await declineButton.setStyles([declineButtonStyle]);
-      await declineButton.setTextContent('Reject');
-      
-      if ((declineButton as any).setDomId) {
-        await (declineButton as any).setDomId("decline-btn"); // Type assertion
-      }
     } catch (error) {
       throw error;
     }
@@ -679,6 +679,10 @@ export const useBannerCreation = () => {
       if ((prefrenceButton as any).setDomId) {
         await (prefrenceButton as any).setDomId("do-not-share-link"); 
       }
+      // Add hover effect for underline on Do Not Share link
+      if (prefrenceButton.setCustomAttribute) {
+        await prefrenceButton.setCustomAttribute("data-hover-underline", "true");
+      }
          
       
     } catch (error) {
@@ -690,20 +694,22 @@ export const useBannerCreation = () => {
   const createGDPRPreferencesWithExistingFunction = async (selectedElement: any, config: BannerConfig) => {
     try {
       
-      // Call createCookiePreferences with all required parameters - black text for content, config colors for buttons
+      // Call createCookiePreferences with hardcoded colors matching the main GDPR banner
+      // Save Preference button: black background, white text (matching main Accept button)
+      // Reject button: grey background, black text (matching main Reject/Preferences buttons)
         await createCookiePreferences(
         ["essential", "analytics", "marketing", "preferences"], // selectedPreferences array
         config.language,           // language
         config.color,             // color (background)
-        config.btnColor,          // btnColor
+        "rgb(0, 0, 0)",           // btnColor - hardcoded black for Save Preference button (matching main Accept button)
         config.headColor,         // headColor
         config.paraColor,         // paraColor 
-        config.secondcolor, 
+        "#C9C9C9",                // secondcolor - hardcoded grey for Reject button (matching main Reject/Preferences buttons)
         typeof config.buttonRadius === 'number' ? config.buttonRadius : parseInt(config.buttonRadius as string), // buttonRadius
         config.animation,         // animation
         config.toggleStates?.customToggle || false, // customToggle
-        config.primaryButtonText, // primaryButtonText
-        config.secondbuttontext,  // secondbuttontext
+        "rgb(255, 255, 255)",     // primaryButtonText - hardcoded white text for Save Preference button (matching main Accept button)
+        "rgb(0, 0, 0)",           // secondbuttontext - hardcoded black text for Reject button (matching main Reject/Preferences buttons)
         false,                    // skipCommonDiv (false to create toggle button)
         config.toggleStates?.disableScroll || false, // disableScroll
         config.toggleStates?.closebutton || false  ,  // closebutton

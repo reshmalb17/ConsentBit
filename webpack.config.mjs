@@ -6,35 +6,70 @@ import fs from "fs";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-// Plugin to remove any remaining new Function() calls from bundle as a safety net
-class RemoveNewFunctionPlugin {
+// Plugin to remove eval() and new Function() calls from all bundle files
+class RemoveEvalAndNewFunctionPlugin {
   apply(compiler) {
-    compiler.hooks.afterEmit.tap("RemoveNewFunctionPlugin", (compilation) => {
+    compiler.hooks.afterEmit.tap("RemoveEvalAndNewFunctionPlugin", (compilation) => {
       const outputPath = compilation.outputOptions.path;
-      const filename = compilation.outputOptions.filename;
-      const bundlePath = path.join(outputPath, filename);
       
-      if (fs.existsSync(bundlePath)) {
-        let bundleContent = fs.readFileSync(bundlePath, "utf8");
-        const originalContent = bundleContent;
+      // Process all .bundle.js files in the output directory
+      const bundleFiles = fs.readdirSync(outputPath).filter(file => file.endsWith('.bundle.js'));
+      
+      bundleFiles.forEach(filename => {
+        const bundlePath = path.join(outputPath, filename);
         
-        // Replace new Function("return this")() with window (since we set globalObject to "window")
-        bundleContent = bundleContent.replace(
-          /new\s+Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
-          "window"
-        );
-        
-        // Replace new Function("return window")() with window
-        bundleContent = bundleContent.replace(
-          /new\s+Function\s*\(\s*["']return\s+window["']\s*\)\s*\(\s*\)/g,
-          "window"
-        );
-        
-        // Only write if content changed
-        if (bundleContent !== originalContent) {
-          fs.writeFileSync(bundlePath, bundleContent, "utf8");
+        if (fs.existsSync(bundlePath)) {
+          let bundleContent = fs.readFileSync(bundlePath, "utf8");
+          const originalContent = bundleContent;
+          
+          // Remove Console Ninja code block (the entire function s() that contains eval)
+          // This removes the entire Console Ninja initialization code
+          bundleContent = bundleContent.replace(
+            /function\s+s\(\)\{[^}]*try\{[^}]*return\s*\(0,\s*eval\)[^}]*\}[^}]*catch[^}]*\}[^}]*function\s+l\([^}]*\)\{[^}]*try\{[^}]*s\(\)[^}]*\}[^}]*catch[^}]*\}[^}]*return[^}]*\}/gs,
+            ''
+          );
+          
+          // Remove eval() calls - replace with safe alternatives
+          bundleContent = bundleContent.replace(
+            /\(0,\s*eval\)\s*\(["'][^"']*["']\)/g,
+            'null'
+          );
+          bundleContent = bundleContent.replace(
+            /await\s*\(0,\s*eval\)\s*\(["'][^"']*["']\)/g,
+            'await Promise.resolve(null)'
+          );
+          
+          // Remove new Function() calls - replace with safe alternatives
+          bundleContent = bundleContent.replace(
+            /new\s+Function\s*\([^)]*\)/g,
+            'function(){}'
+          );
+          
+          // Replace new Function("return this")() with window
+          bundleContent = bundleContent.replace(
+            /new\s+Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+            "window"
+          );
+          
+          // Replace new Function("return window")() with window
+          bundleContent = bundleContent.replace(
+            /new\s+Function\s*\(\s*["']return\s+window["']\s*\)\s*\(\s*\)/g,
+            "window"
+          );
+          
+          // Remove any remaining eval references in Console Ninja code
+          bundleContent = bundleContent.replace(
+            /\/\* https:\/\/github\.com\/wallabyjs\/console-ninja[^*]*\*\/[^}]*function\s+s\(\)\{[^}]*eval[^}]*\}[^}]*function\s+l\([^}]*\)\{[^}]*\}/gs,
+            ''
+          );
+          
+          // Only write if content changed
+          if (bundleContent !== originalContent) {
+            fs.writeFileSync(bundlePath, bundleContent, "utf8");
+            console.log(`Cleaned eval/new Function from ${filename}`);
+          }
         }
-      }
+      });
     });
   }
 }
@@ -128,7 +163,7 @@ export default {
     topLevelAwait: false,
   },
   plugins: [
-    new RemoveNewFunctionPlugin(),
+    new RemoveEvalAndNewFunctionPlugin(),
   ],
   devServer: {
     static: [{ directory: path.join(dirname, "public") }],

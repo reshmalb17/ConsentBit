@@ -397,7 +397,7 @@ const Customization: React.FC<CustomizationProps> = ({
   }, [previewMode, showCCPAPreview]);
 
   useEffect(() => {
-    // Initialize all color pickers
+    // Initialize all color pickers (except paraPicker and secondbgPicker which are initialized when dropdown opens)
 
     if (!btnPickerInstance.current && btnPickerRef.current) {
       btnPickerInstance.current = iro.ColorPicker(btnPickerRef.current, { width: 100, color: btnColor, borderWidth: 2, borderColor: "#ccc" });
@@ -407,17 +407,9 @@ const Customization: React.FC<CustomizationProps> = ({
       headPickerInstance.current = iro.ColorPicker(headPickerRef.current, { width: 100, color: headColor, borderWidth: 2, borderColor: "#ccc" });
       headPickerInstance.current.on("color:change", (newColor: any) => setHeadColor(newColor.hexString));
     }
-    if (!paraPickerInstance.current && paraPickerRef.current) {
-      paraPickerInstance.current = iro.ColorPicker(paraPickerRef.current, { width: 100, color: paraColor, borderWidth: 2, borderColor: "#ccc" });
-      paraPickerInstance.current.on("color:change", (newColor: any) => setParaColor(newColor.hexString));
-    }
     if (!secondbtnPickerInstance.current && secondbtnPickerRef.current) {
       secondbtnPickerInstance.current = iro.ColorPicker(secondbtnPickerRef.current, { width: 100, color: secondcolor, borderWidth: 2, borderColor: "#ccc" });
       secondbtnPickerInstance.current.on("color:change", (newColor: any) => setSecondcolor(newColor.hexString));
-    }
-    if (!secondbgPickerInstance.current && secondbgPickerRef.current) {
-      secondbgPickerInstance.current = iro.ColorPicker(secondbgPickerRef.current, { width: 100, color: bgColors, borderWidth: 2, borderColor: "#ccc" });
-      secondbgPickerInstance.current.on("color:change", (newColor: any) => setBgColors(newColor.hexString));
     }
     if (!SecondbuttonTextInstance.current && SecondbuttonTextPickerRef.current) {
       SecondbuttonTextInstance.current = iro.ColorPicker(SecondbuttonTextPickerRef.current, { width: 100, color: secondbuttontext, borderWidth: 2, borderColor: "#ccc" });
@@ -429,18 +421,71 @@ const Customization: React.FC<CustomizationProps> = ({
     }
   }, []);
 
+  // Initialize paraPicker (Body Text Color) once on mount
+  useEffect(() => {
+    if (!paraPickerInstance.current && paraPickerRef.current) {
+      paraPickerInstance.current = iro.ColorPicker(paraPickerRef.current, {
+        width: 100,
+        color: paraColor,
+        borderWidth: 2,
+        borderColor: "#ccc",
+      });
+
+      paraPickerInstance.current.on("color:change", (newColor: any) => {
+        setParaColor(newColor.hexString);
+      });
+    }
+  }, []);
+
+  // Sync paraPicker color when dropdown opens or paraColor changes
+  useEffect(() => {
+    if (paraOpen && paraPickerInstance.current) {
+      paraPickerInstance.current.color.set(paraColor);
+    }
+  }, [paraOpen, paraColor]);
+
+  // Initialize secondbgPicker (Second Background Color) when style is alignstyle and container exists
+  useEffect(() => {
+    if (style === "alignstyle" && !secondbgPickerInstance.current && secondbgPickerRef.current) {
+      secondbgPickerInstance.current = iro.ColorPicker(secondbgPickerRef.current, {
+        width: 100,
+        color: bgColors,
+        borderWidth: 2,
+        borderColor: "#ccc",
+      });
+
+      secondbgPickerInstance.current.on("color:change", (newColor: any) => {
+        setBgColors(newColor.hexString);
+      });
+    } else if (style !== "alignstyle" && secondbgPickerInstance.current) {
+      // Clean up when style changes away from alignstyle
+      try {
+        if (secondbgPickerInstance.current.el && secondbgPickerInstance.current.el.parentNode) {
+          secondbgPickerInstance.current.el.parentNode.removeChild(secondbgPickerInstance.current.el);
+        }
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      secondbgPickerInstance.current = null;
+    }
+  }, [style, bgColors]);
+
+  // Sync secondbgPicker color when dropdown opens or bgColors changes
+  useEffect(() => {
+    if (secondbgOpen && secondbgPickerInstance.current && style === "alignstyle") {
+      secondbgPickerInstance.current.color.set(bgColors);
+    }
+  }, [secondbgOpen, bgColors, style]);
+
   useEffect(() => {
     // Sync picker color with state when dropdown opens
     if (btnOpen && btnPickerInstance.current) btnPickerInstance.current.color.set(btnColor);
     if (headOpen && headPickerInstance.current) headPickerInstance.current.color.set(headColor);
-    if (paraOpen && paraPickerInstance.current) paraPickerInstance.current.color.set(paraColor);
     if (secondbuttonOpen && secondbtnPickerInstance.current) secondbtnPickerInstance.current.color.set(secondcolor);
-    if (secondbgOpen && secondbgPickerInstance.current) secondbgPickerInstance.current.color.set(bgColors);
     if (SecondbuttonTextOpen && SecondbuttonTextInstance.current) SecondbuttonTextInstance.current.color.set(secondbuttontext);
     if (primaryButtonTextOpen && primaryButtonTextInstance.current) primaryButtonTextInstance.current.color.set(primaryButtonText);
-
-
-  }, [btnOpen, headOpen, paraOpen, secondbuttonOpen, secondbgOpen, SecondbuttonTextOpen, primaryButtonTextOpen]);
+    // Note: paraPicker and secondbgPicker are handled in their own useEffects above
+  }, [btnOpen, headOpen, secondbuttonOpen, SecondbuttonTextOpen, primaryButtonTextOpen]);
 
   useEffect(() => {
     // Handle click outside to close dropdowns
@@ -485,18 +530,36 @@ const Customization: React.FC<CustomizationProps> = ({
                 alt="leftalignment"
                 onClick={() => setSelected("left")}
                 className="cursor-pointer"
+                style={{
+                  opacity: selected === "left" ? 1 : 0.6,
+                  border: selected === "left" ? "thin solid #8C79FF" : "thin solid transparent",
+                  borderRadius: "4px",
+                  transition: "all 0.2s ease"
+                }}
               />
               <img
                 src={getAlignmentIcon("center", selected === "center")}
                 alt="centertalignment"
                 onClick={() => setSelected("center")}
                 className="cursor-pointer"
+                style={{
+                  opacity: selected === "center" ? 1 : 0.6,
+                  border: selected === "center" ? "thin solid #8C79FF" : "thin solid transparent",
+                  borderRadius: "4px",
+                  transition: "all 0.2s ease"
+                }}
               />
               <img
                 src={getAlignmentIcon("right", selected === "right")}
                 alt="righttalignment"
                 onClick={() => setSelected("right")}
                 className="cursor-pointer"
+                style={{
+                  opacity: selected === "right" ? 1 : 0.6,
+                  border: selected === "right" ? "thin solid #8C79FF" : "thin solid transparent",
+                  borderRadius: "4px",
+                  transition: "all 0.2s ease"
+                }}
               />
             </div>
           </div>
@@ -510,23 +573,65 @@ const Customization: React.FC<CustomizationProps> = ({
               </div>
             </div>
             <div className="category-2">
-              <img className="img-width cursor-pointer" src={getBannerStyleIcon("align")} alt="Align icon" style={{ opacity: style === "align" ? 1 : 0.4, border: style === "align" ? "2px solid #8C79FF" : "2px solid #ffffff00", borderRadius: "6px" }} onClick={() => setStyle(style === "align" ? "" : "align")} />
-              <img className="img-width cursor-pointer" src={getBannerStyleIcon("alignstyle")} alt="Align icon" style={{ opacity: style === "alignstyle" ? 1 : 0.4, border: style === "alignstyle" ? "2px solid #8C79FF" : "2px solid #ffffff00", borderRadius: "6px" }} onClick={() => setStyle(style === "alignstyle" ? "" : "alignstyle")} />
-              <img src={getBannerStyleIcon("bigstyle")} alt="Align icon" style={{ opacity: style === "bigstyle" ? 1 : 0.4, border: style === "bigstyle" ? "2px solid #8C79FF" : "2px solid #ffffff00", borderRadius: "6px" }} onClick={() => setStyle(style === "bigstyle" ? "" : "bigstyle")} />
+              <img 
+                className="img-width cursor-pointer" 
+                src={getBannerStyleIcon("align")} 
+                alt="Align icon" 
+                style={{ 
+                  opacity: style === "align" ? 1 : 0.4, 
+                  border: style === "align" ? "2px solid #8C79FF" : "2px solid transparent", 
+                  borderRadius: "6px",
+                  transition: "all 0.2s ease"
+                }} 
+                onClick={() => setStyle(style === "align" ? "" : "align")} 
+              />
+              <img 
+                className="img-width cursor-pointer" 
+                src={getBannerStyleIcon("alignstyle")} 
+                alt="Align icon" 
+                style={{ 
+                  opacity: style === "alignstyle" ? 1 : 0.4, 
+                  border: style === "alignstyle" ? "2px solid #8C79FF" : "2px solid transparent", 
+                  borderRadius: "6px",
+                  transition: "all 0.2s ease"
+                }} 
+                onClick={() => setStyle(style === "alignstyle" ? "" : "alignstyle")} 
+              />
+              <img 
+                src={getBannerStyleIcon("bigstyle")} 
+                alt="Align icon" 
+                style={{ 
+                  opacity: style === "bigstyle" ? 1 : 0.4, 
+                  border: style === "bigstyle" ? "2px solid #8C79FF" : "2px solid transparent", 
+                  borderRadius: "6px",
+                  transition: "all 0.2s ease"
+                }} 
+                onClick={() => setStyle(style === "bigstyle" ? "" : "bigstyle")} 
+              />
             </div>
             <div className="category-2">
               <img
                 className="img-width cursor-pointer"
                 src={getBannerStyleIcon("centeralign")}
                 alt="Align icon"
-                style={{ opacity: style === "centeralign" ? 1 : 0.4, border: style === "centeralign" ? "2px solid #8C79FF" : "2px solid #ffffff00", borderRadius: "4px" }}
+                style={{ 
+                  opacity: style === "centeralign" ? 1 : 0.4, 
+                  border: style === "centeralign" ? "2px solid #8C79FF" : "2px solid transparent", 
+                  borderRadius: "4px",
+                  transition: "all 0.2s ease"
+                }}
                 onClick={() => setStyle(style === "centeralign" ? "" : "centeralign")}
               />
               <img
                 className="img-width cursor-pointer"
                 src={getBannerStyleIcon("fullwidth")}
                 alt="Full Width icon"
-                style={{ opacity: style === "fullwidth" ? 1 : 0.4, border: style === "fullwidth" ? "2px solid #8C79FF" : "2px solid #ffffff00", borderRadius: "4px" }}
+                style={{ 
+                  opacity: style === "fullwidth" ? 1 : 0.4, 
+                  border: style === "fullwidth" ? "2px solid #8C79FF" : "2px solid transparent", 
+                  borderRadius: "4px",
+                  transition: "all 0.2s ease"
+                }}
                 onClick={() => setStyle(style === "fullwidth" ? "" : "fullwidth")}
               />
             </div>
@@ -593,283 +698,289 @@ const Customization: React.FC<CustomizationProps> = ({
               </div>
             </div>
             <div className="custom">
-              <div className="customs">
-                <div>
-                  <span>Banner Background</span>
-                  <div className="color-picker-dropdown" ref={dropdownRef}>
-                    <div className="color-picker-button" onClick={() => {
-                      setIsOpen(!isOpen);
-                    }}>
-                      <input
-                        type="text"
-                        value={color}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setColor(hexValue);
-                            if (pickerInstance.current && hexValue.length === 7) {
-                              pickerInstance.current.color.set(hexValue);
+              {/* Show all color selections - Second Background only when alignstyle is selected */}
+              <>
+                <div className="customs">
+                  <div>
+                    <span>Banner Background</span>
+                    <div className="color-picker-dropdown" ref={dropdownRef}>
+                      <div className="color-picker-button" onClick={() => {
+                        setIsOpen(!isOpen);
+                      }}>
+                        <input
+                          type="text"
+                          value={color}
+                          onChange={(e) => {
+                            const hexValue = e.target.value;
+                            if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                              setColor(hexValue);
+                              if (pickerInstance.current && hexValue.length === 7) {
+                                pickerInstance.current.color.set(hexValue);
+                              }
                             }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#ffffff"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: color }}
-                        onClick={() => setIsOpen(!isOpen)}
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hex-input-field"
+                          placeholder="#ffffff"
+                          maxLength={7}
+                        />
+                        <div 
+                          className="color-preview-circle" 
+                          style={{ backgroundColor: color }}
+                          onClick={() => setIsOpen(!isOpen)}
+                        ></div>
+                      </div>
+
+                      <div
+                        ref={colorPickerRef}
+                        className={`color-picker-container ${isOpen ? "visible" : "hidden"}`}
                       ></div>
                     </div>
-
-                    <div
-                      ref={colorPickerRef}
-                      className={`color-picker-container ${isOpen ? "visible" : "hidden"}`}
-                    ></div>
                   </div>
-                </div>
 
-                <div>
-                  <span>Second Background</span>
-                  <div className="color-picker-dropdown" ref={secondbgDropdownRef}>
-                    <div className="color-picker-button" onClick={() => setSecondbgopen(!secondbgOpen)}>
-                      <input
-                        type="text"
-                        value={bgColors}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setBgColors(hexValue);
-                            if (secondbgPickerInstance.current && hexValue.length === 7) {
-                              secondbgPickerInstance.current.color.set(hexValue);
-                            }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#798EFF"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: bgColors }}
-                        onClick={() => setSecondbgopen(!secondbgOpen)}
-                      ></div>
+                  {/* Show Second Background only when alignstyle is selected */}
+                  {style === "alignstyle" && (
+                    <div>
+                      <span>Second Background</span>
+                      <div className="color-picker-dropdown" ref={secondbgDropdownRef}>
+                        <div className="color-picker-button" onClick={() => setSecondbgopen(!secondbgOpen)}>
+                          <input
+                            type="text"
+                            value={bgColors}
+                            onChange={(e) => {
+                              const hexValue = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                                setBgColors(hexValue);
+                                if (secondbgPickerInstance.current && hexValue.length === 7) {
+                                  secondbgPickerInstance.current.color.set(hexValue);
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hex-input-field"
+                            placeholder="#798EFF"
+                            maxLength={7}
+                          />
+                          <div 
+                            className="color-preview-circle" 
+                            style={{ backgroundColor: bgColors }}
+                            onClick={() => setSecondbgopen(!secondbgOpen)}
+                          ></div>
+                        </div>
+                        <div ref={secondbgPickerRef} className={`color-picker-container ${secondbgOpen ? "visible" : "hidden"}`}></div>
+                      </div>
                     </div>
-                    <div ref={secondbgPickerRef} className={`color-picker-container ${secondbgOpen ? "visible" : "hidden"}`}></div>
-                  </div>
+                  )}
                 </div>
-              </div>
 
-              <div className="customs">
-                <div>
-                  <span>Body Text Color</span>
-                  <div className="color-picker-dropdown" ref={paraDropdownRef}>
-                    <div className="color-picker-button" onClick={() => setParaOpen(!paraOpen)}>
-                      <input
-                        type="text"
-                        value={paraColor}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setParaColor(hexValue);
-                            if (paraPickerInstance.current && hexValue.length === 7) {
-                              paraPickerInstance.current.color.set(hexValue);
-                            }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#ffffff"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: paraColor }}
-                        onClick={() => setParaOpen(!paraOpen)}
-                      ></div>
+                  <div className="customs">
+                    <div>
+                      <span>Body Text Color</span>
+                      <div className="color-picker-dropdown" ref={paraDropdownRef}>
+                        <div className="color-picker-button" onClick={() => setParaOpen(!paraOpen)}>
+                          <input
+                            type="text"
+                            value={paraColor}
+                            onChange={(e) => {
+                              const hexValue = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                                setParaColor(hexValue);
+                                if (paraPickerInstance.current && hexValue.length === 7) {
+                                  paraPickerInstance.current.color.set(hexValue);
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hex-input-field"
+                            placeholder="#ffffff"
+                            maxLength={7}
+                          />
+                          <div 
+                            className="color-preview-circle" 
+                            style={{ backgroundColor: paraColor }}
+                            onClick={() => setParaOpen(!paraOpen)}
+                          ></div>
+                        </div>
+                        <div ref={paraPickerRef} className={`color-picker-container ${paraOpen ? "visible" : "hidden"}`}></div>
+                      </div>
                     </div>
-                    <div ref={paraPickerRef} className={`color-picker-container ${paraOpen ? "visible" : "hidden"}`}></div>
-                  </div>
-                </div>
-                <div>
-                  <span>Title Text Color</span>
-                  <div className="color-picker-dropdown" ref={headDropdownRef}>
-                    <div className="color-picker-button" onClick={() => setHeadOpen(!headOpen)}>
-                      <input
-                        type="text"
-                        value={headColor}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setHeadColor(hexValue);
-                            if (headPickerInstance.current && hexValue.length === 7) {
-                              headPickerInstance.current.color.set(hexValue);
-                            }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#ffffff"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: headColor }}
-                        onClick={() => setHeadOpen(!headOpen)}
-                      ></div>
+                    <div>
+                      <span>Title Text Color</span>
+                      <div className="color-picker-dropdown" ref={headDropdownRef}>
+                        <div className="color-picker-button" onClick={() => setHeadOpen(!headOpen)}>
+                          <input
+                            type="text"
+                            value={headColor}
+                            onChange={(e) => {
+                              const hexValue = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                                setHeadColor(hexValue);
+                                if (headPickerInstance.current && hexValue.length === 7) {
+                                  headPickerInstance.current.color.set(hexValue);
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hex-input-field"
+                            placeholder="#ffffff"
+                            maxLength={7}
+                          />
+                          <div 
+                            className="color-preview-circle" 
+                            style={{ backgroundColor: headColor }}
+                            onClick={() => setHeadOpen(!headOpen)}
+                          ></div>
+                        </div>
+                        <div ref={headPickerRef} className={`color-picker-container ${headOpen ? "visible" : "hidden"}`}></div>
+                      </div>
                     </div>
-                    <div ref={headPickerRef} className={`color-picker-container ${headOpen ? "visible" : "hidden"}`}></div>
                   </div>
-                </div>
-              </div>
 
-              <div className="flex">
-                <span className="font-blue">Primary Button</span>
-                <div className="tooltip-containers">
-                  <img src={questionmark} alt="info" className="tooltip-icon" />
-                  <span className="tooltip-text">Style the primary (Accept) button to match your site’s branding.</span>
-                </div>
-              </div>
-              <div className="customs">
-
-                <div>
-                  <span>Background Color</span>
-                  <div className="color-picker-dropdown" ref={secondbtnDropdownRef}>
-                    <div className="color-picker-button" onClick={() => setSecondButtonOpen(!secondbuttonOpen)}>
-                      <input
-                        type="text"
-                        value={secondcolor}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setSecondcolor(hexValue);
-                            if (secondbtnPickerInstance.current && hexValue.length === 7) {
-                              secondbtnPickerInstance.current.color.set(hexValue);
-                            }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#ffffff"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: secondcolor }}
-                        onClick={() => setSecondButtonOpen(!secondbuttonOpen)}
-                      ></div>
+                  <div className="flex">
+                    <span className="font-blue">Primary Button</span>
+                    <div className="tooltip-containers">
+                      <img src={questionmark} alt="info" className="tooltip-icon" />
+                      <span className="tooltip-text">Style the primary (Accept) button to match your site's branding.</span>
                     </div>
-                    <div ref={secondbtnPickerRef} className={`color-picker-container ${secondbuttonOpen ? "visible" : "hidden"}`}></div>
                   </div>
-                </div>
+                  <div className="customs">
 
-                <div>
-                  <span>Text Color</span>
-                  <div className="color-picker-dropdown" ref={primaryButtonTextDropdownRef}>
-                    <div className="color-picker-button" onClick={() => setPrimaryButtonTextOpen(!primaryButtonTextOpen)}>
-                      <input
-                        type="text"
-                        value={primaryButtonText}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setPrimaryButtonText(hexValue);
-                            if (primaryButtonTextInstance.current && hexValue.length === 7) {
-                              primaryButtonTextInstance.current.color.set(hexValue);
-                            }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#ffffff"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: primaryButtonText }}
-                        onClick={() => setPrimaryButtonTextOpen(!primaryButtonTextOpen)}
-                      ></div>
+                    <div>
+                      <span>Background Color</span>
+                      <div className="color-picker-dropdown" ref={btnDropdownRef}>
+                        <div className="color-picker-button" onClick={() => setBtnOpen(!btnOpen)}>
+                          <input
+                            type="text"
+                            value={btnColor}
+                            onChange={(e) => {
+                              const hexValue = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                                setBtnColor(hexValue);
+                                if (btnPickerInstance.current && hexValue.length === 7) {
+                                  btnPickerInstance.current.color.set(hexValue);
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hex-input-field"
+                            placeholder="#ffffff"
+                            maxLength={7}
+                          />
+                          <div 
+                            className="color-preview-circle" 
+                            style={{ backgroundColor: btnColor }}
+                            onClick={() => setBtnOpen(!btnOpen)}
+                          ></div>
+                        </div>
+                        <div ref={btnPickerRef} className={`color-picker-container ${btnOpen ? "visible" : "hidden"}`}></div>
+                      </div>
                     </div>
-                    <div ref={primaryButtonTextPickerRef} className={`color-picker-container ${primaryButtonTextOpen ? "visible" : "hidden"}`}></div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex">
-                <span className="font-blue">Secondary Button</span>
-                <div className="tooltip-containers">
-                  <img src={questionmark} alt="info" className="tooltip-icon" />
-                  <span className="tooltip-text">  Customize the Reject/Preferences (secondary) buttons to match your site’s branding.
-                  </span>
-                </div>
-              </div>
-
-              <div className="customs">
-                <div>
-                  <span>Background Color</span>
-                  <div className="color-picker-dropdown" ref={btnDropdownRef}>
-                    <div className="color-picker-button" onClick={() => setBtnOpen(!btnOpen)}>
-                      <input
-                        type="text"
-                        value={btnColor}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setBtnColor(hexValue);
-                            if (btnPickerInstance.current && hexValue.length === 7) {
-                              btnPickerInstance.current.color.set(hexValue);
-                            }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#ffffff"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: btnColor }}
-                        onClick={() => setBtnOpen(!btnOpen)}
-                      ></div>
+                    <div>
+                      <span>Text Color</span>
+                      <div className="color-picker-dropdown" ref={primaryButtonTextDropdownRef}>
+                        <div className="color-picker-button" onClick={() => setPrimaryButtonTextOpen(!primaryButtonTextOpen)}>
+                          <input
+                            type="text"
+                            value={primaryButtonText}
+                            onChange={(e) => {
+                              const hexValue = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                                setPrimaryButtonText(hexValue);
+                                if (primaryButtonTextInstance.current && hexValue.length === 7) {
+                                  primaryButtonTextInstance.current.color.set(hexValue);
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hex-input-field"
+                            placeholder="#ffffff"
+                            maxLength={7}
+                          />
+                          <div 
+                            className="color-preview-circle" 
+                            style={{ backgroundColor: primaryButtonText }}
+                            onClick={() => setPrimaryButtonTextOpen(!primaryButtonTextOpen)}
+                          ></div>
+                        </div>
+                        <div ref={primaryButtonTextPickerRef} className={`color-picker-container ${primaryButtonTextOpen ? "visible" : "hidden"}`}></div>
+                      </div>
                     </div>
-                    <div ref={btnPickerRef} className={`color-picker-container ${btnOpen ? "visible" : "hidden"}`}></div>
                   </div>
-                </div>
 
-                <div>
-                  <span>Text Color</span>
-                  <div className="color-picker-dropdown" ref={secondbuttonDropdownRef}>
-                    <div className="color-picker-button" onClick={() => setSecondbuttonTextOpen(!SecondbuttonTextOpen)}>
-                      <input
-                        type="text"
-                        value={secondbuttontext}
-                        onChange={(e) => {
-                          const hexValue = e.target.value;
-                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                            setsecondbuttontext(hexValue);
-                            if (SecondbuttonTextInstance.current && hexValue.length === 7) {
-                              SecondbuttonTextInstance.current.color.set(hexValue);
-                            }
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hex-input-field"
-                        placeholder="#ffffff"
-                        maxLength={7}
-                      />
-                      <div 
-                        className="color-preview-circle" 
-                        style={{ backgroundColor: secondbuttontext }}
-                        onClick={() => setSecondbuttonTextOpen(!SecondbuttonTextOpen)}
-                      ></div>
+                  <div className="flex">
+                    <span className="font-blue">Secondary Button</span>
+                    <div className="tooltip-containers">
+                      <img src={questionmark} alt="info" className="tooltip-icon" />
+                      <span className="tooltip-text">  Customize the Reject/Preferences (secondary) buttons to match your site's branding.
+                      </span>
                     </div>
-                    <div ref={SecondbuttonTextPickerRef} className={`color-picker-container ${SecondbuttonTextOpen ? "visible" : "hidden"}`}></div>
                   </div>
-                </div>
-              </div>
+
+                  <div className="customs">
+                    <div>
+                      <span>Background Color</span>
+                      <div className="color-picker-dropdown" ref={secondbtnDropdownRef}>
+                        <div className="color-picker-button" onClick={() => setSecondButtonOpen(!secondbuttonOpen)}>
+                          <input
+                            type="text"
+                            value={secondcolor}
+                            onChange={(e) => {
+                              const hexValue = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                                setSecondcolor(hexValue);
+                                if (secondbtnPickerInstance.current && hexValue.length === 7) {
+                                  secondbtnPickerInstance.current.color.set(hexValue);
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hex-input-field"
+                            placeholder="#ffffff"
+                            maxLength={7}
+                          />
+                          <div 
+                            className="color-preview-circle" 
+                            style={{ backgroundColor: secondcolor }}
+                            onClick={() => setSecondButtonOpen(!secondbuttonOpen)}
+                          ></div>
+                        </div>
+                        <div ref={secondbtnPickerRef} className={`color-picker-container ${secondbuttonOpen ? "visible" : "hidden"}`}></div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span>Text Color</span>
+                      <div className="color-picker-dropdown" ref={secondbuttonDropdownRef}>
+                        <div className="color-picker-button" onClick={() => setSecondbuttonTextOpen(!SecondbuttonTextOpen)}>
+                          <input
+                            type="text"
+                            value={secondbuttontext}
+                            onChange={(e) => {
+                              const hexValue = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+                                setsecondbuttontext(hexValue);
+                                if (SecondbuttonTextInstance.current && hexValue.length === 7) {
+                                  SecondbuttonTextInstance.current.color.set(hexValue);
+                                }
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hex-input-field"
+                            placeholder="#ffffff"
+                            maxLength={7}
+                          />
+                          <div 
+                            className="color-preview-circle" 
+                            style={{ backgroundColor: secondbuttontext }}
+                            onClick={() => setSecondbuttonTextOpen(!SecondbuttonTextOpen)}
+                          ></div>
+                        </div>
+                        <div ref={SecondbuttonTextPickerRef} className={`color-picker-container ${SecondbuttonTextOpen ? "visible" : "hidden"}`}></div>
+                      </div>
+                    </div>
+                  </div>
+                </>
             </div>
           </div>
 
@@ -972,6 +1083,7 @@ const Customization: React.FC<CustomizationProps> = ({
               {style === "alignstyle" && <div className="secondclass" style={{ backgroundColor: bgColors, borderBottomRightRadius: `${borderRadius}px`, borderTopRightRadius: `${borderRadius}px` }}></div>}
               {closebutton && closeIconSvg ? (
                 <img 
+                  id="close-consent-banner"
                   src={closeIconSvg} 
                   alt="Close" 
                   className="closebutton" 
@@ -1062,7 +1174,7 @@ const Customization: React.FC<CustomizationProps> = ({
                   className="btn-preferences"
                   style={{
                     borderRadius: `${buttonRadius}px`,
-                    backgroundColor: btnColor,
+                    backgroundColor: secondcolor,
                     color: secondbuttontext,
                     fontFamily: Font 
                   }}
@@ -1092,7 +1204,7 @@ const Customization: React.FC<CustomizationProps> = ({
                   className="btn-reject"
                   style={{
                     borderRadius: `${buttonRadius}px`,
-                    backgroundColor: btnColor,
+                    backgroundColor: secondcolor,
                     color: secondbuttontext,
                     fontFamily: Font 
                   }}
@@ -1122,7 +1234,7 @@ const Customization: React.FC<CustomizationProps> = ({
                   className="btn-accept"
                   style={{
                     borderRadius: `${buttonRadius}px`,
-                    backgroundColor: secondcolor,
+                    backgroundColor: btnColor,
                     color: primaryButtonText,
                     fontFamily: Font 
                   }}
@@ -1186,6 +1298,7 @@ const Customization: React.FC<CustomizationProps> = ({
               )}
               {closebutton && closeIconSvg ? (
                 <img 
+                  id="close-consent-banner"
                   src={closeIconSvg} 
                   alt="Close" 
                   className="closebutton" 
@@ -1252,7 +1365,8 @@ const Customization: React.FC<CustomizationProps> = ({
                       style={{
                         color: paraColor,
                         textDecoration: "none",
-                        fontSize: `${typeof size === 'number' ? size - 2 : 12}px`
+                        fontSize: `${typeof size === 'number' ? size - 2 : 12}px`,
+                        fontFamily: Font
                       }}
                       onMouseEnter={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "underline"}
                       onMouseLeave={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "none"}
@@ -1270,7 +1384,7 @@ const Customization: React.FC<CustomizationProps> = ({
                   </span>
                 )}
               </div>
-              <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : undefined, fontFamily: Font }}>
+              <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : "flex-start", fontFamily: Font }}>
                 <a
                   href="#"
                   onClick={(e) => e.preventDefault()}

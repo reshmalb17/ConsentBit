@@ -65,10 +65,38 @@ type UserData = {
   sessionToken: string;
 };
 
+interface InitialBannerStyles {
+  color?: string;
+  btnColor?: string;
+  paraColor?: string;
+  secondcolor?: string;
+  bgColors?: string;
+  headColor?: string;
+  secondbuttontext?: string;
+  primaryButtonText?: string;
+  Font?: string;
+  style?: BannerStyle;
+  selected?: Orientation;
+  borderRadius?: number;
+  buttonRadius?: number;
+  animation?: string;
+  easing?: string;
+  language?: string;
+  weight?: string;
+  cookieExpiration?: string;
+  privacyUrl?: string;
+  toggleStates?: {
+    customToggle?: boolean;
+    disableScroll?: boolean;
+    closebutton?: boolean;
+  };
+}
+
 interface CustomizationTabProps {
   onAuth: () => void;
   initialActiveTab?: string;
   isAuthenticated?: boolean;
+  initialBannerStyles?: InitialBannerStyles;
 }
 
 
@@ -148,26 +176,25 @@ const getOrCreateCloseIconAsset = async (backgroundColor: string): Promise<any> 
   }
 };
 
-const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false }) => {
-  console.log('[CustomizationTab] Component rendered');
-  console.warn('[CustomizationTab] Component rendered - WARN LEVEL');
-  const [color, setColor] = usePersistentState("color", "#ffffff");
+const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActiveTab = "Settings", isAuthenticated = false, initialBannerStyles }) => {
+  // Use initial values if provided, otherwise use defaults
+  const [color, setColor] = usePersistentState("color", initialBannerStyles?.color || "#ffffff");
   
   // Debug: Monitor color state changes
   useEffect(() => {
   }, [color]);
-  const [bgColor, setBgColor] = usePersistentState("bgColor", "#ffffff");
+  const [bgColor, setBgColor] = usePersistentState("bgColor", initialBannerStyles?.bgColors || "#ffffff");
   
   // Debug: Monitor bgColor state changes
   useEffect(() => {
   }, [bgColor]);
-  const [btnColor, setBtnColor] = usePersistentState("btnColor", "#C9C9C9");
-  const [paraColor, setParaColor] = usePersistentState("paraColor", "#4C4A66");
-  const [secondcolor, setSecondcolor] = usePersistentState("secondcolor", "#000000");
-  const [bgColors, setBgColors] = usePersistentState("bgColors", "#798EFF");
-  const [headColor, setHeadColor] = usePersistentState("headColor", "#000000");
-  const [secondbuttontext, setsecondbuttontext] = usePersistentState("secondbuttontext", "#000000");
-  const [primaryButtonText, setPrimaryButtonText] = usePersistentState("primaryButtonText", "#FFFFFF");
+  const [btnColor, setBtnColor] = usePersistentState("btnColor", initialBannerStyles?.btnColor || "#000000");
+  const [paraColor, setParaColor] = usePersistentState("paraColor", initialBannerStyles?.paraColor || "#4C4A66");
+  const [secondcolor, setSecondcolor] = usePersistentState("secondcolor", initialBannerStyles?.secondcolor || "#C9C9C9");
+  const [bgColors, setBgColors] = usePersistentState("bgColors", initialBannerStyles?.bgColors || "#798EFF");
+  const [headColor, setHeadColor] = usePersistentState("headColor", initialBannerStyles?.headColor || "#000000");
+  const [secondbuttontext, setsecondbuttontext] = usePersistentState("secondbuttontext", initialBannerStyles?.secondbuttontext || "#000000");
+  const [primaryButtonText, setPrimaryButtonText] = usePersistentState("primaryButtonText", initialBannerStyles?.primaryButtonText || "#FFFFFF");
   const [activeTab, setActiveTab] = usePersistentState("activeTab", initialActiveTab);
   const [previewMode, setPreviewMode] = useState<'gdpr' | 'ccpa'>('gdpr');
   const [closeIconSvg, setCloseIconSvg] = useState<string>("");
@@ -197,18 +224,109 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
       setActiveTab(initialActiveTab);
     }
   }, [initialActiveTab, activeTab, hasSetActiveTabFromApi]);
-  
+
+  // Update state values from initialBannerStyles if provided (only on mount)
+  // Ensure defaults are set on mount and when initialBannerStyles changes
+  useEffect(() => {
+    if (initialBannerStyles) {
+      if (initialBannerStyles.color) setColor(initialBannerStyles.color);
+      if (initialBannerStyles.btnColor) setBtnColor(initialBannerStyles.btnColor);
+      if (initialBannerStyles.paraColor) setParaColor(initialBannerStyles.paraColor);
+      if (initialBannerStyles.secondcolor) setSecondcolor(initialBannerStyles.secondcolor);
+      if (initialBannerStyles.bgColors) setBgColors(initialBannerStyles.bgColors);
+      if (initialBannerStyles.headColor) setHeadColor(initialBannerStyles.headColor);
+      if (initialBannerStyles.secondbuttontext) setsecondbuttontext(initialBannerStyles.secondbuttontext);
+      if (initialBannerStyles.primaryButtonText) setPrimaryButtonText(initialBannerStyles.primaryButtonText);
+      if (initialBannerStyles.Font) SetFont(initialBannerStyles.Font);
+      // Always set style and selected when initialBannerStyles is provided
+      // Use values from API if available, otherwise use defaults
+      // Note: Empty string "" is a valid style value (no style), so check for undefined/null explicitly
+      // Valid styles: "align" | "alignstyle" | "bigstyle" | "centeralign" | "fullwidth" | ""
+      const newStyle = initialBannerStyles.style !== undefined && initialBannerStyles.style !== null 
+        ? initialBannerStyles.style 
+        : "align";
+      // Use API value if provided and valid, otherwise use default "right"
+      // Valid orientations: "left" | "center" | "right"
+      const apiSelected = initialBannerStyles.selected;
+      const newSelected = (apiSelected !== undefined && apiSelected !== null && 
+                          (apiSelected === "left" || apiSelected === "center" || apiSelected === "right"))
+        ? apiSelected 
+        : "right";
+      // Always update style and selected to ensure they're set correctly from API
+      setStyle(newStyle);
+      setSelected(newSelected);
+      if (initialBannerStyles.borderRadius !== undefined) setBorderRadius(initialBannerStyles.borderRadius);
+      if (initialBannerStyles.buttonRadius !== undefined) setButtonRadius(initialBannerStyles.buttonRadius);
+      if (initialBannerStyles.animation) setAnimation(initialBannerStyles.animation);
+      if (initialBannerStyles.easing) setEasing(initialBannerStyles.easing);
+      if (initialBannerStyles.language) setLanguage(initialBannerStyles.language);
+      if (initialBannerStyles.weight) setWeight(initialBannerStyles.weight);
+      if (initialBannerStyles.cookieExpiration) setCookieExpiration(initialBannerStyles.cookieExpiration);
+      if (initialBannerStyles.privacyUrl !== undefined) setPrivacyUrl(initialBannerStyles.privacyUrl);
+      if (initialBannerStyles.toggleStates) {
+        setToggleStates(prev => ({
+          ...prev,
+          customToggle: initialBannerStyles.toggleStates?.customToggle !== undefined ? initialBannerStyles.toggleStates.customToggle : prev.customToggle,
+          disableScroll: initialBannerStyles.toggleStates?.disableScroll !== undefined ? initialBannerStyles.toggleStates.disableScroll : prev.disableScroll,
+          closebutton: initialBannerStyles.toggleStates?.closebutton !== undefined ? initialBannerStyles.toggleStates.closebutton : prev.closebutton,
+        }));
+      }
+      // Set only GDPR checkbox as selected when coming from ConfirmPublish or SuccessPublish
+      // Only set if initialBannerStyles is provided (coming from API or ConfirmPublish)
+      if (initialBannerStyles) {
+        setSelectedOptions(["GDPR"]);
+        setSelectedOption("GDPR");
+      }
+    } else {
+      // If no initialBannerStyles, ensure defaults are set
+      // This handles the case when component mounts before API data is loaded
+      setStyle("align");
+      setSelected("right");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialBannerStyles]); // Run when initialBannerStyles changes
+
  // Only run on mount
   const [expires, setExpires] = useState("");
   const [size, setSize] = usePersistentState("size", "12");
   const [isActive, setIsActive] = useState(false);
-  const [Font, SetFont] = usePersistentState("Font", "Montserrat");
+  const [Font, SetFont] = usePersistentState("Font", initialBannerStyles?.Font || "Montserrat");
   const [selectedtext, settextSelected] = usePersistentState("selectedtext", "left");
-  const [style, setStyle] = usePersistentState<BannerStyle>("style", "align");
+  // Use regular useState for style and selected since they're banner keys that shouldn't be persisted
+  // They should only come from API via initialBannerStyles
+  // Note: Empty string "" is a valid style value (no style), so check for undefined/null explicitly
+  // Always default to "align" for style and "right" for selected if not provided
+  const [style, setStyle] = useState<BannerStyle>(() => {
+    if (initialBannerStyles?.style !== undefined && initialBannerStyles?.style !== null) {
+      return initialBannerStyles.style;
+    }
+    return "align";
+  });
   // Removed activeMode - all features are now available by default
-  const [selected, setSelected] = usePersistentState<Orientation>("selected", "right");
-  const [selectedOption, setSelectedOption] = usePersistentState("selectedOption", "U.S. State Laws");
-  const [weight, setWeight] = usePersistentState("weight", "Regular");
+  const [selected, setSelected] = useState<Orientation>(() => {
+    if (initialBannerStyles?.selected !== undefined && initialBannerStyles?.selected !== null) {
+      return initialBannerStyles.selected;
+    }
+    return "right";
+  });
+
+  // Ensure selected is always set to a valid value, but only if it's invalid
+  // Don't override valid API values
+  useEffect(() => {
+    // Only validate if selected is somehow undefined or invalid
+    // This should rarely happen since we set defaults, but it's a safety check
+    if (!selected || (selected !== "left" && selected !== "center" && selected !== "right")) {
+      // Only set default if we don't have a valid API value to use
+      const apiValue = initialBannerStyles?.selected;
+      if (apiValue && (apiValue === "left" || apiValue === "center" || apiValue === "right")) {
+        setSelected(apiValue);
+      } else {
+        setSelected("right");
+      }
+    }
+  }, [selected, initialBannerStyles?.selected]); // Run when selected changes or API value changes
+  const [selectedOption, setSelectedOption] = usePersistentState("selectedOption", "GDPR");
+  const [weight, setWeight] = usePersistentState("weight", initialBannerStyles?.weight || "Regular");
   const [showPopup, setShowPopup] = useState(false);
   const [selectedOptions, setSelectedOptions] = usePersistentState("selectedOptions", ["GDPR"]);
   const showCCPAPreview = selectedOptions.includes("U.S. State Laws");
@@ -247,7 +365,6 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
         const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`;
         setCloseIconSvg(svgDataUrl);
       } catch (error) {
-        console.error('Error generating close icon:', error);
         // Fallback to a simple X SVG
         const iconColor = getCloseIconColor(color);
         const fallbackSvg = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4L12 12M12 4L4 12" stroke="${iconColor}" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -269,8 +386,8 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [pages, setPages] = useState<Array<{ id: string; name: string }>>([]);
   const [fetchScripts, setFetchScripts] = useState(false);
   const [triggerScan, setTriggerScan] = useState(false);
-  const [borderRadius, setBorderRadius] = usePersistentState<number>("borderRadius", 4);
-  const [buttonRadius, setButtonRadius] = usePersistentState<number>("buttonRadius", 3);
+  const [borderRadius, setBorderRadius] = usePersistentState<number>("borderRadius", initialBannerStyles?.borderRadius || 4);
+  const [buttonRadius, setButtonRadius] = usePersistentState<number>("buttonRadius", initialBannerStyles?.buttonRadius || 3);
   const [isLoading, setIsLoading] = useState(false);
   const [userlocaldata, setUserlocaldata] = useState<UserData | null>(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -293,37 +410,19 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
   const [showTooltip, setShowTooltip] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // Log whenever showTooltip changes
-  useEffect(() => {
-    console.log('[CustomizationTab] showTooltip state changed to:', showTooltip);
-  }, [showTooltip]);
-
   // Auto-dismiss tooltip after 2 seconds
   useEffect(() => {
-    console.log('[CustomizationTab] Auto-dismiss useEffect triggered - showTooltip:', showTooltip, 'fadeOut:', fadeOut);
-    console.warn('[CustomizationTab] useEffect - showTooltip:', showTooltip);
     if (showTooltip) {
-      console.log('[CustomizationTab] showTooltip is TRUE - Starting auto-dismiss timer (2 seconds)');
-      console.warn('[CustomizationTab] ⏰ STARTING 2 SECOND TIMER');
       const timer = setTimeout(() => {
-        console.log('[CustomizationTab] ⏰ Timer fired after 2 seconds - starting fade out');
-        console.warn('[CustomizationTab] ⏰ TIMER FIRED - HIDING TOOLTIP');
         setFadeOut(true);
         setTimeout(() => {
-          console.log('[CustomizationTab] 🎬 Hiding tooltip after fade animation');
           setShowTooltip(false);
           setFadeOut(false);
-          console.log('[CustomizationTab] ✅ Tooltip hidden successfully');
-          console.warn('[CustomizationTab] ✅ TOOLTIP HIDDEN');
         }, 300); // Wait for fade-out animation
       }, 2000); // Reduced to 2 seconds
       return () => {
-        console.log('[CustomizationTab] 🧹 Cleaning up timer');
         clearTimeout(timer);
       };
-    } else {
-      console.log('[CustomizationTab] showTooltip is FALSE - not starting timer');
-      console.warn('[CustomizationTab] showTooltip is FALSE - no timer');
     }
   }, [showTooltip]);
   // COMMENTED OUT: const userinfo = localStorage.getItem("consentbit-userinfo");
@@ -357,7 +456,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
 
-  const base_url = "https://cb-server.web-8fb.workers.dev"
+  const base_url = "https://consentbit-test-server.web-8fb.workers.dev"
 
   // Welcome screen handlers - removed since this component is accessed via Customize link
   const handleWelcomeAuthorize = () => {
@@ -371,21 +470,21 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
   const [toggleStates, setToggleStates] = usePersistentState('toggleStates', {
-    customToggle: false,
+    customToggle: initialBannerStyles?.toggleStates?.customToggle || false,
     resetInteractions: false,
-    disableScroll: false,
+    disableScroll: initialBannerStyles?.toggleStates?.disableScroll || false,
     storeConsents: false,
     globalvariable: false,
-    closebutton: false,
+    closebutton: initialBannerStyles?.toggleStates?.closebutton || false,
     donotshare: false,
   });
 
 
   // Your default states
   const defaultState = {
-    animation: "fade",
-    easing: "Ease",
-    language: "English",
+    animation: initialBannerStyles?.animation || "fade",
+    easing: initialBannerStyles?.easing || "Ease",
+    language: initialBannerStyles?.language || "English",
   };
 
   const [animation, setAnimation] = usePersistentState('animation', defaultState.animation);
@@ -672,63 +771,8 @@ const handleToggles = (option) => {
     fetchPages();
   }, [webflow]);
 
-  //banner details - fetch from API when siteInfo is available
-  useEffect(() => {
-    const fetchbannerdetails = async () => {
-      const token = getSessionTokenFromLocalStorage();
-      try {
-        if (token && siteInfo?.siteId) {
-          // Get current siteId to ensure we fetch the correct site's banner settings
-          const currentSiteId = siteInfo.siteId;
-          const response = await customCodeApi.getBannerStyles(token, currentSiteId);
-
-          if (response) {
-            // Set all the values with proper checks - these will be saved to site-specific storage
-            if (response.cookieExpiration !== undefined) setCookieExpiration(response.cookieExpiration);
-            if (response.bgColor !== undefined) {
-              setBgColor(response.bgColor);
-            }
-              
-            // Removed activeMode setting - no longer needed
-            if (response.selectedtext !== undefined) settextSelected(response.selectedtext);
-            // fetchScripts is now only set by user action (scan button), not from API
-            if (response.btnColor !== undefined) setBtnColor(response.btnColor);
-            if (response.paraColor !== undefined) setParaColor(response.paraColor);
-            if (response.secondcolor !== undefined) setSecondcolor(response.secondcolor);
-            if (response.bgColors !== undefined) setBgColors(response.bgColors);
-            if (response.headColor !== undefined) setHeadColor(response.headColor);
-            if (response.secondbuttontext !== undefined) setsecondbuttontext(response.secondbuttontext);
-            if (response.primaryButtonText !== undefined) setPrimaryButtonText(response.primaryButtonText);
-            if (response.Font !== undefined) SetFont(response.Font);
-            if (response.style !== undefined) setStyle(response.style);
-            if (response.selected !== undefined) setSelected(response.selected);
-            if (response.weight !== undefined) setWeight(response.weight);
-            if (response.borderRadius !== undefined) setBorderRadius(response.borderRadius);
-            if (response.buttonRadius !== undefined) setButtonRadius(response.buttonRadius);
-            if (response.animation !== undefined) setAnimation(response.animation);
-            if (response.easing !== undefined) setEasing(response.easing);
-            if (response.language !== undefined) setLanguage(response.language);
-            // buttonText is determined by fetchScripts state, not from API
-            if (response.isBannerAdded !== undefined) {
-              setIsBannerAdded(response.isBannerAdded);
-            }
-            if (response.color !== undefined) {
-              setColor(response.color);
-            }
-          } else {
-            // No response - might be first time, don't open auth screen
-          }
-        }
-      } catch (error) {
-        // Error fetching banner details - silent fail, will use defaults
-      }
-    };
-
-    // Only fetch when siteInfo is available
-    if (siteInfo?.siteId) {
-      fetchbannerdetails();
-    }
-  }, [siteInfo?.siteId]); // Re-fetch when siteId changes
+  // Banner details are now fetched in App.tsx and passed as initialBannerStyles prop
+  // No need to fetch here - values come from API via props
 
 
   //main function for adding custom code to the head
@@ -917,6 +961,7 @@ const handleToggles = (option) => {
         buttonContainerStyleName: "consentbit-ccpa-button-container",
         headingStyleName: "consentbit-ccpa-banner-heading",
         linktextstyle: "consentbit-ccpa-linkblock",
+        privacyLinkStyleName: "consentbit-ccpa-privacy-link",
         innerDivStyleName: "consentbit-ccpa-innerdiv",
         secondBackgroundStyleName: "consentbit-banner-ccpasecond-bg",
         closebutton: `close-consentbit`,
@@ -935,6 +980,7 @@ const handleToggles = (option) => {
         buttonContainerStyle,
         headingStyle,
         Linktext,
+        privacyLinkStyle,
         innerDivStyle,
         secondBackgroundStyle,
         closebutton
@@ -1081,12 +1127,24 @@ const handleToggles = (option) => {
         "border-radius": "48px",
         "cursor": "pointer",
         "background-color": "transparent !important",
-        "color": "rgba(72, 57, 153, 1)",
+        "color": paraColor,
         "margin-left": "5px",
         "margin-right": "5px",
         "min-width": "80px",
+        "text-decoration": "none !important",
+        "font-family": Font,
+        "font-size": "16px", // Match paragraph font size
+        "font-weight": `${weight === "Regular" ? 500 : weight === "Medium" ? 600 : weight === "Semi Bold" ? 700 : weight === "Bold" ? 700 : parseInt(weight) + 100 || 500}`, // Slightly bolder than paragraph
       };
 
+      const privacyLinkPropertyMap: Record<string, string> = {
+        "color": paraColor,
+        "text-decoration": "none !important",
+        "font-size": "16px", // Match paragraph font size
+        "font-weight": `${weight === "Regular" ? 500 : weight === "Medium" ? 600 : weight === "Semi Bold" ? 700 : weight === "Bold" ? 700 : parseInt(weight) + 100 || 500}`,
+        "font-family": Font,
+        "cursor": "pointer",
+      };
 
       const headingPropertyMap: Record<string, string> = {
         "color": headColor,
@@ -1143,6 +1201,11 @@ const handleToggles = (option) => {
       await paragraphStyle.setProperties(paragraphPropertyMap);
       await buttonContainerStyle.setProperties(buttonContainerPropertyMap);
       await Linktext.setProperties(linktextPropertyMap);
+      // Add hover styles for underline effect on Do Not Share link
+      await Linktext.setProperties({ "text-decoration": "underline" }, { breakpoint: "main", pseudoClass: "hover" });
+      await privacyLinkStyle.setProperties(privacyLinkPropertyMap);
+      // Add hover styles for underline effect on More Info link
+      await privacyLinkStyle.setProperties({ "text-decoration": "underline" }, { breakpoint: "main", pseudoClass: "hover" });
       await headingStyle.setProperties(headingPropertyMap);
       await innerDivStyle.setProperties(innerdivPropertyMap);
       await secondBackgroundStyle.setProperties(secondbackgroundPropertyMap);
@@ -1203,8 +1266,29 @@ const handleToggles = (option) => {
               });
               
               await (imageElement as any).setStyles?.([imageStyle]);
+              
+              // Set DOM ID for close button icon
+              try {
+                if ((imageElement as any).setDomId) {
+                  await (imageElement as any).setDomId("close-consent-banner");
+                } else {
+                  // Fallback: Set ID on parent container if image doesn't support it
+                  if ((Closebuttons as any).setDomId) {
+                    await (Closebuttons as any).setDomId("close-consent-banner");
+                  }
+                }
+              } catch (idError) {
+                // Try setting on parent container as fallback
+                try {
+                  if ((Closebuttons as any).setDomId) {
+                    await (Closebuttons as any).setDomId("close-consent-banner");
+                  }
+                } catch (fallbackError) {
+                  // Ignore fallback errors
+                }
+              }
             } catch (error) {
-              console.error('Error creating close icon image element:', error);
+              // Error creating close icon image element
             }
           }
         }
@@ -1252,6 +1336,12 @@ const handleToggles = (option) => {
           privacyLink = await tempParagraph.append(webflow.elementPresets.LinkBlock);
           if (!privacyLink) throw new Error("Failed to create privacy link");
 
+          // Use the privacyLinkStyle that was already set up with privacyLinkPropertyMap
+          // This ensures it uses paraColor and correct font size/weight
+          if (privacyLink.setStyles) {
+            await privacyLink.setStyles([privacyLinkStyle]);
+          }
+
           // Set URL using setSettings method
           try {
             await privacyLink.setSettings('url', privacyUrl, {openInNewTab: true});
@@ -1265,11 +1355,6 @@ const handleToggles = (option) => {
         
           if (privacyLink.setDomId) {
             await privacyLink.setDomId("privacy-link");
-          }
-          
-          // Add hover effect for underline
-          if (privacyLink.setCustomAttribute) {
-            await privacyLink.setCustomAttribute("data-hover-underline", "true");
           }
         }
 
@@ -1311,7 +1396,7 @@ const handleToggles = (option) => {
           const response = await saveBannerDetails(true);
           if (response && response.ok) {
             setIsBannerAdded(true);
-            // Set sessionStorage for cross-component communication
+            // Save bannerAdded to sessionStorage
             sessionStorage.setItem('bannerAdded', 'true');
             // Dispatch custom event to notify other components
             window.dispatchEvent(new CustomEvent('bannerAddedChanged'));
@@ -1611,7 +1696,7 @@ const handleToggles = (option) => {
       const buttonPropertyMap: Record<string, string> = {
         "border-radius": `${buttonRadius}px`,
         "cursor": "pointer",
-        "background-color": secondcolor,
+        "background-color": btnColor,
         "margin-left": "5px",
         "margin-right": "5px",
         "min-width": "80px",
@@ -1635,7 +1720,7 @@ const handleToggles = (option) => {
       const declineButtonPropertyMap: Record<string, string> = {
         "border-radius": `${buttonRadius}px`,
         "cursor": "pointer",
-        "background-color": btnColor,
+        "background-color": secondcolor,
         "color": secondbuttontext,
         "margin-left": "5px",
         "margin-right": "5px",
@@ -1649,13 +1734,17 @@ const handleToggles = (option) => {
         "border-radius": `${buttonRadius}px`,
         "cursor": "pointer",
         "background-color": "transparent !important",
-        "color": secondbuttontext,
+        "color": paraColor,
         "margin-left": "5px",
         "margin-right": "5px",
         "min-width": "80px",
         "text-align": "center",
         "display": "flex",
         "justify-content": "center",
+        "text-decoration": "none !important",
+        "font-family": Font,
+        "font-size": "16px", // Match paragraph font size
+        "font-weight": `${weight === "Regular" ? 500 : weight === "Medium" ? 600 : weight === "Semi Bold" ? 700 : weight === "Bold" ? 700 : parseInt(weight) + 100 || 500}`, // Slightly bolder than paragraph
       };
 
       const secondbackgroundPropertyMap: Record<string, string> = {
@@ -1789,8 +1878,29 @@ const handleToggles = (option) => {
               });
               
               await (imageElement as any).setStyles?.([imageStyle]);
+              
+              // Set DOM ID for close button icon
+              try {
+                if ((imageElement as any).setDomId) {
+                  await (imageElement as any).setDomId("close-consent-banner");
+                } else {
+                  // Fallback: Set ID on parent container if image doesn't support it
+                  if ((Closebuttons as any).setDomId) {
+                    await (Closebuttons as any).setDomId("close-consent-banner");
+                  }
+                }
+              } catch (idError) {
+                // Try setting on parent container as fallback
+                try {
+                  if ((Closebuttons as any).setDomId) {
+                    await (Closebuttons as any).setDomId("close-consent-banner");
+                  }
+                } catch (fallbackError) {
+                  // Ignore fallback errors
+                }
+              }
             } catch (error) {
-              console.error('Error creating close icon image element:', error);
+              // Error creating close icon image element
             }
           }
         }
@@ -1838,6 +1948,27 @@ const handleToggles = (option) => {
           privacyLink = await tempParagraph.append(webflow.elementPresets.LinkBlock);
           if (!privacyLink) throw new Error("Failed to create privacy link");
 
+          // Create and apply privacy link style with paraColor
+          const privacyLinkStyle = (await webflow.getStyleByName("consentbit-privacy-link-gdpr-banner")) || (await webflow.createStyle("consentbit-privacy-link-gdpr-banner"));
+          // Calculate slightly bolder weight than paragraph
+          const paragraphWeight = weight === "Regular" ? 400 : weight === "Medium" ? 500 : weight === "Semi Bold" ? 600 : weight === "Bold" ? 700 : parseInt(weight) || 400;
+          const linkWeight = Math.min(paragraphWeight + 100, 700); // Add 100 but cap at 700
+          
+          await privacyLinkStyle.setProperties({
+            "color": paraColor,
+            "text-decoration": "none",
+            "font-size": "16px", // Match paragraph font size
+            "font-weight": `${linkWeight}`,
+            "font-family": Font,
+            "cursor": "pointer",
+          });
+          // Add hover styles for underline effect
+          await privacyLinkStyle.setProperties({ "text-decoration": "underline" }, { breakpoint: "main", pseudoClass: "hover" });
+          
+          if (privacyLink.setStyles) {
+            await privacyLink.setStyles([privacyLinkStyle]);
+          }
+
           // Set URL using setSettings method
           try {
             await privacyLink.setSettings('url', privacyUrl, {openInNewTab: true});
@@ -1851,11 +1982,6 @@ const handleToggles = (option) => {
         
           if (privacyLink.setDomId) {
             await privacyLink.setDomId("privacy-link");
-          }
-          
-          // Add hover effect for underline
-          if (privacyLink.setCustomAttribute) {
-            await privacyLink.setCustomAttribute("data-hover-underline", "true");
           }
         }
 
@@ -1916,7 +2042,7 @@ const handleToggles = (option) => {
           const response = await saveBannerDetails(true); // Pass true directly
           if (response && response.ok) {
             setIsBannerAdded(true);
-            // Set sessionStorage for cross-component communication
+            // Save bannerAdded to sessionStorage
             sessionStorage.setItem('bannerAdded', 'true');
             // Dispatch custom event to notify other components
             window.dispatchEvent(new CustomEvent('bannerAddedChanged'));
@@ -2181,7 +2307,7 @@ const handleToggles = (option) => {
         throw new Error('No site ID available');
       }
 
-      const response = await fetch(`https://cb-server.web-8fb.workers.dev/api/payment/subscription?siteId=${siteId}`, {
+      const response = await fetch(`https://consentbit-test-server.web-8fb.workers.dev/api/payment/subscription?siteId=${siteId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -2227,9 +2353,8 @@ const handleToggles = (option) => {
         
         // Cache subscription status in sessionStorage for current session
         sessionStorage.setItem('subscription_status', JSON.stringify(hasSubscription));
-       } catch (error) {
+         } catch (error) {
          // Error handling
-         console.error('Subscription check failed:', error);
        } finally {
          // Always mark subscription as checked when done
          setSubscriptionChecked(true);
@@ -2518,10 +2643,7 @@ const handleToggles = (option) => {
                       const isInvalidElement = !selectedElement || selectedElement.type === "Body";
 
                       if (isInvalidElement) {
-                        console.log('[CustomizationTab] Setting showTooltip to true');
-                        console.warn('[CustomizationTab] 🚨 SETTING TOOLTIP TO TRUE');
                         setShowTooltip(true);
-                        console.warn('[CustomizationTab] 🚨 TOOLTIP SET TO TRUE - should trigger useEffect');
                         setShowPopup(false);
                         return;
                       }
@@ -3141,6 +3263,7 @@ const handleToggles = (option) => {
                     {style === "alignstyle" && <div className="secondclass" style={{ backgroundColor: bgColors, borderBottomRightRadius: `${borderRadius}px`, borderTopRightRadius: `${borderRadius}px` }}></div>}
                     {toggleStates.closebutton && closeIconSvg ? (
                       <img 
+                        id="close-consent-banner"
                         src={closeIconSvg} 
                         alt="Close" 
                         className="closebutton" 
@@ -3173,7 +3296,8 @@ const handleToggles = (option) => {
                             style={{ 
                               color: paraColor, 
                               textDecoration: "none",
-                              fontSize: `${typeof size === 'number' ? size - 2 : 12}px`
+                              fontSize: `${typeof size === 'number' ? size - 2 : 12}px`,
+                              fontFamily: Font
                             }}
                             onMouseEnter={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "underline"}
                             onMouseLeave={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "none"}
@@ -3184,9 +3308,9 @@ const handleToggles = (option) => {
                       )}
                     </div>
                     <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : undefined, }}>
-                      <button className="btn-preferences" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: btnColor, color: secondbuttontext, fontFamily: Font }} >{translations[language as keyof typeof translations]?.preferences || "Preferences"}</button>
-                      <button className="btn-reject" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: btnColor, color: secondbuttontext, fontFamily: Font }} >{translations[language as keyof typeof translations]?.reject || "Reject"}</button>
-                      <button className="btn-accept" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: secondcolor, color: primaryButtonText, fontFamily: Font }} >{translations[language as keyof typeof translations]?.accept || "Accept"}</button>
+                      <button className="btn-preferences" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: secondcolor, color: secondbuttontext, fontFamily: Font }} >{translations[language as keyof typeof translations]?.preferences || "Preferences"}</button>
+                      <button className="btn-reject" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: secondcolor, color: secondbuttontext, fontFamily: Font }} >{translations[language as keyof typeof translations]?.reject || "Reject"}</button>
+                      <button className="btn-accept" style={{ borderRadius: `${buttonRadius}px`, backgroundColor: btnColor, color: primaryButtonText, fontFamily: Font }} >{translations[language as keyof typeof translations]?.accept || "Accept"}</button>
                     </div>
                   </div>
                   )}
@@ -3225,6 +3349,7 @@ const handleToggles = (option) => {
                   )}
                   {toggleStates.closebutton && closeIconSvg ? (
                     <img 
+                      id="close-consent-banner"
                       src={closeIconSvg} 
                       alt="Close" 
                       className="closebutton" 
@@ -3254,7 +3379,8 @@ const handleToggles = (option) => {
                           style={{ 
                             color: paraColor, 
                             textDecoration: "none",
-                            fontSize: `${typeof size === 'number' ? size - 2 : 12}px`
+                            fontSize: `${typeof size === 'number' ? size - 2 : 12}px`,
+                            fontFamily: Font
                           }}
                           onMouseEnter={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "underline"}
                           onMouseLeave={(e) => (e.target as HTMLAnchorElement).style.textDecoration = "none"}
@@ -3264,7 +3390,7 @@ const handleToggles = (option) => {
                       </span>
                     )}
                   </div>
-                  <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : undefined }}>
+                  <div className="button-wrapp" style={{ justifyContent: style === "centeralign" ? "center" : "flex-start" }}>
                     <a
                       href="#"
                       onClick={(e) => e.preventDefault()}

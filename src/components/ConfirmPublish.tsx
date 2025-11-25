@@ -44,8 +44,6 @@ type ConfirmPublishProps = {
 };
 
 const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirmPublish, handleCustomize }) => {
-  console.log('[ConfirmPublish] Component rendered');
-  console.warn('[ConfirmPublish] Component rendered - WARN LEVEL');
   const [isConfirmed, setIsConfirmed] = useState(true);
   // Note: This local showTooltip is not used - we use tooltips.showTooltip from useAppState
   const [showTooltip, setShowTooltip] = useState(true);
@@ -75,38 +73,19 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
   const { user, exchangeAndVerifyIdToken, isAuthenticatedForCurrentSite, openAuthScreen } = useAuth();
   const { createCompleteBannerStructureWithExistingFunctions, isCreating } = useBannerCreation();
 
-  // Log whenever tooltip state changes
-  useEffect(() => {
-    console.log('[ConfirmPublish] tooltips.showTooltip state changed to:', tooltips.showTooltip);
-    console.warn('[ConfirmPublish] tooltips.showTooltip =', tooltips.showTooltip);
-  }, [tooltips.showTooltip]);
-
   // Auto-dismiss tooltip after 2 seconds
   useEffect(() => {
-    console.log('[ConfirmPublish] Auto-dismiss useEffect triggered - showTooltip:', tooltips.showTooltip, 'fadeOut:', tooltips.fadeOut);
-    console.warn('[ConfirmPublish] useEffect - showTooltip:', tooltips.showTooltip);
     if (tooltips.showTooltip) {
-      console.log('[ConfirmPublish] tooltips.showTooltip is TRUE - Starting auto-dismiss timer (2 seconds)');
-      console.warn('[ConfirmPublish] ⏰ STARTING 2 SECOND TIMER');
       const timer = setTimeout(() => {
-        console.log('[ConfirmPublish] ⏰ Timer fired after 2 seconds - starting fade out');
-        console.warn('[ConfirmPublish] ⏰ TIMER FIRED - HIDING TOOLTIP');
         tooltips.setFadeOut(true);
         setTimeout(() => {
-          console.log('[ConfirmPublish] 🎬 Hiding tooltip after fade animation');
           tooltips.setShowTooltip(false);
           tooltips.setFadeOut(false);
-          console.log('[ConfirmPublish] ✅ Tooltip hidden successfully');
-          console.warn('[ConfirmPublish] ✅ TOOLTIP HIDDEN');
         }, 300); // Wait for fade-out animation
       }, 2000); // Reduced to 2 seconds
       return () => {
-        console.log('[ConfirmPublish] 🧹 Cleaning up timer');
         clearTimeout(timer);
       };
-    } else {
-      console.log('[ConfirmPublish] tooltips.showTooltip is FALSE - not starting timer');
-      console.warn('[ConfirmPublish] showTooltip is FALSE - no timer');
     }
   }, [tooltips.showTooltip]);
 
@@ -161,7 +140,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
         
             const bannerData = {
            siteId: siteData.siteInfo?.siteId,
-           cookieExpiration: "30",
+           cookieExpiration: bannerConfig.cookieExpiration || "120",
            bgColor: bannerStyles.color,
            activeTab: "Customization",
            activeMode: "Advanced",
@@ -216,10 +195,7 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
           tooltips.setShowTooltip(false);
           openAuthScreen(); // Open OAuth window instead of popup
         } else if (isInvalidElement) {
-          console.log('[ConfirmPublish] Setting tooltips.showTooltip to true');
-          console.warn('[ConfirmPublish] 🚨 SETTING TOOLTIP TO TRUE');
           tooltips.setShowTooltip(true);
-          console.warn('[ConfirmPublish] 🚨 TOOLTIP SET TO TRUE - should trigger useEffect');
         }
       }
     } catch (error) {
@@ -243,7 +219,34 @@ const ConfirmPublish: React.FC<ConfirmPublishProps> = ({ onGoBack, handleConfirm
 
   // If showCustomize is true, render the CustomizationTab component
   if (showCustomize) {
-    return <CustomizationTab onAuth={handleBackFromCustomize} initialActiveTab="Customization" />;
+    return <CustomizationTab 
+      onAuth={handleBackFromCustomize} 
+      initialActiveTab="Customization"
+      initialBannerStyles={{
+        color: bannerStyles.color,
+        btnColor: bannerStyles.btnColor,
+        paraColor: bannerStyles.paraColor,
+        secondcolor: bannerStyles.secondcolor,
+        bgColors: bannerStyles.color,
+        headColor: bannerStyles.headColor,
+        secondbuttontext: bannerStyles.secondbuttontext,
+        primaryButtonText: bannerStyles.primaryButtonText,
+        Font: bannerStyles.Font,
+        style: "align",
+        selected: "right",
+        borderRadius: bannerStyles.borderRadius,
+        buttonRadius: bannerStyles.buttonRadius,
+        animation: bannerAnimation.animation,
+        easing: "ease",
+        language: bannerLanguages.language,
+        weight: "Regular",
+        toggleStates: {
+          customToggle: bannerToggleStates.toggleStates.customToggle,
+          disableScroll: bannerToggleStates.toggleStates.disableScroll,
+          closebutton: bannerToggleStates.toggleStates.closebutton,
+        }
+      }}
+    />;
   }
 
 
