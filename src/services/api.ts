@@ -1,4 +1,4 @@
-const base_url = "https://consentbit-test-server.web-8fb.workers.dev";
+const base_url = "https://cb-server.web-8fb.workers.dev";
 import { ScriptCategory, SaveCategoriesResponse, AppData } from '../types/types';
 import { scriptCategorizationService } from './script-categorization-service';
 import { ClientEncryption } from '../util/Secure-Data';

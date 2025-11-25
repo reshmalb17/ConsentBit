@@ -456,7 +456,7 @@ const CustomizationTab: React.FC<CustomizationTabProps> = ({ onAuth, initialActi
 
 
 
-  const base_url = "https://consentbit-test-server.web-8fb.workers.dev"
+  const base_url = "https://cb-server.web-8fb.workers.dev"
 
   // Welcome screen handlers - removed since this component is accessed via Customize link
   const handleWelcomeAuthorize = () => {
@@ -2307,7 +2307,7 @@ const handleToggles = (option) => {
         throw new Error('No site ID available');
       }
 
-      const response = await fetch(`https://consentbit-test-server.web-8fb.workers.dev/api/payment/subscription?siteId=${siteId}`, {
+      const response = await fetch(`https://cb-server.web-8fb.workers.dev/api/payment/subscription?siteId=${siteId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

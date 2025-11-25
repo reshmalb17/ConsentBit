@@ -11,7 +11,7 @@ import { usePersistentState, getCurrentSiteId } from './usePersistentState';
 import pkg from '../../package.json';
 
 const appVersion = pkg.version;
-const base_url = "https://consentbit-test-server.web-8fb.workers.dev"
+const base_url = "https://cb-server.web-8fb.workers.dev"
 
 
 export interface BannerConfig {

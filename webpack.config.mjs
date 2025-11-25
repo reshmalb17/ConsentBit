@@ -6,71 +6,128 @@ import fs from "fs";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-// Plugin to remove eval() and new Function() calls from all bundle files
-class RemoveEvalAndNewFunctionPlugin {
+// Plugin to safely replace new Function patterns for marketplace compliance
+// This runs AFTER bundling to ensure we don't break functionality
+class SafeNewFunctionReplacerPlugin {
   apply(compiler) {
-    compiler.hooks.afterEmit.tap("RemoveEvalAndNewFunctionPlugin", (compilation) => {
+    compiler.hooks.afterEmit.tap("SafeNewFunctionReplacerPlugin", (compilation) => {
       const outputPath = compilation.outputOptions.path;
+      const bundleDir = path.join(path.dirname(outputPath), 'bundle');
       
-      // Process all .bundle.js files in the output directory
-      const bundleFiles = fs.readdirSync(outputPath).filter(file => file.endsWith('.bundle.js'));
+      // Function to clean a directory
+      const cleanDirectory = (dir) => {
+        if (!fs.existsSync(dir)) return;
+        
+        const bundleFiles = fs.readdirSync(dir).filter(file => 
+          file.endsWith('.bundle.js') || file === 'bundle.js'
+        );
+        
+        bundleFiles.forEach(filename => {
+          const bundlePath = path.join(dir, filename);
+          this.processFile(bundlePath, filename);
+        });
+      };
+      
+      // Clean public directory (webpack output)
+      const bundleFiles = fs.readdirSync(outputPath).filter(file => 
+        file.endsWith('.bundle.js') || file === 'bundle.js'
+      );
       
       bundleFiles.forEach(filename => {
         const bundlePath = path.join(outputPath, filename);
-        
-        if (fs.existsSync(bundlePath)) {
-          let bundleContent = fs.readFileSync(bundlePath, "utf8");
-          const originalContent = bundleContent;
-          
-          // Remove Console Ninja code block (the entire function s() that contains eval)
-          // This removes the entire Console Ninja initialization code
-          bundleContent = bundleContent.replace(
-            /function\s+s\(\)\{[^}]*try\{[^}]*return\s*\(0,\s*eval\)[^}]*\}[^}]*catch[^}]*\}[^}]*function\s+l\([^}]*\)\{[^}]*try\{[^}]*s\(\)[^}]*\}[^}]*catch[^}]*\}[^}]*return[^}]*\}/gs,
-            ''
-          );
-          
-          // Remove eval() calls - replace with safe alternatives
-          bundleContent = bundleContent.replace(
-            /\(0,\s*eval\)\s*\(["'][^"']*["']\)/g,
-            'null'
-          );
-          bundleContent = bundleContent.replace(
-            /await\s*\(0,\s*eval\)\s*\(["'][^"']*["']\)/g,
-            'await Promise.resolve(null)'
-          );
-          
-          // Remove new Function() calls - replace with safe alternatives
-          bundleContent = bundleContent.replace(
-            /new\s+Function\s*\([^)]*\)/g,
-            'function(){}'
-          );
-          
-          // Replace new Function("return this")() with window
-          bundleContent = bundleContent.replace(
-            /new\s+Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
-            "window"
-          );
-          
-          // Replace new Function("return window")() with window
-          bundleContent = bundleContent.replace(
-            /new\s+Function\s*\(\s*["']return\s+window["']\s*\)\s*\(\s*\)/g,
-            "window"
-          );
-          
-          // Remove any remaining eval references in Console Ninja code
-          bundleContent = bundleContent.replace(
-            /\/\* https:\/\/github\.com\/wallabyjs\/console-ninja[^*]*\*\/[^}]*function\s+s\(\)\{[^}]*eval[^}]*\}[^}]*function\s+l\([^}]*\)\{[^}]*\}/gs,
-            ''
-          );
-          
-          // Only write if content changed
-          if (bundleContent !== originalContent) {
-            fs.writeFileSync(bundlePath, bundleContent, "utf8");
-            console.log(`Cleaned eval/new Function from ${filename}`);
-          }
-        }
+        this.processFile(bundlePath, filename);
       });
+      
+      // Also clean bundle directory if it exists (after webflow extension bundle copies files)
+      cleanDirectory(bundleDir);
     });
+  }
+  
+  processFile(bundlePath, filename) {
+    if (!fs.existsSync(bundlePath)) return;
+    
+    let bundleContent = fs.readFileSync(bundlePath, "utf8");
+    const originalContent = bundleContent;
+    
+    // CRITICAL: Replace new Function("return this")() with a safe alternative
+    // This pattern is used by framer-motion to get global object in strict mode
+    // Replacement: (function(){return this||window})() works in all contexts
+    
+    // Run multiple passes to catch all variations (minified code can have different spacing)
+    let previousContent = '';
+    let passCount = 0;
+    const maxPasses = 3;
+    
+    while (previousContent !== bundleContent && passCount < maxPasses) {
+      previousContent = bundleContent;
+      passCount++;
+      
+      // Pattern 1: this||new Function("return this")() - handle various spacing
+      bundleContent = bundleContent.replace(
+        /this\|\|new\s+Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        'this||(function(){return this||window})()'
+      );
+      bundleContent = bundleContent.replace(
+        /this\|\|new\s*Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        'this||(function(){return this||window})()'
+      );
+      
+      // Pattern 2: ||new Function("return this")()
+      bundleContent = bundleContent.replace(
+        /\|\|new\s+Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        '||(function(){return this||window})()'
+      );
+      bundleContent = bundleContent.replace(
+        /\|\|new\s*Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        '||(function(){return this||window})()'
+      );
+      
+      // Pattern 3: standalone new Function("return this")() - most flexible pattern
+      bundleContent = bundleContent.replace(
+        /new\s+Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        '(function(){return this||window})()'
+      );
+      bundleContent = bundleContent.replace(
+        /new\s*Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        '(function(){return this||window})()'
+      );
+      
+      // Pattern 4: new Function("return window")()
+      bundleContent = bundleContent.replace(
+        /new\s+Function\s*\(\s*["']return\s+window["']\s*\)\s*\(\s*\)/g,
+        'window'
+      );
+      bundleContent = bundleContent.replace(
+        /new\s*Function\s*\(\s*["']return\s+window["']\s*\)\s*\(\s*\)/g,
+        'window'
+      );
+      
+      // Pattern 5: await new Function("return this")()
+      bundleContent = bundleContent.replace(
+        /await\s+new\s+Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        'await Promise.resolve((function(){return this||window})())'
+      );
+      bundleContent = bundleContent.replace(
+        /await\s+new\s*Function\s*\(\s*["']return\s+this["']\s*\)\s*\(\s*\)/g,
+        'await Promise.resolve((function(){return this||window})())'
+      );
+    }
+    
+    // Remove eval patterns (safe to remove)
+    bundleContent = bundleContent.replace(
+      /\(0,\s*eval\)\s*\(["'][^"']*["']\)/g,
+      'null'
+    );
+    bundleContent = bundleContent.replace(
+      /await\s*\(0,\s*eval\)\s*\(["'][^"']*["']\)/g,
+      'await Promise.resolve(null)'
+    );
+    
+    // Only write if content changed
+    if (bundleContent !== originalContent) {
+      fs.writeFileSync(bundlePath, bundleContent, "utf8");
+      console.log(`✓ Cleaned new Function/eval from ${filename}`);
+    }
   }
 }
 
@@ -163,7 +220,7 @@ export default {
     topLevelAwait: false,
   },
   plugins: [
-    new RemoveEvalAndNewFunctionPlugin(),
+    new SafeNewFunctionReplacerPlugin(),
   ],
   devServer: {
     static: [{ directory: path.join(dirname, "public") }],
